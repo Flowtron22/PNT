@@ -1,0 +1,7 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {createRound,tag,dash,stepRound} from '../../src/psx/rules.js';
+test('both playable roles create exactly one chaser and three runners',()=>{for(const role of ['runner','chaser']){const r=createRound(role);assert.equal(r.actors[0].role,role);assert.equal(r.actors.filter(a=>a.role==='chaser').length,1);}});
+test('only a chaser in range can tag a runner, and repeated tags do nothing',()=>{const r=createRound('chaser');assert.equal(tag(r,1,2,.2),false);assert.equal(tag(r,0,1,2),false);assert.equal(tag(r,0,1,.5),true);assert.equal(tag(r,0,1,.5),false);assert.equal(tag(r,0,2,NaN),false);});
+test('the round ends when all three runners are caught',()=>{const r=createRound('chaser');for(const id of [1,2,3])tag(r,0,id,.3);assert.equal(r.winner,'chaser');assert.equal(r.phase,'finished');assert.equal(dash(r,0),false);});
+test('surviving runners win at timeout and long frames cannot skip the round',()=>{const r=createRound();stepRound(r,100);assert.ok(r.remaining>59);r.remaining=.05;stepRound(r,.1);assert.equal(r.winner,'runner');assert.equal(tag(r,1,0,0),false);});
+test('dash cooldown and capture prevent repeated actions',()=>{const r=createRound();assert.equal(dash(r,0),true);assert.equal(dash(r,0),false);for(let i=0;i<51;i++)stepRound(r,.1);assert.equal(dash(r,0),true);tag(r,1,0,.1);assert.equal(dash(r,0),false);});
