@@ -15,14 +15,16 @@ const glb=readFileSync(join(root,'assets/psx/thief.glb'));
 const gltf=JSON.parse(glb.subarray(20,20+glb.readUInt32LE(12)));
 const normalize=s=>s.replace(/[_\- ]/g,'').toLowerCase();
 const names=new Map(gltf.nodes.filter(n=>n.name).map(n=>[normalize(n.name),n.name]));
-const targetRoot=gltf.nodes.find(n=>n.name==='Bip001');
-const output={version:1,source:'Original PSX FBX animations; police run exported from sk_chr_ch_runA',clips:{}};
+const output={version:2,source:'Original PSX FBX animations; police run exported from sk_chr_ch_runA; root-local basis corrected',clips:{}};
 for(const [name,file]of Object.entries(sources)){
  const data=readFileSync(file.endsWith('.fbx')?file:join(input,file+'.fbx'));
  const group=new FBXLoader().parse(data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength),'');
  const clip=group.animations[0];if(!clip)throw new Error('No animation: '+name);
- const sourceRoot=group.getObjectByName('Bip001');
- const correction=new THREE.Quaternion().fromArray(targetRoot.rotation).multiply(sourceRoot.quaternion.clone().invert());
+ // FBX bone-local axes need a basis change, not a left-side pose correction.
+ // The root is already in world Y-up (or has the FBXLoader's Z-up group rotation).
+ // Convert its local axes on the RIGHT, preserving world-up spin and authored yaw.
+ const basis=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
+ const inverseBasis=basis.clone().invert();
  const tracks=[];
  for(const track of clip.tracks){
   const parsed=THREE.PropertyBinding.parseTrackName(track.name),bone=names.get(normalize(parsed.nodeName));
@@ -30,7 +32,7 @@ for(const [name,file]of Object.entries(sources)){
   const values=[];
   for(let i=0;i<track.values.length;i+=4){
    const q=new THREE.Quaternion().fromArray(track.values,i);
-   if(bone==='Bip001')q.premultiply(correction);else q.set(q.x,q.z,-q.y,q.w);
+   if(bone==='Bip001')q.premultiply(group.quaternion).multiply(inverseBasis);else q.premultiply(basis).multiply(inverseBasis);
    q.normalize();values.push(...q.toArray().map(v=>+v.toFixed(7)));
   }
   tracks.push({name:bone+'.quaternion',type:'quaternion',times:Array.from(track.times,v=>+v.toFixed(6)),values});

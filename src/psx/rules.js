@@ -2,7 +2,12 @@ export const ROUND_SECONDS=60;
 export const TAG_RADIUS=.9;
 export function createRound(playerRole='runner'){
   if(!['runner','chaser'].includes(playerRole))throw new Error('Unknown role');
-  return {remaining:ROUND_SECONDS,phase:'playing',winner:null,playerRole,actors:Array.from({length:4},(_,i)=>({id:i,role:(playerRole==='chaser'?i===0:i===1)?'chaser':'runner',caught:false,caughtTime:0,dash:0,cooldown:0,toolCooldown:0,effect:null,effectTime:0}))};
+  return {remaining:ROUND_SECONDS,phase:'playing',winner:null,playerRole,actors:Array.from({length:4},(_,i)=>({id:i,role:(playerRole==='chaser'?i===0:i===1)?'chaser':'runner',caught:false,caughtTime:0,dash:0,cooldown:0,toolCooldowns:[0,0],effect:null,effectTime:0}))};
+}
+export function activateTool(round,id,slot){
+ const actor=round.actors[id];
+ if(![0,1].includes(slot)||round.phase!=='playing'||!actor||actor.caught||actor.effectTime>0||actor.toolCooldowns[slot]>0)return false;
+ actor.toolCooldowns[slot]=8;return true;
 }
 export function dash(round,id){const a=round.actors[id];if(round.phase!=='playing'||!a||a.caught||a.cooldown>0||a.effectTime>0)return false;a.dash=.7;a.cooldown=5;return true;}
 export function tag(round,chaserId,runnerId,distance){
@@ -13,6 +18,6 @@ export function tag(round,chaserId,runnerId,distance){
 export function stepRound(round,dt){
   if(round.phase!=='playing')return;
   const step=Math.max(0,Math.min(dt,.1));round.remaining=Math.max(0,round.remaining-step);
-  for(const a of round.actors){a.dash=Math.max(0,a.dash-step);a.cooldown=Math.max(0,a.cooldown-step);a.toolCooldown=Math.max(0,a.toolCooldown-step);a.effectTime=Math.max(0,a.effectTime-step);if(a.caught)a.caughtTime+=step;}
+  for(const a of round.actors){a.dash=Math.max(0,a.dash-step);a.cooldown=Math.max(0,a.cooldown-step);a.toolCooldowns=a.toolCooldowns.map(t=>Math.max(0,t-step));a.effectTime=Math.max(0,a.effectTime-step);if(a.caught)a.caughtTime+=step;}
   if(round.remaining===0){round.phase='finished';round.winner='runner';}
 }

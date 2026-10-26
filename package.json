@@ -1,6 +1,6 @@
 {
   "name": "police-n-thief-web",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Local browser prototype based on Wonder Wave, using exported PSX assets.",
@@ -8,7 +8,7 @@
     "dev": "node tools/psx-serve.mjs",
     "dev:lan": "node tools/psx-serve.mjs --lan",
     "build": "node build/psx-web.mjs",
-    "check": "node --check src/psx/main.js && node --check src/psx/rules.js && node --check src/psx/animation.js && node --check src/psx/catalog.js && node --check tools/psx-serve.mjs && node --check tools/convert-character-animations.mjs && node --check tools/optimize-costumes.mjs && node --check build/psx-web.mjs",
+    "check": "node --check src/psx/main.js && node --check src/psx/rules.js && node --check src/psx/animation.js && node --check src/psx/catalog.js && node --check src/psx/loadout.js && node --check tools/psx-serve.mjs && node --check tools/convert-character-animations.mjs && node --check tools/optimize-costumes.mjs && node --check build/psx-web.mjs",
     "test": "node --test tests/psx/*.test.mjs"
   }
 }

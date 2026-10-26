@@ -49,7 +49,10 @@ if not unreal.Exporter.run_asset_export_task(task): raise RuntimeError('Police r
 for key,folder,mesh in [('boney','_cs_boneyM','sk_cs_boneyM'),('oyen','_cs_oyen','sk_cs_oyen'),('pingu','_cs_pingu','sk_cs_pingu'),('pumpkin','_cs_pumpking','sk_cs_pumpking'),('purple','_cs_purple','sk_cs_purple'),('racer','_cs_racer','sk_cs_racer'),('raptor','_cs_raptor','sk_cs_raptor')]:
     export_glb('/Game/Assets/3D/_char/_players/'+folder+'/'+mesh,'costumes/'+key)
 
-for source,name in [('/Game/_MyGame/Asset_UI/PNT_Logo','logo'),('/Game/_MyGame/Asset_UI/T_UI_HammerTime','hammer'),('/Game/_MyGame/Asset_UI/T_UI_BananaSkin','banana')]:
+(OUT/'portraits').mkdir(exist_ok=True)
+texture_exports=[('/Game/_MyGame/Asset_UI/PNT_Logo','logo'),('/Game/_MyGame/Asset_UI/T_UI_HammerTime','hammer'),('/Game/_MyGame/Asset_UI/T_UI_BananaSkin','banana'),('/Game/_MyGame/Asset_UI/T_UI_Jetpack','rocket')]
+texture_exports += [('/Game/_MyGame/Asset_UI/Costumes/'+name,'portraits/'+key) for key,name in [('thief','Costume_Thief'),('police','Costume_Police'),('oyen','Costume_Oyen'),('pingu','pingu_cap'),('pumpkin','pumpking_cap'),('boney','boneyM_cap'),('purple','arale_cap'),('racer','Costume_Racer'),('raptor','Costume_Raptor')]]
+for source,name in texture_exports:
     task=unreal.AssetExportTask()
     task.object=unreal.load_asset(source)
     task.filename=str(OUT/(name+'.png'))

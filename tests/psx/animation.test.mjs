@@ -25,3 +25,15 @@ test('all supplied action clips have changing rotations and bind to every costum
 test('animation priority keeps captured and stunned characters from running',()=>{
  assert.equal(animationFor({caught:false,role:'runner',effectTime:0},true,false),'thiefRun');assert.equal(animationFor({caught:false,role:'chaser',effectTime:0},true,false),'policeRun');assert.equal(animationFor({caught:false,role:'runner',effectTime:1,effect:'banana'},true,false),'banana');assert.equal(animationFor({caught:true,caughtTime:.1},true,true),'airStunned');assert.equal(animationFor({caught:true,caughtTime:2},true,false),'bustedIdle');
 });
+test('banana root spins around world up rather than flipping head over heels',()=>{
+ const track=clips.banana.tracks.find(t=>t.name==='Bip001.quaternion'),initial=new THREE.Quaternion().fromArray(track.values).invert();let biggestTurn=0;
+ for(let i=0;i<track.values.length;i+=4){const delta=new THREE.Quaternion().fromArray(track.values,i).multiply(initial);const vertical=new THREE.Vector3(0,1,0).applyQuaternion(delta);assert.ok(vertical.y>.999,'banana spin axis must remain vertical');biggestTurn=Math.max(biggestTurn,delta.angleTo(new THREE.Quaternion()));}
+ assert.ok(biggestTurn>3,'the authored spin must be preserved');
+});
+test('hammer begins facing the same way as idle, and returns without changing the actor heading',()=>{
+ const first=name=>new THREE.Quaternion().fromArray(clips[name].tracks.find(t=>t.name==='Bip001.quaternion').values);
+ assert.ok(first('idle').angleTo(first('hammer'))<.001);
+ const track=clips.hammer.tracks.find(t=>t.name==='Bip001.quaternion'),initial=first('hammer').invert();
+ for(let i=0;i<track.values.length;i+=4){const delta=new THREE.Quaternion().fromArray(track.values,i).multiply(initial);const forward=new THREE.Vector3(0,0,1).applyQuaternion(delta);assert.ok(Math.abs(forward.x)<.001,'hammer root must lean forward rather than turn sideways');}
+ const model=rig('thief.glb'),anim=makeAnimator(model,clips,'runner');anim.play('hammer',{fade:0,loop:false});anim.update(.2);anim.play('idle',{fade:0});anim.update(.001);assert.ok(model.quaternion.angleTo(new THREE.Quaternion())<.001);anim.dispose();
+});

@@ -16,14 +16,19 @@ Open http://localhost:8491. For a phone on the same Wi-Fi, run `npm run dev:lan`
 and use the printed LAN address. `Start Web Preview.cmd` also starts the LAN preview.
 
 Choose runner or chaser for a 60-second practice with three local bots.
-Desktop: WASD move, Shift dash, Space jump, E tool, Escape pause.
+Desktop: WASD move, Shift dash, Space jump, E slot 1, R slot 2, Escape pause.
 Phone: virtual stick and Jump, Dash and tool buttons. The match camera has a fixed
 orthographic top-down view; movement follows the screen directions.
 
-Tools equip immediately: hammer stuns nearby opponents, banana leaves a spin trap,
-and rocket launches into a short jet boost. Each has an eight-second cooldown.
-The Tools page also previews all twelve animation clips. Costumes load on selection
-and remain cached; the chosen costume and tool persist on this browser.
+The Tools page follows the Unreal layout: two equipped slots at the top, a catalog
+below left, and selected-tool details with Equip Slot 1/2 buttons below right.
+Selecting a catalog tool does not change equipment until a slot is chosen. Equipping
+an already-equipped tool into the other slot swaps the slots, preventing duplicates.
+Hammer stuns nearby opponents, banana leaves a spin trap, and rocket gives a jet boost.
+Each slot has its own eight-second cooldown. Old one-tool saves migrate automatically.
+Costumes use one shared portrait grid. Police, Thief and every other costume can be
+worn in either role; gameplay role determines the running animation, not the outfit.
+Costumes load on selection and remain cached. The costume and two-slot kit persist.
 Boot and match-start loading screens wait for assets and shader preparation.
 
 ## Validate and deploy
@@ -39,7 +44,7 @@ No environment variables or backend service are required for this prototype.
 
 ## Current limits
 
-Online multiplayer, Steam, full PSX capture/escape/rescue rules, equipment effects,
+Online multiplayer, Steam, full PSX capture/escape/rescue rules,
 the complete original tool systems, full stages, audio and progression are not ported yet.
 Bots use simple steering and ground sampling; collision/navigation needs further work.
 Touch layouts have browser checks, but actual iOS/Android performance is unmeasured.
@@ -62,7 +67,9 @@ from version control.
 GLB rigs. Police run uses the original `sk_chr_ch_runA` animation exported as FBX to
 `.local/police-run.fbx`. This export is required only to regenerate clips, not to build.
 The conversion rejects static clips. Bone-motion and per-costume binding tests guard
-against the previous frozen-pose run exports.
+against frozen-pose run exports. Root animation converts its local basis on the right,
+preserving world-up spin instead of turning it into end-over-end rotation. Regression
+tests check the banana spin axis, hammer's initial facing, and independent slot timers.
 
 `tools/optimize-costumes.mjs` caps embedded costume textures at 512px while preserving
 skin weights and animation bones. It requires the optional `sharp` package (or pass
