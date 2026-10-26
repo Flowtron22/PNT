@@ -32,6 +32,23 @@ export_glb('/Game/Assets/3D/_char/_players/_chaser/sk_ch_base','police')
 export_glb('/Game/Assets/3D/_char/_players/_anim/sk_chr_idleA','idle')
 export_glb('/Game/Assets/3D/_char/_players/_anim/sk_chr_rn_runA','run')
 
+# Keep a separate police-run FBX: the GLTF animation exporter produced frozen poses.
+# The offline converter reads original FBX keys and targets the GLB skeleton axes.
+(ROOT/'.local').mkdir(exist_ok=True)
+task=unreal.AssetExportTask()
+task.object=unreal.load_asset('/Game/Assets/3D/_char/_players/_anim/sk_chr_ch_runA')
+task.filename=str(ROOT/'.local/police-run.fbx')
+task.automated=True
+task.prompt=False
+task.replace_identical=True
+task.exporter=unreal.AnimSequenceExporterFBX()
+task.options=unreal.FbxExportOption()
+if not unreal.Exporter.run_asset_export_task(task): raise RuntimeError('Police run FBX export failed')
+
+(OUT/'costumes').mkdir(exist_ok=True)
+for key,folder,mesh in [('boney','_cs_boneyM','sk_cs_boneyM'),('oyen','_cs_oyen','sk_cs_oyen'),('pingu','_cs_pingu','sk_cs_pingu'),('pumpkin','_cs_pumpking','sk_cs_pumpking'),('purple','_cs_purple','sk_cs_purple'),('racer','_cs_racer','sk_cs_racer'),('raptor','_cs_raptor','sk_cs_raptor')]:
+    export_glb('/Game/Assets/3D/_char/_players/'+folder+'/'+mesh,'costumes/'+key)
+
 for source,name in [('/Game/_MyGame/Asset_UI/PNT_Logo','logo'),('/Game/_MyGame/Asset_UI/T_UI_HammerTime','hammer'),('/Game/_MyGame/Asset_UI/T_UI_BananaSkin','banana')]:
     task=unreal.AssetExportTask()
     task.object=unreal.load_asset(source)

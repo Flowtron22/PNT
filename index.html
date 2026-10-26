@@ -1,47 +1,29 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#09154b"><meta name="description" content="Police N Thief — a local browser chase prototype.">
-  <title>Police N Thief · Local Chase</title>
-  <link rel="preload" href="assets/fonts/TitanOne-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles/psx.css">
-  <script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.js","three/addons/":"./vendor/three/jsm/"}}</script>
-</head>
-<body>
-  <canvas id="world" aria-label="Mall chase arena"></canvas>
-  <div class="grain" aria-hidden="true"></div>
-  <div class="corner-label"><span class="live-dot"></span> LOCAL PRACTICE <span class="build">WEB 0.1</span></div>
-  <button id="fullscreen" class="icon-button" aria-label="Toggle fullscreen">⛶</button>
-  <main id="menu" class="screen">
-    <section class="menu-panel">
-      <img class="logo" src="assets/psx/logo.png" alt="Police N Thief">
-      <div class="eyebrow">ONE CHASER. THREE RUNNERS.</div>
-      <h1>Make your<br><span>great escape.</span></h1>
-      <p class="intro-copy">A little trouble. A lot of running.<br>Take your side and hit the Mall.</p>
-      <div class="role-picker" aria-label="Choose your role">
-        <button class="role selected" data-role="runner" aria-pressed="true"><span>01</span> RUNNER <small>Stay out of reach</small></button>
-        <button class="role" data-role="chaser" aria-pressed="false"><span>02</span> CHASER <small>Catch the whole crew</small></button>
-      </div>
-      <button id="play" class="play-button" disabled><span class="play-mark">▶</span><span id="play-label">GETTING READY…</span><span class="button-arrow">↗</span></button>
-      <div class="menu-links"><button id="how-button">HOW TO PLAY</button><button id="quality">GRAPHICS: BALANCED</button></div>
-      <div id="load-status" role="status">Getting the Mall ready…</div>
-    </section>
-    <aside class="arena-ticket"><span class="ticket-icon">✦</span><div><small>YOUR NEXT GETAWAY</small><strong>MALL</strong><span>60 seconds · 3 local bots</span></div><span class="ticket-corner">01 / 01</span></aside>
-    <div class="tape" aria-hidden="true">POLICE LINE DO NOT CROSS &nbsp; / &nbsp; POLICE LINE DO NOT CROSS</div>
-    <footer><span>A PSX WEB PROTOTYPE</span><a href="credits.html" target="_blank" rel="noopener">CREDITS ↗</a></footer>
-  </main>
-  <section id="hud" hidden aria-label="Match information">
-    <div class="hud-top"><div class="role-tag" id="role-label">RUNNER</div><div class="timer" id="timer">1:00</div><button id="pause-button" class="pause-button" aria-label="Pause match">Ⅱ</button></div>
-    <div id="crew-status" class="crew-status"></div>
-    <div id="toast" class="toast" role="status"></div>
-    <div class="control-guide">WASD MOVE &nbsp; · &nbsp; DRAG LOOK &nbsp; · &nbsp; SHIFT DASH &nbsp; · &nbsp; SPACE JUMP</div>
-    <div class="touch-controls"><div id="joystick" aria-label="Movement joystick"><div id="stick"></div></div><div class="touch-actions"><button id="jump" aria-label="Jump">JUMP</button><button id="dash" aria-label="Dash">DASH <small id="dash-status">READY</small></button></div><div class="look-hint">DRAG TO LOOK</div></div>
+<html lang="en"><head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="theme-color" content="#171329"><meta name="description" content="Police N Thief — pick your costume, grab a tool, and chase the crew.">
+ <title>Police N Thief</title><link rel="preload" href="assets/fonts/TitanOne-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="styles/psx.css">
+ <script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.js","three/addons/":"./vendor/three/jsm/"}}</script>
+</head><body>
+ <canvas id="world" aria-label="Mall chase arena and character preview"></canvas><div class="menu-backdrop" aria-hidden="true"></div>
+ <main id="menu" class="screen">
+  <img class="logo" src="assets/psx/logo.png" alt="Police N Thief">
+  <section id="home" class="home-left"><div class="eyebrow">A LITTLE TROUBLE. A LOT OF RUNNING.</div>
+   <nav class="main-nav" aria-label="Main menu">
+    <button class="nav-button hero" data-page="play"><i><img src="assets/psx/ui/play.png" alt=""></i><span>PLAY<small>One chaser. Three runners.</small></span><b>↗</b></button>
+    <button class="nav-button" data-page="tools"><i><img src="assets/psx/ui/swords.png" alt=""></i><span>TOOLS</span><b>›</b></button>
+    <button class="nav-button" data-page="costume"><i><img src="assets/psx/ui/hanger.png" alt=""></i><span>COSTUME</span><b>›</b></button>
+    <button class="nav-button" data-page="settings"><i><img src="assets/psx/ui/gear.png" alt=""></i><span>SETTING</span><b>›</b></button>
+    <button class="nav-button" data-page="credits"><i><img src="assets/psx/ui/star.png" alt=""></i><span>CREDIT</span><b>›</b></button>
+   </nav><p class="menu-hint"><span></span> Your next great escape starts here.</p>
   </section>
-  <section id="pause" class="dialog-screen" hidden><div class="dialog"><span class="eyebrow">TAKE A BREATHER</span><h2>Chase on hold.</h2><p>The clock is paused.</p><button id="resume" class="primary">KEEP RUNNING</button><button id="leave" class="secondary">BACK TO MENU</button></div></section>
-  <section id="results" class="dialog-screen" hidden><div class="dialog"><span id="result-eyebrow" class="eyebrow">ROUND OVER</span><h2 id="result-title">Nice escape.</h2><p id="result-copy"></p><button id="again" class="primary">ONE MORE CHASE</button><button id="result-menu" class="secondary">BACK TO MENU</button></div></section>
-  <section id="how" class="dialog-screen" hidden><div class="dialog how"><span class="eyebrow">THE PLAN IS SIMPLE</span><h2>Pick a side.<br>Cause trouble.</h2><p><b>Runner:</b> stay uncaught until the 60-second clock runs out. <b>Chaser:</b> tag all three runners before time is up.</p><p><b>Computer:</b> WASD to move, drag the scene to look, Shift to dash, Space to jump. <b>Phone:</b> left joystick to move, right side to look, and the Jump / Dash buttons.</p><p class="small-copy">This first practice uses local bots. Online matches, equipment and the full PSX rules are not part of this prototype yet.</p><button id="close-how" class="primary">GOT IT</button></div></section>
-  <div id="error" role="alert" hidden></div>
-  <script type="module" src="src/psx/main.js"></script>
-</body>
-</html>
+  <section id="page" class="page-panel" hidden><button id="page-back" class="back-button">← BACK</button><div id="page-kicker" class="eyebrow">MAKE IT YOURS</div><h1 id="page-title">TOOLS</h1><div id="page-content"></div></section>
+  <aside id="character-label" class="character-label"><span>READY FOR TROUBLE</span><strong id="costume-label">ORIGINAL</strong><small id="equipped-label">HAMMER EQUIPPED</small></aside>
+  <footer><span>WEB 0.2 · LOCAL PRACTICE</span><span id="footer-hint">CHOOSE YOUR NEXT MOVE</span></footer>
+ </main>
+ <section id="loading" class="loading-screen" aria-label="Loading game" aria-busy="true"><img src="assets/psx/logo.png" alt="Police N Thief"><div class="loading-inner"><span class="eyebrow">PACKING A LITTLE TROUBLE</span><h2 id="loading-title">GETTING READY</h2><div class="progress-track"><div id="load-progress"></div></div><div class="loading-meta"><span id="load-status" role="status">Loading character models…</span><b id="load-percent">0%</b></div><p id="loading-tip">A clean getaway starts with a good warm-up.</p><button id="retry" class="primary" hidden>TRY AGAIN</button></div></section>
+ <section id="hud" hidden aria-label="Match information"><div class="hud-top"><div class="role-tag" id="role-label">RUNNER</div><div class="timer" id="timer">1:00</div><button id="pause-button" aria-label="Pause match">Ⅱ</button></div><div id="crew-status" class="crew-status"></div><div id="toast" class="toast" role="status"></div><div class="control-guide">WASD MOVE · SHIFT DASH · SPACE JUMP · E TOOL</div><div class="touch-controls"><div id="joystick" aria-label="Movement joystick"><div id="stick"></div></div></div><div class="actions"><button id="jump">JUMP <small>SPACE</small></button><button id="dash">DASH <small id="dash-status">SHIFT</small></button><button id="tool-action"><span id="tool-action-label">SMASH</span><small id="tool-status">E</small></button></div></section>
+ <section id="pause" class="dialog-screen" hidden><div class="dialog"><span class="eyebrow">TAKE A BREATHER</span><h2>Chase on hold.</h2><p>The clock is paused.</p><button id="resume" class="primary">KEEP RUNNING</button><button id="leave" class="secondary">BACK TO MENU</button></div></section>
+ <section id="results" class="dialog-screen" hidden><div class="dialog"><span id="result-eyebrow" class="eyebrow">ROUND OVER</span><h2 id="result-title">Nice escape.</h2><p id="result-copy"></p><button id="again" class="primary">ONE MORE CHASE</button><button id="result-menu" class="secondary">BACK TO MENU</button></div></section>
+ <div id="error" role="alert" hidden></div><script type="module" src="src/psx/main.js"></script>
+</body></html>

@@ -4,10 +4,10 @@ import {fileURLToPath} from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),out=resolve(root,'dist');
 const inputs=['index.html','styles/psx.css','src/psx','src/ui/ui-util.js','assets/psx','assets/fonts','vendor/three','LICENSE'];
 for(const path of inputs)if(!existsSync(join(root,path)))throw new Error(`Missing input: ${path}`);
-for(const name of ['thief.glb','police.glb','idle.glb','run.glb','mall-slice.glb','logo.png'])if(!existsSync(join(root,'assets/psx',name)))throw new Error(`Export missing: ${name}`);
+for(const name of ['thief.glb','police.glb','mall-slice.glb','logo.png','animations/clips.json',...['oyen','pingu','pumpkin','boney','purple','racer','raptor'].map(n=>`costumes/${n}.glb`)])if(!existsSync(join(root,'assets/psx',name)))throw new Error(`Export missing: ${name}`);
 if(out!==join(root,'dist'))throw new Error('Unsafe output path');
 rmSync(out,{recursive:true,force:true});mkdirSync(out,{recursive:true});
-for(const path of inputs){const target=join(out,path);mkdirSync(dirname(target),{recursive:true});cpSync(join(root,path),target,{recursive:true,filter:source=>!source.endsWith('asset-manifest.json')});}
+for(const path of inputs){const target=join(out,path);mkdirSync(dirname(target),{recursive:true});cpSync(join(root,path),target,{recursive:true,filter:source=>!source.endsWith('asset-manifest.json')&&!['idle.glb','run.glb'].includes(source.split(/[\\/]/).at(-1))});}
 const esc=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;');
 let notices=readFileSync(join(root,'LICENSE'),'utf8');
 const three=join(root,'vendor/three/LICENSE');if(existsSync(three))notices+='\n\nTHREE.JS\n'+readFileSync(three,'utf8');
