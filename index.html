@@ -5,7 +5,7 @@
  <title>Police N Thief</title><link rel="preload" href="assets/fonts/TitanOne-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="styles/psx.css">
  <script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.js","three/addons/":"./vendor/three/jsm/"}}</script>
 </head><body>
- <canvas id="world" aria-label="Mall chase arena and character preview"></canvas><div class="menu-backdrop" aria-hidden="true"></div>
+ <canvas id="world" aria-label="Mall chase arena and character preview"></canvas><div class="menu-backdrop" aria-hidden="true"></div><div id="lobby-backdrop" class="lobby-backdrop" hidden aria-hidden="true"></div>
  <main id="menu" class="screen">
   <img class="logo" src="assets/psx/logo.png" alt="Police N Thief">
   <section id="home" class="home-left"><div class="eyebrow">A LITTLE TROUBLE. A LOT OF RUNNING.</div>
@@ -19,8 +19,9 @@
   </section>
   <section id="page" class="page-panel" hidden><button id="page-back" class="back-button">← BACK</button><div id="page-kicker" class="eyebrow">MAKE IT YOURS</div><h1 id="page-title">TOOLS</h1><div id="page-content"></div></section>
   <aside id="character-label" class="character-label"><span>READY FOR TROUBLE</span><strong id="costume-label">ORIGINAL</strong><small id="equipped-label">HAMMER EQUIPPED</small></aside>
-  <footer><span>WEB 0.3 · LOCAL PRACTICE</span><span id="footer-hint">CHOOSE YOUR NEXT MOVE</span></footer>
+  <footer><span>WEB 0.4 · LOCAL PRACTICE</span><span id="footer-hint">CHOOSE YOUR NEXT MOVE</span></footer>
  </main>
+ <section id="lobby" class="lobby-screen" hidden aria-label="Matchmaking lobby"></section>
  <section id="loading" class="loading-screen" aria-label="Loading game" aria-busy="true"><img src="assets/psx/logo.png" alt="Police N Thief"><div class="loading-inner"><span class="eyebrow">PACKING A LITTLE TROUBLE</span><h2 id="loading-title">GETTING READY</h2><div class="progress-track"><div id="load-progress"></div></div><div class="loading-meta"><span id="load-status" role="status">Loading character models…</span><b id="load-percent">0%</b></div><p id="loading-tip">A clean getaway starts with a good warm-up.</p><button id="retry" class="primary" hidden>TRY AGAIN</button></div></section>
  <section id="hud" hidden aria-label="Match information"><div class="hud-top"><div class="role-tag" id="role-label">RUNNER</div><div class="timer" id="timer">1:00</div><button id="pause-button" aria-label="Pause match">Ⅱ</button></div><div id="crew-status" class="crew-status"></div><div id="toast" class="toast" role="status"></div><div class="control-guide">WASD MOVE · SHIFT DASH · SPACE JUMP · E / R TOOLS</div><div class="touch-controls"><div id="joystick" aria-label="Movement joystick"><div id="stick"></div></div></div><div class="actions"><button id="jump">JUMP <small>SPACE</small></button><button id="dash">DASH <small id="dash-status">SHIFT</small></button><button id="tool-action1" class="tool-action"><span id="tool-action-label1">SMASH</span><small id="tool-status1">E</small></button><button id="tool-action2" class="tool-action"><span id="tool-action-label2">DROP</span><small id="tool-status2">R</small></button></div></section>
  <section id="pause" class="dialog-screen" hidden><div class="dialog"><span class="eyebrow">TAKE A BREATHER</span><h2>Chase on hold.</h2><p>The clock is paused.</p><button id="resume" class="primary">KEEP RUNNING</button><button id="leave" class="secondary">BACK TO MENU</button></div></section>

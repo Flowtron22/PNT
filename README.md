@@ -31,6 +31,20 @@ worn in either role; gameplay role determines the running animation, not the out
 Costumes load on selection and remain cached. The costume and two-slot kit persist.
 Boot and match-start loading screens wait for assets and shader preparation.
 
+## PLAY and lobby flow
+
+PLAY opens Host / Join, following the Unreal HostJoin screen. Join opens public
+matchmaking and six-character room-code choices. Online search/join is not connected;
+these controls validate input and report that limitation without creating fake rooms.
+
+Host opens a local practice lobby. Add three bots to fill the four podiums, browse
+the map cards, change role preference, or edit tools/costumes and return to the same
+room. Start Match requires four players and the playable Mall stage, then runs a
+cancelable three-second countdown and loads the chase. Sunken and Iceberg are artwork
+previews, with launching disabled until their web stages exist. The lobby's bot
+costumes, your kit and costume, and your role preference carry into the match.
+Room settings explain that this room is on this device; no joinable code is fabricated.
+
 ## Validate and deploy
 
 ```powershell
@@ -75,3 +89,7 @@ tests check the banana spin axis, hammer's initial facing, and independent slot 
 skin weights and animation bones. It requires the optional `sharp` package (or pass
 its module path as the first argument). These prepared assets are checked in;
 Vercel needs no FBX converter, image processor, or Unreal installation.
+
+`tools/prepare-lobby-assets.mjs` creates compact WebP copies of the original Unreal
+map thumbnails and copies its Host/Join icons. Pass the PSXWonderUI `Resources`
+directory and, optionally, a `sharp` module path. Prepared assets are checked in.
