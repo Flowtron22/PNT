@@ -13,9 +13,20 @@ export class MatchSimulation {
  constructor(map,players,data){
   this.map=map;this.players=players;this.data=data;this.grid=data.grid;this.root=new THREE.Group();this.physics=null;this.round=createRound('runner',data.metadata.caches);this.round.profileId=randomUUID();this.time=0;this.tick=0;this.eventId=0;this.hazardId=0;this.events=[];this.hazards=[];
   const preferred=players.map((p,i)=>p.preference==='chaser'?i:-1).filter(i=>i>=0),neutral=players.map((p,i)=>p.preference!=='runner'?i:-1).filter(i=>i>=0),pool=preferred.length?preferred:neutral.length?neutral:[0,1,2,3],cop=pool[randomInt(pool.length)];
-  this.actors=players.map((player,id)=>{this.round.actors[id].role=id===cop?'chaser':'runner';const group=new THREE.Group(),spawn=data.metadata.spawns[id];group.position.copy(groundSpot(this.grid,spawn[0],spawn[2]));return {id,group,spawn:group.position.clone(),tools:player.loadout,grounded:true,vx:0,vz:0,velocity:0,speed:0,input:{seq:0,x:0,z:0,interact:false},lastInput:0,mark:null};});
+  this.actors=players.map((player,id)=>{this.round.actors[id].role=id===cop?'chaser':'runner';const group=new THREE.Group(),spawn=data.metadata.spawns[id];group.position.copy(groundSpot(this.grid,spawn[0],spawn[2]));return {id,group,spawn:group.position.clone(),tools:player.loadout,grounded:true,vx:0,vz:0,velocity:0,speed:0,input:{seq:0,x:0,z:0,interact:false},lastInput:0,inputQueue:[],framed:false,processedInput:0,mark:null};});
  }
- input(id,message){const actor=this.actors[id];if(!actor||!Number.isSafeInteger(message.seq)||message.seq<=actor.input.seq||!Number.isFinite(message.x)||!Number.isFinite(message.z))return false;const x=Math.max(-1,Math.min(1,message.x)),z=Math.max(-1,Math.min(1,message.z));actor.input={seq:message.seq,x,z,interact:message.interact===true};actor.lastInput=this.time;return true;}
+ input(id,message){
+  const actor=this.actors[id];if(!actor||!message||typeof message!=='object')return false;
+  if(Array.isArray(message.frames)){
+   if(!message.frames.length||message.frames.length>12||actor.inputQueue.length+message.frames.length>120)return false;
+   let last=actor.input.seq;const frames=[];
+   for(const frame of message.frames){if(!frame||!Number.isSafeInteger(frame.seq)||!Number.isFinite(frame.x)||!Number.isFinite(frame.z))return false;if(frame.seq<=last)continue;last=frame.seq;frames.push({seq:last,x:Math.max(-1,Math.min(1,frame.x)),z:Math.max(-1,Math.min(1,frame.z)),interact:frame.interact===true});}
+   if(!frames.length)return false;actor.framed=true;actor.input=frames.at(-1);actor.inputQueue.push(...frames);actor.lastInput=this.time;return true;
+  }
+  if(actor.framed||!Number.isSafeInteger(message.seq)||message.seq<=actor.input.seq||!Number.isFinite(message.x)||!Number.isFinite(message.z))return false;
+  actor.input={seq:message.seq,x:Math.max(-1,Math.min(1,message.x)),z:Math.max(-1,Math.min(1,message.z)),interact:message.interact===true};actor.lastInput=this.time;return true;
+ }
+
  event(type,values){this.events.push({id:++this.eventId,type,...values});if(this.events.length>64)this.events.shift();}
  sight(p,q,smoke=true,stop=.35){
   if(smoke)for(const h of this.hazards){if(h.type!=='smoke'||h.time<=0)continue;const from=p.clone().add(new THREE.Vector3(0,.65,0)),delta=q.clone().sub(p),length=delta.lengthSq(),t=length?Math.max(0,Math.min(1,h.position.clone().sub(p).dot(delta)/length)):0;if(from.addScaledVector(delta,t).distanceTo(h.position.clone().add(new THREE.Vector3(0,.65,0)))<2.6)return false;}
@@ -56,7 +67,7 @@ export class MatchSimulation {
  }
  step(dt=1/60){
   if(this.round.phase!=='playing')return;this.time+=dt;this.tick++;stepRound(this.round,dt);const tilt=this.map==='sunken'?shipTilt(this.time):0,wishes=[];
-  for(const actor of this.actors){const state=this.round.actors[actor.id];state.interacting=false;let input=this.players[actor.id].bot?this.botInput(actor,dt):this.time-actor.lastInput<.4?actor.input:{x:0,z:0,interact:false};let {x,z}=input;
+  for(const actor of this.actors){const state=this.round.actors[actor.id];state.interacting=false;let input=this.players[actor.id].bot?this.botInput(actor,dt):actor.framed?(actor.inputQueue.shift()||{x:0,z:0,interact:false}):this.time-actor.lastInput<.4?actor.input:{x:0,z:0,interact:false};if(input.seq)actor.processedInput=input.seq;let {x,z}=input;
    if(state.caught){x=z=0;actor.mark=null;for(const h of this.hazards)if(h.owner===actor.id&&h.type==='marker')h.time=0;}
    if(state.effect==='banana'&&state.effectTime>0){state.spinTurn-=dt;if(state.spinTurn<=0){state.spinDirection=rollSpinDirection();state.spinTurn=.35;}x=state.spinDirection.x;z=state.spinDirection.z;}
    const flying=state.effect==='rocket'&&state.effectTime>0;if(flying&&Math.hypot(x,z)<.1){x=Math.sin(actor.group.rotation.y);z=Math.cos(actor.group.rotation.y);}
@@ -68,6 +79,6 @@ export class MatchSimulation {
   const cop=this.actors.find(a=>this.round.actors[a.id].role==='chaser');for(const state of this.round.actors.filter(a=>a.role==='runner')){const p=cop.group.position,q=this.actors[state.id].group.position;if(detectThief(this.round,cop.id,state.id,dt,Math.hypot(p.x-q.x,p.z-q.z),this.time>1.5&&Math.abs(p.y-q.y)<.8&&this.sight(p,q))){this.event('capture',{actor:state.id,position:q.toArray()});this.actors[state.id].mark=null;}}
   for(const cache of this.round.caches)cache.harvester=null;for(const wish of wishes){const target=wish.wants?this.interaction(wish.id):null,actor=this.actors[wish.id],key=target?`${target.type}:${target.id}`:null;if(actor.interactionKey!==key||!target)cancelInteraction(this.round,wish.id);actor.interactionKey=key;if(target?.type==='cache')harvest(this.round,wish.id,target.id,dt,target.d);if(target?.type==='rescue')rescue(this.round,wish.id,target.id,dt,target.d);}
  }
- snapshot(){return {tick:this.tick,time:this.time,map:this.map,round:this.round,poses:this.actors.map(a=>({id:a.id,position:a.group.position.toArray(),angle:a.group.rotation.y,vx:a.vx,vz:a.vz,slideX:a.slideX||0,velocity:a.velocity,grounded:a.grounded,speed:a.speed,ack:a.input.seq})),hazards:this.hazards.map(h=>({...h,position:h.position.toArray(),time:Number.isFinite(h.time)?h.time:-1})),furniture:this.physics?.furniture.map(f=>({name:f.mesh.name,position:f.mesh.position.toArray(),rotation:f.mesh.quaternion.toArray()}))||[],events:this.events};}
+ snapshot(){return {inputFrames:true,tick:this.tick,time:this.time,map:this.map,round:this.round,poses:this.actors.map(a=>({id:a.id,position:a.group.position.toArray(),angle:a.group.rotation.y,vx:a.vx,vz:a.vz,slideX:a.slideX||0,velocity:a.velocity,grounded:a.grounded,speed:a.speed,ack:a.processedInput,received:a.input.seq})),hazards:this.hazards.map(h=>({...h,position:h.position.toArray(),time:Number.isFinite(h.time)?h.time:-1})),furniture:this.physics?.furniture.map(f=>({name:f.mesh.name,position:f.mesh.position.toArray(),rotation:f.mesh.quaternion.toArray()}))||[],events:this.events};}
  dispose(){this.physics?.dispose();this.physics=null;}
 }

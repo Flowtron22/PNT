@@ -1,6 +1,6 @@
 # Multiplayer prototype — local and online testing
 
-Version 0.9.10. Colyseus 0.18 server, JavaScript browser SDK. The user authorized
+Version 0.9.11. Colyseus 0.18 server, JavaScript browser SDK. The user authorized
 a free online test on Render after the local test. No paid upgrade is authorized.
 
 ## Online hosting
@@ -52,9 +52,22 @@ starts that website alone with vendored browser dependencies.
 - Fixed 60 Hz authoritative movement, collision, bot decisions, tools, cooldowns,
   cash, rescue, 1.6-second police detection, round timer and winner.
 - Shared movement implementation in `src/pnt/player-motion.js` for local practice,
-  server simulation and browser prediction. Local-player prediction with bounded
-  correction; interpolation of remote players and furniture. This is an initial
-  implementation, not complete input-history rollback/lag compensation.
+  server simulation and browser prediction. `src/pnt/netcode.js` predicts at 60 Hz
+  independently of render FPS, retains unacknowledged inputs, rewinds to server
+  poses and replays pending inputs. Visual corrections decay separately from the
+  simulation, avoiding packet-by-packet pulls toward an old server position.
+- Inputs are batched at approximately 20 Hz (up to 12 frames per message). The
+  server consumes at most one frame per tick and acknowledges only consumed
+  frames; clients cannot increase movement speed by supplying more commands.
+  Legacy intent messages remain supported for older browser tabs. Snapshots
+  advertise `inputFrames` so a new browser can fall back against an older server.
+- Remote players and furniture render from a 100 ms server-time snapshot buffer,
+  with a gently adjusted playback clock and at most 100 ms extrapolation during
+  short gaps. Teleports snap. Inputs/queues/history are bounded; reconnecting
+  discards stale prediction and resumes after the server's last received sequence.
+- This does not implement server rewind for latency-compensated tool hits or
+  capture. Mall furniture physics stays authoritative; client prediction does not
+  simulate furniture contacts and those corrections are smoothed visually.
 - Map effects: original Iceberg slip with its latest movement/animation tuning,
   Sunken tilt/sliding, and server-simulated Mall furniture. Only the server runs
   online furniture physics; browsers render its poses.
@@ -99,13 +112,16 @@ npm run test:multiplayer
 npm run build
 ```
 
-The root suite has 85 tests; the server suite has six tests, including four real
+The root suite has 90 tests; the server suite has eight tests, including four real
 SDK clients joining over HTTP/WebSocket, capacity, host permissions, readiness,
 shared state, cooldown enforcement, reconnect, end/rematch/map switch, public/private
 isolation, timed capture, input validation, stealing, rescue and Mall furniture.
 Two browser clients completed a shared Mall match with matching clock/cash totals
 and correct separate victory/defeat results. Tests use loopback, not cellular
 latency or a production load. Real phone testing and internet-latency tuning remain.
+The 0.9.11 tests also cover replay under 200 ms round-trip delay plus jitter,
+smooth buffered motion with uneven 20 Hz arrivals, fixed movement at 30/60/144
+render FPS, bounded extrapolation, teleports and server frame-consumption limits.
 
 On 27 October 2026, four real SDK clients also passed a hosted Render smoke test:
 private room joining, shared Mall match, all 15 furniture poses, acknowledged

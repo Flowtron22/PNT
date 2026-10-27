@@ -21,6 +21,7 @@ export class MultiplayerConnection {
  }
  send(type,data){if(this.room&&!this.closed&&this.room.connection.isOpen)this.room.send(type,data);}
  input(x,z,interact,now=performance.now(),force=false){if(!force&&now-this.lastSend<50)return;this.lastSend=now;this.send('input',{seq:++this.sequence,x,z,interact});}
+ flushPrediction(prediction,now=performance.now()){if(now-this.lastSend<50||!this.room?.connection.isOpen)return;const frames=prediction.outgoing();if(!frames.length)return;this.lastSend=now;this.send('input',{frames});}
  control(action,direction){this.send('control',{action,direction});}
  leave(){this.closed=true;this.room?.leave();this.room=null;}
 }

@@ -31,7 +31,7 @@ export class GameRoom extends Room {
   else{this.players.splice(index,1);if(this.phase==='countdown')this.control('cancel');if(this.phase==='loading')this.abortLoading('A player left before the match was ready.');}
   if(this.host===client.sessionId)this.host=this.players.find(p=>!p.bot)?.sessionId||null;this.sendLobby();
  }
- clearInput(client){const id=this.players.findIndex(p=>p.sessionId===client.sessionId);if(this.sim?.actors[id])this.sim.actors[id].input={...this.sim.actors[id].input,x:0,z:0,interact:false};}
+ clearInput(client){const id=this.players.findIndex(p=>p.sessionId===client.sessionId);if(this.sim?.actors[id])this.sim.actors[id].input={...this.sim.actors[id].input,x:0,z:0,interact:false};if(this.sim?.actors[id])this.sim.actors[id].inputQueue.length=0;}
  info(){return {code:this.roomId,mode:'online',public:this.public,phase:this.phase,map:this.map,host:this.host,countdown:this.countdown,players:this.players,match:this.phase==='loading'?this.sim?.snapshot():undefined};}
  sendLobby(client){const info=this.info();if(client)client.send('lobby',info);else this.broadcast('lobby',info);}
  control(action,direction){

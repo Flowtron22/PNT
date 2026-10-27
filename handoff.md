@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 27 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.10**, online multiplayer test release.
+Current app version: **0.9.11**, online multiplayer test release.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -17,6 +17,13 @@ returning after 22 seconds away. Reconnection now broadcasts the restored roster
 to every client. Render is a public-repository service: if it does not auto-deploy,
 use Manual Deploy → Deploy latest commit on its dashboard. Browser control was
 disabled in Work settings during the 0.9.10 fix; verify the server deploy separately.
+0.9.11 replaces packet-by-packet local position pulls with fixed 60 Hz prediction,
+acknowledged-input replay and separate visual correction smoothing. Remote actors
+and Mall furniture use a 100 ms server-time snapshot buffer. Server input batches
+consume one frame per tick, with processed/received sequence acknowledgements.
+New clients retain compatibility with older servers via the `inputFrames` flag.
+See `src/pnt/netcode.js` and `docs/MULTIPLAYER.md`. Tests cover 200 ms RTT + jitter,
+30/60/144 FPS, bounded queues/extrapolation, teleports and reconnect sequence reset.
 See `docs/MULTIPLAYER.md`. Colyseus server and LAN launcher are implemented;
 use `npm run dev:online`, with website port 8491 and game-server port 2567.
 
@@ -201,7 +208,7 @@ desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw
 
 ## Verification and remaining concerns
 
-- Multiplayer 0.9.10: 84 root tests plus five server tests pass. Four real SDK
+- Multiplayer 0.9.11: 84 root tests plus five server tests pass. Four real SDK
   clients cover rooms, permissions, readiness, shared state, reconnect, rematch,
   public/private isolation, capture, tools, stealing/rescue and Mall physics.
   Two browser clients completed a shared Mall match with correct per-player

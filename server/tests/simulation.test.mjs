@@ -2,7 +2,32 @@ import test from 'node:test';import assert from 'node:assert/strict';import {reg
 registerHooks({resolve(s,c,next){return s==='three'?{url:new URL('../../vendor/three/build/three.module.js',import.meta.url).href,shortCircuit:true}:next(s,c);}});
 const {MatchSimulation}=await import('../simulation.mjs');
 const {groundSpot}=await import('../arena.mjs');
+const {LocalPrediction}=await import('../../src/pnt/netcode.js');
 const players=()=>Array.from({length:4},(_,i)=>({sessionId:`player${i}`,name:`Player ${i}`,costume:'thief',preference:i===0?'chaser':'runner',loadout:['hammer','rocket'],bot:false}));
+
+test('batched input acknowledges simulated frames only and cannot accelerate the authoritative clock',async()=>{
+ const sim=await MatchSimulation.create('sunken',players());try{
+  const frames=Array.from({length:6},(_,i)=>({seq:i+1,x:1,z:0,interact:false}));assert.equal(sim.input(0,{frames}),true);
+  assert.equal(sim.snapshot().poses[0].ack,0);sim.step();assert.equal(sim.snapshot().poses[0].ack,1);assert.equal(sim.actors[0].inputQueue.length,5);
+  assert.equal(sim.input(0,{frames}),false);assert.equal(sim.input(0,{frames:[{seq:7,x:NaN,z:0}]}),false);assert.equal(sim.input(0,{frames:Array(13).fill({seq:7,x:1,z:0})}),false);
+  for(let i=0;i<5;i++)sim.step();assert.equal(sim.snapshot().poses[0].ack,6);sim.step();assert.equal(sim.snapshot().poses[0].ack,6);assert.equal(sim.tick,7);assert.ok(Math.abs(sim.time-7/60)<1e-8);
+  assert.equal(sim.input(0,{seq:8,x:1,z:0}),false);assert.equal(sim.snapshot().inputFrames,true);
+ }finally{sim.dispose();}
+});
+test('prediction and authoritative movement stay smooth with 200ms round trips and packet jitter',()=>{
+ const grid={minX:-50,minZ:-50,nx:101,nz:101,step:1,heights:Array(10201).fill(0),blocked:new Uint8Array(10201)},sim=new MatchSimulation('iceberg',players(),{grid,metadata:{spawns:[[30,0,30],[0,0,0],[-30,0,30],[-30,0,-30]],caches:[{id:'cash',position:[35,0,-35],amount:8000}]}});
+ const initial=sim.snapshot(),prediction=new LocalPrediction(sim.actors[1],initial.poses[1],initial.round.actors[1],0,{grid,map:'iceberg'}),inputs=[],snapshots=[];let previous=0,maxReverse=0,maxJump=0;
+ try{for(let frame=0;frame<720;frame++){
+  prediction.advance(1/120,{x:frame<360?1:0,z:0});
+  if(frame%6===0){const frames=prediction.outgoing();if(frames.length)inputs.push({at:frame+12+[0,4,2,6][frame/6%4],frames});}
+  inputs.sort((a,b)=>a.at-b.at);while(inputs.length&&inputs[0].at<=frame)sim.input(1,{frames:inputs.shift().frames});
+  if(frame%2===0){sim.step();if(frame%6===0)snapshots.push({at:frame+12+[2,6,0,4][frame/6%4],snapshot:structuredClone(sim.snapshot())});}
+  snapshots.sort((a,b)=>a.at-b.at);while(snapshots.length&&snapshots[0].at<=frame){const s=snapshots.shift().snapshot;prediction.reconcile(s.poses[1],s.round.actors[1],s.time);}
+  const x=prediction.render().position.x;maxReverse=Math.max(maxReverse,previous-x);maxJump=Math.max(maxJump,x-previous);previous=x;
+ }
+ assert.ok(maxReverse<.005,`backward correction ${maxReverse}`);assert.ok(maxJump<.08,`frame jump ${maxJump}`);assert.ok(Math.abs(prediction.actor.group.position.x-sim.actors[1].group.position.x)<.05);assert.ok(prediction.pending.length<30);
+ }finally{sim.dispose();}
+});
 test('server capture requires continuous 1.6-second detection, and escape resets it',async()=>{
  const sim=await MatchSimulation.create('iceberg',players());try{sim.time=2;sim.actors[1].group.position.copy(sim.actors[0].group.position);for(let i=0;i<60;i++)sim.step();assert.equal(sim.round.actors[1].caught,false);assert.ok(sim.round.actors[1].detectionProgress>.9);sim.actors[1].group.position.copy(sim.actors[2].group.position);sim.step();assert.equal(sim.round.actors[1].detectionProgress,0);sim.actors[1].group.position.copy(sim.actors[0].group.position);for(let i=0;i<96;i++)sim.step();assert.equal(sim.round.actors[1].caught,true);assert.ok(sim.events.some(e=>e.type==='capture'&&e.actor===1));}finally{sim.dispose();}
 });
