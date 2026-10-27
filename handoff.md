@@ -38,6 +38,14 @@ at original dimensions; the preview URL is versioned to avoid stale asset caches
 
 ## Continue here
 
+Mobile movement now accepts touch starts anywhere on the left half of the active
+match. A floating joystick centers on that touch, starts neutral, then follows
+the owning finger across either half until release/cancel. UI buttons are excluded
+and right-hand actions keep independent pointer ownership. Release/pause restores
+the original joystick location; mouse controls stay fixed. Main isActive also
+blocks input during the start countdown and portrait overlay. Tests cover large
+touch zone, boundaries, button exclusion, multitouch, cancellation and restoration.
+
 Android install fix: manifest was missing its `icons` array. Added square 192/512
 PNG exports of the user's thief head (white padding, aspect ratio preserved),
 plus square touch icon. Generate using `tools/prepare-app-icons.ps1`. HTTPS,
