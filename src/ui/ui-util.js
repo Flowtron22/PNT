@@ -192,9 +192,9 @@ export function splatShape(cx, cy, r, { arms = 9, seed = 7, armLen = 0.42, drops
 }
 /** Five-point selection star, retaining the caller's existing colour and size. */
 export function starSVG({ cls = 'iw-fa', fill = null, viewBox = 200, r = 58, extra = '' } = {}) {
-  const c = viewBox / 2, outer = r * 1.4, inner = outer * .46;
+  const c = viewBox / 2, outer = r * 1.4 * 1.3, inner = outer * .46;
   const points = Array.from({ length: 10 }, (_, i) => {
-    const angle = -Math.PI / 2 + i * Math.PI / 5, radius = i % 2 ? inner : outer;
+    const angle = -Math.PI / 2 - Math.PI / 12 + i * Math.PI / 5, radius = i % 2 ? inner : outer;
     return [f1(c + Math.cos(angle) * radius), f1(c + Math.sin(angle) * radius)];
   });
   const fa = fill ? `fill="${fill}"` : `class="${cls}"`;

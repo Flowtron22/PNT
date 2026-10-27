@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 27 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.12**, online multiplayer test release.
+Current app version: **0.9.13**, online multiplayer test release.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -31,6 +31,10 @@ use `npm run dev:online`, with website port 8491 and game-server port 2567.
 colors and selection animations. Tools, costumes, profile portrait decoration
 and results title use the shared `starSVG` helper. Multiplayer tuning is deferred
 per the latest user instruction; server stays on 0.9.11.
+
+0.9.13 enlarges shared stars by another 30% and tilts them 15 degrees left.
+Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
+at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
 
