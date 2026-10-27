@@ -134,3 +134,11 @@ Version 0.7.1 adds another 10% camera framing, +15% Mall exposure, and an alpha
 WebGL character portrait on results. Native Unreal Pawn capsule collision is sampled
 into per-cell occupancy and swept edge masks for all three maps. Movement and bot
 routes share those blockers, including invisible Unreal blocking volumes.
+
+Version 0.8.0 fixes rocket steering while airborne and rotates the tool model 90°
+about its vertical axis. Banana slips force randomized movement while spinning.
+Capture locks a thief in opaque swirling smoke for one second before applying the
+caught state. The same varied sphere shapes form smoke bombs and spaced run trails
+(roughly one cluster per 0.85m). Every match ends with an in-stage Victory/Defeat
+stamp, then a fade into results. Menu backgrounds reuse the lobby art and gradient;
+map geometry is hidden while browsing the menu.

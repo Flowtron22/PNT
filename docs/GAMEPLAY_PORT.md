@@ -89,3 +89,24 @@ scene exposure is multiplied by 1.15 and restored when leaving Mall.
 
 52 automated tests and the Unreal protected-file baseline pass. Browser verification
 is unavailable while local browser use is disabled in Work settings.
+
+## Version 0.8.0 tool and transition changes
+
+- Rocket movement checks ground-level navigation clearance independently from its
+  airborne visual height. Its model receives a 90° yaw offset. Native blockers
+  remain enforced.
+- Banana slips apply a random unit movement direction and reroll periodically or
+  when blocked, for the existing two-second spin duration.
+- Contact now starts a one-second capture lock/smoke sequence. The thief cannot
+  move, use tools or harvest during that time; caught state and release cooldown
+  begin after it finishes. Capturing the last thief only ends the match then.
+- Opaque, varied sphere clusters provide the smoke bomb, capture and run effects.
+  Run clusters are distance-spaced by 0.85m. Capture smoke rotates rapidly with
+  randomized initial orientation and angular speeds, then shrinks away.
+- All win conditions show a stage verdict first. The fade begins at 1.7s; the
+  results screen follows at 2.4s. Outcome audio plays once, during the stage reveal.
+- The menu uses the lobby backdrop with its existing gradient overlay. The 3D
+  character preview remains; map and floor geometry are hidden in the menu.
+
+58 automated tests pass. Visual browser verification remains unavailable because
+local browser access is disabled in Work settings.
