@@ -1,9 +1,14 @@
 # Police N Thief web prototype — handoff
 
 Updated: 27 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.7**. Code baseline before this document: `6ace5d1` on `main`.
+Current app version: **0.9.8**. Environment implementation follows code baseline `6ebac15` on `main`.
 
 ## Continue here
+
+Environment reference inspected on this workstation: Unreal checkout
+`F:\PROJECTS\PS_3D\GitHub\PSX`. See `docs/ENVIRONMENT_PORT.md` for verified
+ship tilt/push, Iceberg friction, Mall furniture settings and proposed optimized
+browser adaptation and the implemented 0.9.8 mechanics.
 
 This is the browser prototype, not the original Unreal project. Continue editing
 this repository. Do not recreate the game or switch to the Unreal checkout.
@@ -179,6 +184,12 @@ desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw
 
 ## Verification and remaining concerns
 
+- Version 0.9.8: syntax checks, **81 tests**, and production build passed. Desktop
+  browser sessions covered Mall pushing/tumbling, Sunken rocking and Iceberg
+  movement, plus map/menu transitions, without logged runtime errors. Real phone
+  frame rate and final movement feel still need device review. Mall navigation and
+  collision requests use an environment-version query to bypass old cached grids.
+
 - Last full suite run: **69 tests passed** during this project naming cleanup. Earlier small UI changes
   passed relevant syntax checks and production builds; do not claim the full suite
   was rerun after each later CSS/copy change.
@@ -197,8 +208,10 @@ desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw
 - Sunken/Iceberg performance remains a phone-testing concern. Loading screens,
   cached costumes, collision-grid sight checks and bounded simulation steps exist,
   but these are not proof that all phones sustain a good frame rate.
-- Native dynamic physics, original gameplay audio and online browser networking
-  are not fully ported. UI sound effects are implemented.
+- Mall coffee furniture now uses dynamic physics; Iceberg has momentum and Sunken
+  has authored rocking plus grounded sliding. Sunken barrels/cannons retain static
+  collision. Original gameplay audio and online browser networking are not fully
+  ported. UI sound effects are implemented.
 - Static credits no longer use the retained Ureka image asset. Unused CSS/image
   cleanup is optional; do not restore that logo to the screen.
 - README has one stale instruction saying Interact (F); current default is **E**.

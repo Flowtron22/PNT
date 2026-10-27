@@ -1,0 +1,9 @@
+import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';import {registerHooks} from 'node:module';import * as THREE from '../vendor/three/build/three.module.js';
+registerHooks({resolve(s,c,next){return s==='three'?{url:new URL('../vendor/three/build/three.module.js',import.meta.url).href,shortCircuit:true}:next(s,c);}});
+const {GLTFLoader}=await import('../vendor/three/jsm/loaders/GLTFLoader.js');
+const {buildWalkGrid,arenaBounds,solidForGameplay}=await import('../src/pnt/world-navigation.js');
+mkdirSync('.local/environment-audit',{recursive:true});
+const b=readFileSync('assets/pnt/arenas/mall.glb'),len=b.readUInt32LE(12),j=JSON.parse(b.subarray(20,20+len));delete j.images;delete j.textures;j.materials=j.materials.map(m=>({name:m.name}));const json=Buffer.from(JSON.stringify(j)),pad=Buffer.alloc((4-json.length%4)%4,32),header=Buffer.from(b.subarray(0,20)),tail=b.subarray(20+len);header.writeUInt32LE(20+json.length+pad.length+tail.length,8);header.writeUInt32LE(json.length+pad.length,12);const bytes=Buffer.concat([header,json,pad,tail]),asset=await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.length),'');
+const root=asset.scene,data=JSON.parse(readFileSync('assets/pnt/arenas/mall.json'));root.position.fromArray(data.origin.map(v=>-v));root.updateMatrixWorld(true);const meshes=[],props=[];
+root.traverse(o=>{if(o.isMesh){if(/^BP_Coffee(Chair|Table)/.test(o.name)){const box=new THREE.Box3().setFromObject(o);props.push({name:o.name,min:box.min.toArray(),max:box.max.toArray()});}else if(solidForGameplay(o))meshes.push(o);}});
+const nav=buildWalkGrid(meshes,arenaBounds(root,data));writeFileSync('.local/environment-audit/mall-static-nav.json',JSON.stringify({...nav,heights:Array.from(nav.heights,n=>Number.isFinite(n)?Math.round(n*10000)/10000:null)}));console.log(JSON.stringify({props,cells:nav.heights.length}));

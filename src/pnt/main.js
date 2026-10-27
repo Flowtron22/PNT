@@ -12,7 +12,7 @@ import {PROFILE_KEY,readProfile,saveProfile,profileName,recordMatch} from './pro
 import {renderHomeWidgets} from './home-widgets.js';
 import {bindGameControls} from './touch-controls.js';
 import {configureFullscreen} from './fullscreen.js';
-import {sampleGround,dampVelocity,simulationSteps} from './motion.js';
+import {sampleGround,simulationSteps} from './motion.js';
 import {matchView,fixedStageCenter,stageFraming,shakeOffset} from './camera-rig.js';
 import {DEFAULT_BINDINGS,BINDING_LABELS,keyLabel,rebind,loadBindings,saveBindings,movementInput} from './keybindings.js';
 import {createHaptics} from './haptics.js';
@@ -23,6 +23,8 @@ import {createGameFX,createToonSmoke} from './game-fx.js';
 import {stageEndState,rollSpinDirection,movementGroundReference} from './action-state.js';
 import {renderResults} from './results-ui.js';
 import {createDetectionZone} from './detection-zone.js';
+import {environmentVelocity,shipTilt} from './environment.js';
+import {createMallPhysics} from './mall-physics.js';
 import {findPath,screenToWorld} from './navigation.js';
 import {buildWalkGrid,arenaBounds,solidForGameplay} from './world-navigation.js';
 let resultPortrait=null,bindings=loadBindings(localStorage),bindingCapture=null,cameraShake=0,shakeTime=0,stageFrame=null;
@@ -32,6 +34,7 @@ let profile=readProfile(localStorage);
 const $=s=>document.querySelector(s),canvas=$('#world');
 const ui={menu:$('#menu'),hud:$('#hud'),pause:$('#pause'),results:$('#results'),lobby:$('#lobby')};
 const scene=new THREE.Scene();scene.background=new THREE.Color('#70688f');scene.fog=new THREE.Fog('#70688f',38,85);
+const matchRoot=new THREE.Group(),shipPivot=new THREE.Vector3();scene.add(matchRoot);let furniturePhysics=null,shipAngle=0;
 const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
 const menuCamera=new THREE.PerspectiveCamera(40,1,.05,120),matchCamera=new THREE.PerspectiveCamera(30,1,.1,180);
@@ -42,7 +45,7 @@ const fill=new THREE.DirectionalLight(0xb6d8ff,1.2);fill.position.set(-8,7,-4);s
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(180,180),new THREE.MeshStandardMaterial({color:0x77768c,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.3;scene.add(floor);
 const up=new THREE.Vector3(0,1,0),down=new THREE.Vector3(0,-1,0);
 const loader=new GLTFLoader(),cache=new Map();
-const gameFX=createGameFX(scene);
+const gameFX=createGameFX(matchRoot);
 
 let ready=false,role='runner',quality=localStorage.getItem('psx-web-quality')||'balanced';
 let costume=normalizeCostume(localStorage.getItem('pnt-costume'));
@@ -192,14 +195,16 @@ $('#pause-button').onclick=null;
 for(const name of ['fullscreenchange','webkitfullscreenchange'])document.addEventListener(name,()=>{if(activePage==='settings'&&$('#fullscreen'))configureFullscreen($('#fullscreen'),$('#fullscreen-status'));});
 
 async function loadArena(id){
- const [asset,data,nav,collision]=await Promise.all([getGLB('arena-'+id,`assets/pnt/arenas/${id}.glb`,e=>progress(e.total?Math.min(50,e.loaded/e.total*50):15,'Loading '+id+' arena…')),fetch(`assets/pnt/arenas/${id}.json`).then(r=>{if(!r.ok)throw Error('Missing arena metadata');return r.json();}),fetch(`assets/pnt/arenas/${id}.nav.json`).then(r=>{if(!r.ok)throw Error('Missing arena navigation');return r.json();}),fetch(`assets/pnt/arenas/${id}.collision.json`).then(r=>{if(!r.ok)throw Error('Missing Unreal collision');return r.json();})]);
- gameArena?.removeFromParent();gameArena=asset.scene;gameArena.visible=true;mapData=data;gameArena.position.set(...data.origin.map(v=>-v));scene.add(gameArena);gameArena.updateMatrixWorld(true);menuArena.visible=false;
+ const [asset,data,nav,collision]=await Promise.all([getGLB('arena-'+id,`assets/pnt/arenas/${id}.glb`,e=>progress(e.total?Math.min(50,e.loaded/e.total*50):15,'Loading '+id+' arena…')),fetch(`assets/pnt/arenas/${id}.json`).then(r=>{if(!r.ok)throw Error('Missing arena metadata');return r.json();}),fetch(`assets/pnt/arenas/${id}.nav.json?v=environment-098`).then(r=>{if(!r.ok)throw Error('Missing arena navigation');return r.json();}),fetch(`assets/pnt/arenas/${id}.collision.json?v=environment-098`).then(r=>{if(!r.ok)throw Error('Missing Unreal collision');return r.json();})]);
+ furniturePhysics?.dispose();furniturePhysics=null;matchRoot.rotation.set(0,0,0);matchRoot.position.set(0,0,0);shipAngle=0;
+ gameArena?.removeFromParent();gameArena=asset.scene;gameArena.visible=true;mapData=data;gameArena.position.set(...data.origin.map(v=>-v));matchRoot.add(gameArena);matchRoot.updateMatrixWorld(true);menuArena.visible=false;
  ground=[];gameArena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m?.map)m.map.anisotropy=2;}});
  bounds=arenaBounds(gameArena,data);renderer.toneMappingExposure=id==='mall'?1.15*1.15:1.15;
  grid={...nav,blocked:collision.blocked,edges:collision.edges,heights:Float32Array.from(collision.groundHeights||nav.heights,v=>v===null?NaN:v)};floor.position.y=-12;floor.material.color.set(id==='mall'?0x77768c:id==='sunken'?0x24638b:0x9bc4d7);
+ if(id==='sunken')gameArena.getObjectByName('SunkenShip').getWorldPosition(shipPivot);if(id==='mall'){progress(50,'Preparing movable furniture…');furniturePhysics=await createMallPhysics(gameArena,matchRoot,grid);}
  const props=[['propBanana','SM_TL_Banana'],['propSmoke','SM_TL_Bomb'],['propHammer','SM_TL_Hammer'],['propJet','jetpack'],['propRewind','rewind']];await Promise.all(props.map(async([key,file])=>{templates[key]=await getGLB(key,`assets/pnt/props/${file}.glb`);}));
 }
-function restoreMenuArena(){renderer.toneMappingExposure=1.15;if(gameArena)gameArena.visible=false;if(menuArena){menuArena.visible=false;({ground,bounds,grid}=menuNavigation);}floor.position.y=-.3;floor.material.color.set(0x77768c);$('#world-markers').replaceChildren();}
+function restoreMenuArena(){furniturePhysics?.dispose();furniturePhysics=null;matchRoot.rotation.set(0,0,0);matchRoot.position.set(0,0,0);shipAngle=0;renderer.toneMappingExposure=1.15;if(gameArena)gameArena.visible=false;if(menuArena){menuArena.visible=false;({ground,bounds,grid}=menuNavigation);}floor.position.y=-.3;floor.material.color.set(0x77768c);$('#world-markers').replaceChildren();}
 function prop(key,size=1){const source=templates[key];if(!source)return null;const object=clone(source.scene);const box=new THREE.Box3().setFromObject(object),scale=size/Math.max(.01,...box.getSize(new THREE.Vector3()).toArray());object.scale.multiplyScalar(scale);object.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(object),center=b.getCenter(new THREE.Vector3());object.position.add(new THREE.Vector3(-center.x,-b.min.y,-center.z));const root=new THREE.Group();root.add(object);return root;}
 function disposeHazard(h){h.mesh.removeFromParent();if(h.owned)h.mesh.traverse(o=>{if(o.isMesh){o.geometry.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});}
 function withinSight(p,q,smoke=true,stop=.35){
@@ -224,7 +229,7 @@ function performInteraction(id,target,dt){
 function buildMarkers(){const root=$('#world-markers');root.replaceChildren();for(const c of round.caches){const node=document.createElement('div');node.className='world-marker cache-marker';node.id='marker-'+c.id;root.append(node);}for(const a of round.actors){if(a.role==='chaser')continue;const node=document.createElement('div');node.className='world-marker rescue-marker';node.id='rescue-'+a.id;root.append(node);}}
 function updateMarkers(){
  if(!round||ui.hud.hidden)return;matchCamera.updateMatrixWorld();
- const place=(node,p)=>{const v=p.clone().project(matchCamera);node.hidden=v.z>1||v.z< -1||Math.abs(v.x)>1.1||Math.abs(v.y)>1.1;node.style.transform=`translate(-50%,-100%) translate(${(v.x*.5+.5)*innerWidth}px,${(-v.y*.5+.5)*innerHeight}px)`;};
+ const place=(node,p)=>{matchRoot.updateMatrixWorld();const v=matchRoot.localToWorld(p.clone()).project(matchCamera);node.hidden=v.z>1||v.z< -1||Math.abs(v.x)>1.1||Math.abs(v.y)>1.1;node.style.transform=`translate(-50%,-100%) translate(${(v.x*.5+.5)*innerWidth}px,${(-v.y*.5+.5)*innerHeight}px)`;};
  for(const c of round.caches){const node=$('#marker-'+c.id);if(!node)continue;node.textContent=c.remaining>0?'$'+Math.ceil(c.remaining).toLocaleString():'EMPTY';node.classList.toggle('empty',c.remaining<=0);place(node,new THREE.Vector3(...c.position).addScaledVector(up,2.4));}
  for(const a of round.actors.filter(a=>a.role==='runner')){const node=$('#rescue-'+a.id);if(!a.caught){node.hidden=true;continue;}node.textContent=a.releaseCooldown>0?'RELEASE IN '+Math.ceil(a.releaseCooldown)+'s':a.rescueProgress>0?'RELEASING '+Math.round(a.rescueProgress/RESCUE_SECONDS*100)+'%':'HOLD INTERACT TO RELEASE';place(node,avatars[a.id].group.position.clone().addScaledVector(up,2));}
 }
@@ -239,7 +244,7 @@ function spot(x,z){let best=null,distance=Infinity;for(let iz=2;iz<grid.nz-2;iz+
 }if(!best)throw new Error('No walkable ground was found in the Mall export');return best;}
 function avatar(template,id,actorRole){
  const model=clone(template.scene),group=new THREE.Group();model.updateMatrixWorld(true);
- let box=new THREE.Box3().setFromObject(model),height=box.max.y-box.min.y;model.scale.multiplyScalar(1.55/height);model.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(model);const center=box.getCenter(new THREE.Vector3());model.position.add(new THREE.Vector3(-center.x,-box.min.y,-center.z));group.add(model);scene.add(group);group.position.copy(spot((id-1.5)*2.7,id%2?4:-3));
+ let box=new THREE.Box3().setFromObject(model),height=box.max.y-box.min.y;model.scale.multiplyScalar(1.55/height);model.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(model);const center=box.getCenter(new THREE.Vector3());model.position.add(new THREE.Vector3(-center.x,-box.min.y,-center.z));group.add(model);(round?matchRoot:scene).add(group);group.position.copy(spot((id-1.5)*2.7,id%2?4:-3));
  model.traverse(o=>{if(o.isMesh){o.frustumCulled=false;for(const m of Array.isArray(o.material)?o.material:[o.material])if(m)m.roughness=Math.max(.55,m.roughness||0);}});
  const anim=makeAnimator(model,clips,actorRole);
  const ring=new THREE.Mesh(new THREE.RingGeometry(.35,.42,24),new THREE.MeshBasicMaterial({color:id===0?0xff8a14:actorRole==='chaser'?0x2f5bff:0xffffff,transparent:true,opacity:.8,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.position.y=.025;group.add(ring);
@@ -254,7 +259,7 @@ function stopInteract(){interactHeld=false;if(round)cancelInteraction(round,0);}
 function setEffect(state,name,time){state.effect=name;state.effectTime=time;if(name==='banana'){state.spinDirection=rollSpinDirection();state.spinTurn=.35;}}
 function useTool(slot,id=0){
  const actor=avatars[id],state=round?.actors[id],tool=(id===0?loadout:actor?.tools)?.[slot];if(!actor||!state||!canActRule(round,id)||paused||busy)return;
- if(tool==='rewind'&&!actor.mark&&state.toolCooldowns[slot]<=0){actor.mark=actor.group.position.clone();const mesh=prop('propRewind',.6);mesh.position.copy(actor.mark);scene.add(mesh);hazards.push({mesh,type:'marker',owner:id,time:Infinity});if(id===0)say('MARK SET · PRESS AGAIN TO RETURN',1.5);return;}
+ if(tool==='rewind'&&!actor.mark&&state.toolCooldowns[slot]<=0){actor.mark=actor.group.position.clone();const mesh=prop('propRewind',.6);mesh.position.copy(actor.mark);matchRoot.add(mesh);hazards.push({mesh,type:'marker',owner:id,time:Infinity});if(id===0)say('MARK SET · PRESS AGAIN TO RETURN',1.5);return;}
  if(!activateTool(round,id,slot,tool))return;
  const point=actor.group.position.clone();
  if(tool==='hammer'){
@@ -262,9 +267,9 @@ function useTool(slot,id=0){
   for(const other of round.actors){if(other.role===state.role||other.caught)continue;const a=avatars[other.id];if(point.distanceTo(a.group.position)<2&&withinSight(point,a.group.position,false))setEffect(other,a.grounded?'stunned':'airStunned',2);}
   if(id===0)say('HAMMER SWING!',.7);
  }else if(tool==='banana'){
-  const mesh=prop('propBanana',.65);mesh.position.copy(point).add(new THREE.Vector3(-Math.sin(actor.group.rotation.y)*.7,.03,-Math.cos(actor.group.rotation.y)*.7));scene.add(mesh);hazards.push({mesh,type:'banana',owner:id,ownerRole:state.role,time:15});limitItems(id,'banana',5);if(id===0)say('PEEL DROPPED!',.7);
+  const mesh=prop('propBanana',.65);mesh.position.copy(point).add(new THREE.Vector3(-Math.sin(actor.group.rotation.y)*.7,.03,-Math.cos(actor.group.rotation.y)*.7));matchRoot.add(mesh);hazards.push({mesh,type:'banana',owner:id,ownerRole:state.role,time:15});limitItems(id,'banana',5);if(id===0)say('PEEL DROPPED!',.7);
  }else if(tool==='smoke'){
-  const mesh=prop('propSmoke',.65);mesh.position.copy(point);const cloud=createToonSmoke(1.2,14);cloud.position.y=.9;mesh.add(cloud);scene.add(mesh);hazards.push({mesh,type:'smoke',owner:id,time:20});limitItems(id,'smoke',3);if(id===0)say('SMOKE SCREEN!',.8);
+  const mesh=prop('propSmoke',.65);mesh.position.copy(point);const cloud=createToonSmoke(1.2,14);cloud.position.y=.9;mesh.add(cloud);matchRoot.add(mesh);hazards.push({mesh,type:'smoke',owner:id,time:20});limitItems(id,'smoke',3);if(id===0)say('SMOKE SCREEN!',.8);
  }else if(tool==='rewind'){
   if(actor.mark){actor.group.position.copy(spot(actor.mark.x,actor.mark.z));actor.velocity=0;actor.mark=null;for(const h of hazards)if(h.type==='marker'&&h.owner===id)h.time=0;if(id===0)say('BACK TO YOUR MARK!',.8);}
  }else if(tool==='rocket'){
@@ -273,15 +278,16 @@ function useTool(slot,id=0){
 }
 function limitItems(owner,type,max){const all=hazards.filter(h=>h.owner===owner&&h.type===type&&h.time>0);for(let i=0;i<all.length-max;i++)all[i].time=0;}
 
-function move(a,dx,dz,dt,speed){const p=a.group.position,magnitude=Math.hypot(dx,dz);if(magnitude>.01){dx/=Math.max(1,magnitude);dz/=Math.max(1,magnitude);}a.vx=dampVelocity(a.vx||0,dx*speed,dt);a.vz=dampVelocity(a.vz||0,dz*speed,dt);const nx=p.x+a.vx*dt,nz=p.z+a.vz*dt;let moved=false;
+function move(a,dx,dz,dt,speed){const p=a.group.position,previous=p.clone(),magnitude=Math.hypot(dx,dz),state=round?.actors[a.id],flying=state?.effect==='rocket'&&state.effectTime>0,locked=speed===0||state?.captureRemaining>0||state?.effectTime>0&&!['rocket','banana'].includes(state.effect);environmentVelocity(a,dx,dz,speed,dt,{map:mapData?.id,grounded:a.grounded,flying,locked,tilt:shipAngle});const nx=p.x+(a.vx+(a.slideX||0))*dt,nz=p.z+a.vz*dt;let moved=false;
  const walkY=movementGroundReference(p.y,heightAt(p.x,p.z));
- if(Math.hypot(a.vx,a.vz)>.01){if(walkable(nx,p.z,walkY)&&canTraverse(grid,p.x,p.z,nx,p.z)){p.x=nx;moved=true;}else a.vx=0;if(walkable(p.x,nz,walkY)&&canTraverse(grid,p.x,p.z,p.x,nz)){p.z=nz;moved=true;}else a.vz=0;}
+ if(Math.hypot(a.vx+(a.slideX||0),a.vz)>.01){if(walkable(nx,p.z,walkY)&&canTraverse(grid,p.x,p.z,nx,p.z)){p.x=nx;moved=true;}else a.vx=a.slideX=0;if(walkable(p.x,nz,walkY)&&canTraverse(grid,p.x,p.z,p.x,nz)){p.z=nz;moved=true;}else a.vz=0;}
+ if(moved&&furniturePhysics){furniturePhysics.move(a,previous,p,dt);if(!canTraverse(grid,previous.x,previous.z,p.x,p.z)||!walkable(p.x,p.z,walkY)){p.copy(previous);a.vx=a.vz=0;}moved=Math.hypot(p.x-previous.x,p.z-previous.z)>.001;}
  if(magnitude>.06&&moved){const angle=Math.atan2(a.vx,a.vz);a.group.rotation.y+=Math.atan2(Math.sin(angle-a.group.rotation.y),Math.cos(angle-a.group.rotation.y))*Math.min(1,dt*14);}
- const h=heightAt(p.x,p.z),flying=round?.actors[a.id]?.effect==='rocket'&&round.actors[a.id].effectTime>0;if(flying&&Number.isFinite(h)){p.y=THREE.MathUtils.damp(p.y,h+1.8,6,dt);a.velocity=0;}else{a.velocity-=16*dt;p.y+=a.velocity*dt;}if(!flying&&Number.isFinite(h)&&(p.y<=h||a.grounded&&Math.abs(p.y-h)<.55)){p.y=THREE.MathUtils.damp(p.y,h,30,dt);a.velocity=0;a.grounded=true;}else a.grounded=false;if(p.y<bounds.min.y-3){p.copy(spot(0,0));a.velocity=0;}a.speed=THREE.MathUtils.damp(a.speed,magnitude>.05&&moved?1:0,10,dt);return moved;
+ const h=heightAt(p.x,p.z);if(flying&&Number.isFinite(h)){p.y=THREE.MathUtils.damp(p.y,h+1.8,6,dt);a.velocity=0;}else{a.velocity-=16*dt;p.y+=a.velocity*dt;}if(!flying&&Number.isFinite(h)&&(p.y<=h||a.grounded&&Math.abs(p.y-h)<.55)){p.y=THREE.MathUtils.damp(p.y,h,30,dt);a.velocity=0;a.grounded=true;}else a.grounded=false;if(p.y<bounds.min.y-3){p.copy(spot(0,0));a.velocity=0;}a.speed=THREE.MathUtils.damp(a.speed,moved?1:0,10,dt);return moved;
 }
 function animate(a,state,dt){let name=animationFor(state,a.speed>.16,!a.grounded);if(name==='rocket'&&state.effectTime<4.5)name='jet';a.anim.play(name,{loop:!['hammer','stunned','airStunned','busted','rocket'].includes(name)});a.anim.update(dt);a.group.userData.animation=name;gameFX.run(a,dt);gameFX.jetpack(a,state,dt,matchCamera);if(a.hammerImpact>0){a.hammerImpact-=dt;if(a.hammerImpact<=0){const impact=a.group.position.clone().add(new THREE.Vector3(Math.sin(a.group.rotation.y)*.9,0,Math.cos(a.group.rotation.y)*.9));const y=heightAt(impact.x,impact.z);impact.y=Number.isFinite(y)?y:a.group.position.y;gameFX.hammer(impact);cameraShake=Math.max(cameraShake,.099);}}}
 function updateGame(dt){
- stepRound(round,dt);const chaser=round.actors.find(a=>a.role==='chaser'),cop=avatars[chaser.id],wishes=[];
+ stepRound(round,dt);shipAngle=mapData.id==='sunken'?shipTilt(300-round.remaining):0;matchRoot.rotation.z=shipAngle;matchRoot.position.copy(shipPivot).sub(shipPivot.clone().applyAxisAngle(new THREE.Vector3(0,0,1),shipAngle));if(mapData.id!=='sunken')matchRoot.position.set(0,0,0);const chaser=round.actors.find(a=>a.role==='chaser'),cop=avatars[chaser.id],wishes=[];
  for(const state of round.actors){
   const a=avatars[state.id];state.interacting=false;
   if(state.caught){a.vx=a.vz=0;cancelInteraction(round,state.id);a.mark=null;for(const h of hazards)if(h.type==='marker'&&h.owner===state.id)h.time=0;move(a,0,0,dt,0);animate(a,state,dt);continue;}
@@ -303,8 +309,9 @@ function updateGame(dt){
   if(state.effect==='rocket'&&state.effectTime>0&&Math.hypot(dx,dz)<.1){dx=Math.sin(a.group.rotation.y);dz=Math.cos(a.group.rotation.y);}
   const moved=move(a,dx,dz,dt,(state.role==='chaser'?3.65:3.4)*1.15*(state.id===0?1.08:1)*(state.effect==='rocket'&&state.effectTime>0?1.8:1));if(!moved&&state.effect==='banana'&&state.effectTime>0)state.spinDirection=rollSpinDirection();if(!moved&&state.id!==0&&!locked&&Math.hypot(dx,dz)>.1){a.routeTime=0;}animate(a,state,dt);wishes.push({id:state.id,wants:wants&&!locked});
  }
+ furniturePhysics?.step(dt,avatars);
  for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];h.time-=dt;if(h.type==='capture'){h.mesh.rotation.x+=dt*h.spin.x;h.mesh.rotation.y+=dt*h.spin.y;h.mesh.rotation.z+=dt*h.spin.z;h.mesh.scale.setScalar(Math.min(1,h.time*4));}else if(h.type==='smoke')h.mesh.rotation.y+=dt*.2;if(h.type==='banana'&&h.time>0)for(const state of round.actors){if(state.caught||state.role===h.ownerRole||state.effectTime>0)continue;if(avatars[state.id].group.position.distanceTo(h.mesh.position)<.8){setEffect(state,'banana',2);h.time=0;break;}}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}
- for(const r of round.actors.filter(a=>a.role==='runner')){const p=cop.group.position,q=avatars[r.id].group.position,d=Math.hypot(p.x-q.x,p.z-q.z);if(detectThief(round,chaser.id,r.id,dt,d,round.remaining<298.5&&Math.abs(p.y-q.y)<.8&&withinSight(p,q))){const cloud=createToonSmoke(.7,16);cloud.position.copy(q).addScaledVector(up,.8);scene.add(cloud);cloud.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);hazards.push({mesh:cloud,type:'capture',owner:r.id,time:1,spin:new THREE.Vector3(12+Math.random()*16,14+Math.random()*18,10+Math.random()*16)});cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAPTURED!':'CATCHING THIEF!',1);}}
+ for(const r of round.actors.filter(a=>a.role==='runner')){const p=cop.group.position,q=avatars[r.id].group.position,d=Math.hypot(p.x-q.x,p.z-q.z);if(detectThief(round,chaser.id,r.id,dt,d,round.remaining<298.5&&Math.abs(p.y-q.y)<.8&&withinSight(p,q))){const cloud=createToonSmoke(.7,16);cloud.position.copy(q).addScaledVector(up,.8);matchRoot.add(cloud);cloud.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);hazards.push({mesh:cloud,type:'capture',owner:r.id,time:1,spin:new THREE.Vector3(12+Math.random()*16,14+Math.random()*18,10+Math.random()*16)});cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAPTURED!':'CATCHING THIEF!',1);}}
  cop.detectionZone.update(round.actors,round.phase==='playing'&&canActRule(round,chaser.id));
  for(const c of round.caches)c.harvester=null;
  for(const wish of wishes){const target=wish.wants?interactionTarget(wish.id):null,key=target?target.type+':'+target.target.id:null,actor=avatars[wish.id];if(actor.interactionKey!==key||!target)cancelInteraction(round,wish.id);actor.interactionKey=key;if(target)performInteraction(wish.id,target,dt);}

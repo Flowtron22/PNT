@@ -6,7 +6,7 @@ import {networkInterfaces} from 'node:os';
 import {spawn} from 'node:child_process';
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)),process.argv.includes('--dist')?'dist':'.');
 const port=Number(process.env.PORT||8491),lan=process.argv.includes('--lan');
-const types={'.webmanifest':'application/manifest+json','.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2','.glb':'model/gltf-binary','.svg':'image/svg+xml'};
+const types={'.webmanifest':'application/manifest+json','.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.wasm':'application/wasm','.css':'text/css','.json':'application/json','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2','.glb':'model/gltf-binary','.svg':'image/svg+xml'};
 const server=createServer(async(req,res)=>{
   try{
     const url=new URL(req.url,'http://localhost');const relative=decodeURIComponent(url.pathname);

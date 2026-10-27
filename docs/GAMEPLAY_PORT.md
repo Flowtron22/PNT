@@ -1,5 +1,10 @@
 # Unreal gameplay port
 
+Current environment update (0.9.8): Iceberg momentum, Sunken rocking/sliding and
+Mall coffee furniture dynamics are implemented. See `ENVIRONMENT_PORT.md` for the
+verified original settings, web tuning, export tools and validation. Historical
+notes below about static arenas and missing environment physics predate this work.
+
 Source: `D:/Projects/PNT/PNT`, revision `9625f30a2f02b1febec99108455a5a9f891f20db`.
 Read `updates.md`; inspected Blueprint defaults, `DT_Skills`, and all three level actor
 placements through Unreal 5.6 Python without saving any source packages.
