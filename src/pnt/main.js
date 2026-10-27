@@ -34,6 +34,7 @@ const scene=new THREE.Scene();scene.background=new THREE.Color('#70688f');scene.
 const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
 const menuCamera=new THREE.PerspectiveCamera(40,1,.05,120),matchCamera=new THREE.PerspectiveCamera(30,1,.1,180);
+matchCamera.zoom=1.1;matchCamera.updateProjectionMatrix();
 scene.add(new THREE.HemisphereLight(0xeaf4ff,0x6c728e,2.4));
 const sunlight=new THREE.DirectionalLight(0xfff1df,3);sunlight.position.set(8,16,7);scene.add(sunlight);
 const fill=new THREE.DirectionalLight(0xb6d8ff,1.2);fill.position.set(-8,7,-4);scene.add(fill);
@@ -277,7 +278,7 @@ function move(a,dx,dz,dt,speed){const p=a.group.position,magnitude=Math.hypot(dx
  if(magnitude>.06&&moved){const angle=Math.atan2(a.vx,a.vz);a.group.rotation.y+=Math.atan2(Math.sin(angle-a.group.rotation.y),Math.cos(angle-a.group.rotation.y))*Math.min(1,dt*14);}
  const h=heightAt(p.x,p.z),flying=round?.actors[a.id]?.effect==='rocket'&&round.actors[a.id].effectTime>0;if(flying&&Number.isFinite(h)){p.y=THREE.MathUtils.damp(p.y,h+1.8,6,dt);a.velocity=0;}else{a.velocity-=16*dt;p.y+=a.velocity*dt;}if(!flying&&Number.isFinite(h)&&(p.y<=h||a.grounded&&Math.abs(p.y-h)<.55)){p.y=THREE.MathUtils.damp(p.y,h,30,dt);a.velocity=0;a.grounded=true;}else a.grounded=false;if(p.y<bounds.min.y-3){p.copy(spot(0,0));a.velocity=0;}a.speed=THREE.MathUtils.damp(a.speed,magnitude>.05&&moved?1:0,10,dt);return moved;
 }
-function animate(a,state,dt){let name=animationFor(state,a.speed>.16,!a.grounded);if(name==='rocket'&&state.effectTime<4.5)name='jet';a.anim.play(name,{loop:!['hammer','stunned','airStunned','busted','rocket'].includes(name)});a.anim.update(dt);a.group.userData.animation=name;gameFX.run(a,dt);if(a.hammerImpact>0){a.hammerImpact-=dt;if(a.hammerImpact<=0){const impact=a.group.position.clone().add(new THREE.Vector3(Math.sin(a.group.rotation.y)*.9,0,Math.cos(a.group.rotation.y)*.9));const y=heightAt(impact.x,impact.z);impact.y=Number.isFinite(y)?y:a.group.position.y;gameFX.hammer(impact);cameraShake=Math.max(cameraShake,.075);}}}
+function animate(a,state,dt){let name=animationFor(state,a.speed>.16,!a.grounded);if(name==='rocket'&&state.effectTime<4.5)name='jet';a.anim.play(name,{loop:!['hammer','stunned','airStunned','busted','rocket'].includes(name)});a.anim.update(dt);a.group.userData.animation=name;gameFX.run(a,dt);if(a.hammerImpact>0){a.hammerImpact-=dt;if(a.hammerImpact<=0){const impact=a.group.position.clone().add(new THREE.Vector3(Math.sin(a.group.rotation.y)*.9,0,Math.cos(a.group.rotation.y)*.9));const y=heightAt(impact.x,impact.z);impact.y=Number.isFinite(y)?y:a.group.position.y;gameFX.hammer(impact);cameraShake=Math.max(cameraShake,.09);}}}
 function updateGame(dt){
  stepRound(round,dt);const chaser=round.actors.find(a=>a.role==='chaser'),cop=avatars[chaser.id],wishes=[];
  for(const state of round.actors){
