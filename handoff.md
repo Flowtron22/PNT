@@ -184,6 +184,9 @@ desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw
 
 ## Verification and remaining concerns
 
+- Iceberg follow-up: slippery steering response time and stopping distance toned
+  down about 40%; `ICE.steering=1.4/.6`, `ICE.braking=2.2/.6`. Speed is unchanged.
+
 - Version 0.9.8: syntax checks, **81 tests**, and production build passed. Desktop
   browser sessions covered Mall pushing/tumbling, Sunken rocking and Iceberg
   movement, plus map/menu transitions, without logged runtime errors. Real phone
