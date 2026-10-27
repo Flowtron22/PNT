@@ -8,3 +8,16 @@ test('game audio plays exported cues, stops loops on pause/menu and respects ind
   audio.setEnabled(false);audio.setMusic(false);const count=sources.length;audio.tool('banana',0,actors);audio.update(round,actors,true);assert.equal(sources.length,count);assert.equal(storage.get('pnt-game-sfx'),'off');assert.equal(storage.get('pnt-game-music'),'off');audio.update(null,[],false);assert.ok(sources.every(s=>s.stopped));
  }finally{globalThis.localStorage=originalStorage;globalThis.fetch=originalFetch;}
 });
+test('menu/lobby music uses one loop across scene and match changes, and stops when hidden or muted',async()=>{
+ const oldStorage=globalThis.localStorage,oldFetch=globalThis.fetch,sources=[];globalThis.localStorage={getItem:()=>null,setItem(){}};globalThis.fetch=async url=>({ok:true,arrayBuffer:async()=>new TextEncoder().encode(url).buffer});
+ const context={currentTime:1,state:'running',createGain:()=>({gain:{value:1},connect(){},disconnect(){}}),decodeAudioData:async bytes=>new TextDecoder().decode(bytes),createBufferSource(){return {connect(){},disconnect(){},start(){sources.push(this);},stop(){this.stopped=true;this.onended?.();}};}},engine={ctx:context,master:{},init(){},resume(){}};
+ try{const audio=createGameplayAudio(()=>engine);await audio.prepare();audio.update(null,[],false,true);audio.update(null,[],false,true);assert.equal(sources.length,1);const bgm=sources[0];assert.ok(bgm.loop&&bgm.buffer.includes('gameplay-bgm'));
+  const round={profileId:'first',playerRole:'runner',collected:0,actors:[]};audio.update(round,[],true,true);audio.update(null,[],false,true);audio.update({...round,profileId:'next'},[],true,true);assert.equal(sources.length,1);assert.ok(!bgm.stopped);
+  audio.update(null,[],false,false);assert.equal(bgm.stopped,true);audio.update(null,[],false,true);assert.equal(sources.length,2);audio.setMusic(false);audio.update(null,[],false,true);assert.equal(sources[1].stopped,true);audio.update(null,[],false,true);assert.equal(sources.length,2);audio.stop();
+ }finally{globalThis.localStorage=oldStorage;globalThis.fetch=oldFetch;}
+});
+test('a failed music download can retry without reloading already decoded sound effects',async()=>{
+ const oldStorage=globalThis.localStorage,oldFetch=globalThis.fetch,requests=[],sources=[];let fail=true;globalThis.localStorage={getItem:()=>null,setItem(){}};globalThis.fetch=async url=>{requests.push(url);return {ok:!(fail&&url.includes('gameplay-bgm')),arrayBuffer:async()=>new TextEncoder().encode(url).buffer};};
+ const context={currentTime:1,state:'running',createGain:()=>({gain:{value:1},connect(){},disconnect(){}}),decodeAudioData:async bytes=>new TextDecoder().decode(bytes),createBufferSource(){return {connect(){},disconnect(){},start(){sources.push(this);},stop(){this.onended?.();}};}},engine={ctx:context,master:{},init(){},resume(){}};
+ try{const audio=createGameplayAudio(()=>engine);await audio.prepare();audio.update(null,[],false,true);assert.equal(sources.length,0);const count=requests.length;fail=false;await audio.prepare();assert.equal(requests.length,count+1);audio.update(null,[],false,true);assert.equal(sources.length,1);audio.stop();}finally{globalThis.localStorage=oldStorage;globalThis.fetch=oldFetch;}
+});

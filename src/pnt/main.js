@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {clone} from 'three/addons/utils/SkeletonUtils.js';
-import {createRound,stepRound,detectThief,activateTool,canAct as canActRule,harvest,rescue,cancelInteraction,INTERACT_RADIUS,RESCUE_SECONDS,updateSmokeCoverage,startCountdown} from './rules.js';
+import {createRound,stepRound,detectThiefAt,activateTool,canAct as canActRule,harvest,rescue,cancelInteraction,INTERACT_RADIUS,RESCUE_SECONDS,updateSmokeCoverage,startCountdown} from './rules.js';
 import {normalizeLoadout,equipTool,normalizeCostume} from './loadout.js';
 import {makeAnimator,animationFor,ANIMATION_PLAY_RATE} from './animation.js';
 import {COSTUMES,TOOLS} from './catalog.js';
@@ -24,10 +24,10 @@ import {matchView,fixedStageCenter,stageFraming,shakeOffset} from './camera-rig.
 import {DEFAULT_BINDINGS,BINDING_LABELS,keyLabel,rebind,loadBindings,saveBindings,movementInput} from './keybindings.js';
 import {createHaptics} from './haptics.js';
 import {creditsMarkup} from './credits-ui.js';
-import {canTraverse,gridSightClear} from './collision.js';
+import {hasSight} from './sight.js';
 import {createResultPortrait} from './result-portrait.js';
 import {createGameFX,createToonSmoke,smokeBombCloud,animateSmokeBomb} from './game-fx.js';
-import {stageEndState,rollSpinDirection,movementGroundReference} from './action-state.js';
+import {stageEndState,rollSpinDirection} from './action-state.js';
 import {renderResults} from './results-ui.js';
 import {createDetectionZone} from './detection-zone.js';
 import {shipTilt} from './environment.js';
@@ -74,7 +74,8 @@ const uiEffects=createWonderUI({blocked:()=>busy||!$('#loading').hidden||!ui.hud
 const gameAudio=createGameplayAudio(()=>uiEffects.sounds.engine);
 const roundStart=createRoundStart(ui.hud,n=>gameAudio.play(n>0?'Match_Countdown':'Match_Start',.6,.8));
 const moneyTrail=createMoneyTrail(ui.hud,$('#money-status'),{reduced:()=>reduced});
-document.addEventListener('pointerdown',()=>gameAudio.unlock(),{capture:true});
+document.addEventListener('pointerdown',()=>void gameAudio.prepare(),{capture:true});
+document.addEventListener('keydown',()=>void gameAudio.prepare(),{capture:true,once:true});
 document.body.classList.toggle('reduced-motion',reduced);
 function resize(){const aspect=innerWidth/innerHeight;menuCamera.aspect=aspect;menuCamera.updateProjectionMatrix();matchCamera.aspect=aspect;matchCamera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,quality==='battery'?1:1.5));renderer.setSize(innerWidth,innerHeight,false);}
 addEventListener('resize',resize);resize();
@@ -264,7 +265,7 @@ addEventListener('storage',e=>{if(e.key===PROFILE_KEY){profile=readProfile(local
 $('#page-back').onclick=goBack;$('#pause-button').onclick=pauseGame;$('#resume').onclick=resume;$('#leave').onclick=menu;$('#result-menu').onclick=menu;$('#again').onclick=start;
 addEventListener('keydown',e=>{if(!bindingCapture)return;e.preventDefault();e.stopImmediatePropagation();if(e.code==='Escape'){bindingCapture=null;renderBindingSettings();return;}const next=rebind(bindings,bindingCapture,e.code);if(!next){$('#binding-status').textContent='Choose a letter, number, arrow, Space, Shift, Ctrl or Enter.';return;}bindings=next;bindingCapture=null;clearInput();saveBindings(localStorage,bindings);renderBindingSettings();refreshControlHints();},true);
 addEventListener('keydown',e=>{if(e.target.matches('select,input,textarea')||busy)return;if(e.code==='Escape'){if(paused)resume();else if(round)pauseGame();else goBack();return;}if(round&&Object.values(bindings).includes(e.code)){e.preventDefault();keys.add(e.code);}if(round&&!paused&&!e.repeat){if(e.code===bindings.interact)interact();if(e.code===bindings.tool1)useTool(0);if(e.code===bindings.tool2)useTool(1);}});
-addEventListener('keyup',e=>{keys.delete(e.code);if(e.code===bindings.interact)stopInteract();});addEventListener('blur',()=>{clearInput();pauseGame();});document.addEventListener('visibilitychange',()=>{lastFrame=performance.now();if(document.hidden)pauseGame();});
+addEventListener('keyup',e=>{keys.delete(e.code);if(e.code===bindings.interact)stopInteract();});addEventListener('blur',()=>{clearInput();pauseGame();});document.addEventListener('visibilitychange',()=>{lastFrame=performance.now();if(document.hidden){pauseGame();gameAudio.stop();}});
 touchControls=bindGameControls({root:document,joystick:$('#joystick'),knob:$('#stick'),isActive:()=>!ui.hud.hidden&&!busy&&!paused&&round?.phase==='playing',onMove:(x,z)=>{input.x=x;input.z=z;},actions:[[$('#interact'),interact,stopInteract],[$('#tool-action1'),()=>useTool(0)],[$('#tool-action2'),()=>useTool(1)],[$('#pause-button'),pauseGame]]});
 $('#pause-button').onclick=null;
 for(const name of ['fullscreenchange','webkitfullscreenchange'])document.addEventListener(name,()=>{if(activePage==='settings'&&$('#fullscreen'))configureFullscreen($('#fullscreen'),$('#fullscreen-status'));});
@@ -284,11 +285,7 @@ async function loadArena(id){
 function restoreMenuArena(){restoreRemoteFurniture();furniturePhysics?.dispose();furniturePhysics=null;matchRoot.rotation.set(0,0,0);matchRoot.position.set(0,0,0);shipAngle=0;sunlight.intensity=3;fill.intensity=1.2;hemisphere.intensity=2.4;mallFill.visible=false;renderer.toneMappingExposure=1.15;if(gameArena)gameArena.visible=false;if(menuArena){menuArena.visible=false;({ground,bounds,grid}=menuNavigation);}floor.position.y=-.3;floor.material.color.set(0x77768c);$('#world-markers').replaceChildren();}
 function prop(key,size=1){const source=templates[key];if(!source)return null;const object=clone(source.scene);const box=new THREE.Box3().setFromObject(object),scale=size/Math.max(.01,...box.getSize(new THREE.Vector3()).toArray());object.scale.multiplyScalar(scale);object.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(object),center=b.getCenter(new THREE.Vector3());object.position.add(new THREE.Vector3(-center.x,-b.min.y,-center.z));const root=new THREE.Group();root.add(object);return root;}
 function disposeHazard(h){h.mesh.removeFromParent();if(h.owned)h.mesh.traverse(o=>{if(o.isMesh){o.geometry.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});}
-function withinSight(p,q,smoke=true,stop=.35){
- const from=p.clone().addScaledVector(up,.65),to=q.clone().addScaledVector(up,.65),delta=to.sub(from),distance=delta.length();if(distance<.1)return true;
- if(smoke)for(const h of hazards.filter(h=>h.type==='smoke'&&h.time>0)){const t=THREE.MathUtils.clamp(h.mesh.position.clone().sub(from).dot(delta)/delta.lengthSq(),0,1),closest=from.clone().addScaledVector(delta,t);if(closest.distanceTo(h.mesh.position.clone().addScaledVector(up,.65))<2.6)return false;}
- return gridSightClear(grid,p.x,p.z,q.x,q.z,stop);
-}
+function withinSight(p,q,smoke=true,stop=.35){return hasSight(grid,p,q,hazards,smoke,stop);}
 function steerBot(a,target,dt){
  a.routeTime=(a.routeTime||0)-dt;const p=a.group.position;
  if(a.routeTime<=0||!a.route||!a.routeGoal||a.routeGoal.distanceToSquared(target)>1){a.route=findPath(grid,p,target);a.routeGoal=target.clone();a.routeTime=.8;}
@@ -359,7 +356,7 @@ function limitItems(owner,type,max){const all=hazards.filter(h=>h.owner===owner&
 function move(a,dx,dz,dt,speed){return advanceActor(a,round.actors[a.id],dx,dz,dt,{grid,map:mapData.id,tilt:shipAngle,speed,furniture:furniturePhysics,respawn:()=>spot(0,0)});}
 function animate(a,state,dt){let name=animationFor(state,a.speed>.16,!a.grounded);if(name==='rocket'&&state.effectTime<4.5)name='jet';a.anim.play(name,{loop:!['hammer','stunned','airStunned','busted','rocket'].includes(name),rate:mapData.id==='iceberg'&&['policeRun','thiefRun'].includes(name)?2:1});a.anim.update(dt);a.group.userData.animation=name;gameFX.run(a,dt);gameFX.jetpack(a,state,dt,matchCamera);if(a.hammerImpact>0){a.hammerImpact-=dt;if(a.hammerImpact<=0){const impact=a.group.position.clone().add(new THREE.Vector3(Math.sin(a.group.rotation.y)*.9,0,Math.cos(a.group.rotation.y)*.9));const y=heightAt(impact.x,impact.z);impact.y=Number.isFinite(y)?y:a.group.position.y;gameFX.hammer(impact);gameAudio.play('Tool_Hammer_Impact',a.id===0?1:.45);cameraShake=Math.max(cameraShake,.099);}}}
 function updateGame(dt){
- const starting=round.startRemaining>0;stepRound(round,dt);if(starting){clearInput();for(const a of avatars)animate(a,round.actors[a.id],dt);return;}smokeCoverage();shipAngle=mapData.id==='sunken'?shipTilt(300-round.remaining):0;matchRoot.rotation.z=shipAngle;matchRoot.position.copy(shipPivot).sub(shipPivot.clone().applyAxisAngle(new THREE.Vector3(0,0,1),shipAngle));if(mapData.id!=='sunken')matchRoot.position.set(0,0,0);const chaser=round.actors.find(a=>a.role==='chaser'),cop=avatars[chaser.id],wishes=[];
+ const starting=round.startRemaining>0;stepRound(round,dt);if(round.phase!=='playing'){if(!round.endStarted)beginStageVerdict();return;}if(starting){clearInput();for(const a of avatars)animate(a,round.actors[a.id],dt);return;}smokeCoverage();shipAngle=mapData.id==='sunken'?shipTilt(300-round.remaining):0;matchRoot.rotation.z=shipAngle;matchRoot.position.copy(shipPivot).sub(shipPivot.clone().applyAxisAngle(new THREE.Vector3(0,0,1),shipAngle));if(mapData.id!=='sunken')matchRoot.position.set(0,0,0);const chaser=round.actors.find(a=>a.role==='chaser'),cop=avatars[chaser.id],wishes=[];
  for(const state of round.actors){
   const a=avatars[state.id];state.interacting=false;
   if(state.caught){a.vx=a.vz=0;cancelInteraction(round,state.id);a.mark=null;for(const h of hazards)if(h.type==='marker'&&h.owner===state.id)h.time=0;move(a,0,0,dt,0);animate(a,state,dt);continue;}
@@ -382,8 +379,8 @@ function updateGame(dt){
   const moved=move(a,dx,dz,dt,(state.role==='chaser'?3.65:3.4)*1.15*(mapData.id==='iceberg'?1.5:1)*(state.id===0?1.08:1)*(state.effect==='rocket'&&state.effectTime>0?1.8:1));if(!moved&&state.effect==='banana'&&state.effectTime>0)state.spinDirection=rollSpinDirection();if(!moved&&state.id!==0&&!locked&&Math.hypot(dx,dz)>.1){a.routeTime=0;}animate(a,state,dt);wishes.push({id:state.id,wants:wants&&!locked});
  }
  furniturePhysics?.step(dt,avatars);
- smokeCoverage();for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];h.time-=dt;if(h.type==='capture'){h.mesh.rotation.x+=dt*h.spin.x;h.mesh.rotation.y+=dt*h.spin.y;h.mesh.rotation.z+=dt*h.spin.z;h.mesh.scale.setScalar(Math.min(1,h.time*4));}else if(h.type==='smoke')animateSmokeBomb(h.mesh,dt);if(h.type==='banana'&&h.time>0)for(const state of round.actors){if(state.caught||state.inSmoke||state.role===h.ownerRole||state.effectTime>0)continue;if(avatars[state.id].group.position.distanceTo(h.mesh.position)<.8){setEffect(state,'banana',2);h.time=0;break;}}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}
- for(const r of round.actors.filter(a=>a.role==='runner')){const p=cop.group.position,q=avatars[r.id].group.position,d=Math.hypot(p.x-q.x,p.z-q.z);if(detectThief(round,chaser.id,r.id,dt,d,round.remaining<298.5&&Math.abs(p.y-q.y)<.8&&withinSight(p,q))){const cloud=createToonSmoke(.7,16);cloud.position.copy(q).addScaledVector(up,.8);matchRoot.add(cloud);cloud.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);hazards.push({mesh:cloud,type:'capture',owner:r.id,time:1,spin:new THREE.Vector3(12+Math.random()*16,14+Math.random()*18,10+Math.random()*16)});cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAPTURED!':'CATCHING THIEF!',1);}}
+ for(const h of hazards)h.time-=dt;smokeCoverage();for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];if(h.type==='capture'){h.mesh.rotation.x+=dt*h.spin.x;h.mesh.rotation.y+=dt*h.spin.y;h.mesh.rotation.z+=dt*h.spin.z;h.mesh.scale.setScalar(Math.min(1,h.time*4));}else if(h.type==='smoke')animateSmokeBomb(h.mesh,dt);if(h.type==='banana'&&h.time>0)for(const state of round.actors){if(state.caught||state.inSmoke||state.role===h.ownerRole||state.effectTime>0)continue;if(avatars[state.id].group.position.distanceTo(h.mesh.position)<.8){setEffect(state,'banana',2);h.time=0;break;}}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}
+ for(const r of round.actors.filter(a=>a.role==='runner')){const p=cop.group.position,q=avatars[r.id].group.position;if(detectThiefAt(round,chaser.id,r.id,dt,p,q,withinSight(p,q))){const cloud=createToonSmoke(.7,16);cloud.position.copy(q).addScaledVector(up,.8);matchRoot.add(cloud);cloud.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);hazards.push({mesh:cloud,type:'capture',owner:r.id,time:1,spin:new THREE.Vector3(12+Math.random()*16,14+Math.random()*18,10+Math.random()*16)});cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAPTURED!':'CATCHING THIEF!',1);}}
  cop.detectionZone.update(round.actors,round.phase==='playing'&&!chaser.inSmoke,dt);
  for(const c of round.caches)c.harvester=null;
  for(const wish of wishes){const target=wish.wants?interactionTarget(wish.id):null,key=target?target.type+':'+target.target.id:null,actor=avatars[wish.id];if(actor.interactionKey!==key||!target)cancelInteraction(round,wish.id);actor.interactionKey=key;if(target)performInteraction(wish.id,target,dt);}
@@ -419,7 +416,7 @@ function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed
  if(ready){if(room&&!online&&!ui.lobby.hidden&&!busy&&!document.hidden){if(stepLobby(room,elapsed))start();else if(room.phase==='countdown'){$('#lobby-counter').textContent=Math.ceil(room.countdown);}}if(round){if(online&&!busy){updateOnlineMatch(Math.min(elapsed,.1));}else if(round.phase==='playing'&&!paused&&!busy&&!phoneLandscape.blocked){const steps=simulationSteps(elapsed);for(let i=0;i<steps.count&&round.phase==='playing';i++){updateGame(steps.dt);gameFX.update(steps.dt);}updateHud();}cameraShake=Math.max(0,cameraShake-elapsed*.35);shakeTime+=elapsed;positionMatchCamera();}
  else if(preview){const homePreview=['home','tools','costume'].includes(activePage);preview.group.scale.setScalar(homePreview?1.5:1);preview.group.rotation.y=homePreview?-Math.PI/6:0;preview.anim.update(dt);if(previewTime>0){previewTime-=dt;if(previewTime<=0)preview.anim.play('idle');}const p=preview.group.position,narrow=innerWidth<760,pagePreview=narrow&&activePage!=='home';const distance=pagePreview?9:4.6,offset=distance*Math.tan(THREE.MathUtils.degToRad(menuCamera.fov/2))*menuCamera.aspect*(activePage==='home'?(narrow?.28:.16):.43);menuCamera.position.set(p.x,p.y+(homePreview?1.85:1.45),p.z+distance);menuCamera.lookAt(p.x-offset,p.y+(pagePreview?3:homePreview?1.2:.8),p.z);}}
  moneyTrail.update(round,position=>{matchRoot.updateMatrixWorld();const p=matchRoot.localToWorld(new THREE.Vector3(...position).addScaledVector(up,2.4)).project(matchCamera);return p.z>=-1&&p.z<=1&&Math.abs(p.x)<=1&&Math.abs(p.y)<=1?{x:(p.x*.5+.5)*innerWidth,y:(-p.y*.5+.5)*innerHeight}:null;},elapsed,!!round&&!ui.hud.hidden&&!paused&&!busy&&!document.hidden&&!phoneLandscape.blocked);
- roundStart.update(round,elapsed);gameAudio.update(round,avatars,!!round&&round.phase==='playing'&&!(round.startRemaining>0)&&!paused&&!busy&&!document.hidden&&!phoneLandscape.blocked);
+ const audioActive=!!round&&round.phase==='playing'&&!(round.startRemaining>0)&&!paused&&!busy&&!document.hidden&&!phoneLandscape.blocked;gameAudio.update(round,avatars,audioActive,!document.hidden&&!phoneLandscape.blocked&&!paused&&(!ui.menu.hidden||!ui.lobby.hidden||audioActive));roundStart.update(round,elapsed);
  if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('#toast').textContent='';}updateMarkers();if(!ui.lobby.hidden&&!busy)renderLobbyCharacters(dt);else renderer.render(scene,round?matchCamera:menuCamera);
 }
 const phoneLandscape=configureLandscape({onChange:()=>{clearInput();resize();}});

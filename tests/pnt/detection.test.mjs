@@ -4,7 +4,7 @@ import {registerHooks} from 'node:module';
 registerHooks({resolve(s,c,next){return s==='three'?{url:new URL('../../vendor/three/build/three.module.js',import.meta.url).href,shortCircuit:true}:next(s,c);}});
 import {createRound,detectThief,canAct,stepRound,DETECTION_RADIUS} from '../../src/pnt/rules.js';
 const {createDetectionZone}=await import('../../src/pnt/detection-zone.js');
-test('detection catches only after 1.6 continuous seconds, at different frame rates',()=>{
+test('detection catches only after 1.6 seconds of valid contact, at different frame rates',()=>{
  for(const hz of [20,60,120]){const round=createRound('chaser');for(let i=0;i<hz*1.6-1;i++)assert.equal(detectThief(round,0,1,1/hz,DETECTION_RADIUS),false);assert.equal(canAct(round,1),true);assert.equal(round.actors[1].caught,false);assert.equal(detectThief(round,0,1,1/hz,DETECTION_RADIUS),true);assert.equal(round.actors[1].caught,true);assert.equal(round.actors[1].releaseCooldown,10);assert.equal(canAct(round,1),false);}
 });
 test('escaping, blocked sight and police stun decay progress; rescue immunity clears it',()=>{

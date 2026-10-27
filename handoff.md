@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.16**, online multiplayer test release.
+Current app version: **0.9.17**, online multiplayer test release.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,18 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.17 code review and audio: BGM plays across main menu and matchmaking lobby
+after the first gesture, without duplicate loops; SFX and music lifecycle are
+separate, failed clips can retry, hidden-tab audio stops immediately. Rules share
+`detectThiefAt()` (2 radius, <0.8 height, 1.5s gameplay grace after GO) and the new
+`sight.js` across local/server. Dormant instant/delayed capture APIs are removed;
+capture stays 1.6s valid contact with 0.4/sec decay. Expired smoke protection and
+one-extra-tick timeout simulation fixed. See `docs/CODE_REVIEW_2026-10-28.md` for
+findings and remaining ring/structural issues. Tests: 112 root + 16 server.
+Render needs a server deploy from `codex/multiplayer-local`; verify health 0.9.17.
+Browser control is currently disabled; don't claim hosted server deployment
+until the health endpoint confirms it.
 
 Browser/share branding now uses the user's supplied files unchanged:
 `assets/pnt/thief-head-icon.png` is the tab/touch icon (512×449), and

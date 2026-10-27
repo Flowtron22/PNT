@@ -1,10 +1,10 @@
 import {randomUUID,randomInt} from 'node:crypto';
 import * as THREE from '../vendor/three/build/three.module.js';
-import {createRound,stepRound,canAct,activateTool,detectThief,harvest,rescue,cancelInteraction,INTERACT_RADIUS,updateSmokeCoverage} from '../src/pnt/rules.js';
+import {createRound,stepRound,canAct,activateTool,detectThiefAt,harvest,rescue,cancelInteraction,INTERACT_RADIUS,updateSmokeCoverage} from '../src/pnt/rules.js';
 import {advanceActor,movementSpeed,MOVEMENT_VERSION} from '../src/pnt/player-motion.js';
 import {shipTilt} from '../src/pnt/environment.js';
 import {findPath} from '../src/pnt/navigation.js';
-import {gridSightClear} from '../src/pnt/collision.js';
+import {hasSight} from '../src/pnt/sight.js';
 import {rollSpinDirection} from '../src/pnt/action-state.js';
 import {createMallPhysics} from '../src/pnt/mall-physics.js';
 import {loadArenaData,groundSpot} from './arena.mjs';
@@ -28,10 +28,7 @@ export class MatchSimulation {
  }
 
  event(type,values){this.events.push({id:++this.eventId,type,...values});if(this.events.length>64)this.events.shift();}
- sight(p,q,smoke=true,stop=.35){
-  if(smoke)for(const h of this.hazards){if(h.type!=='smoke'||h.time<=0)continue;const from=p.clone().add(new THREE.Vector3(0,.65,0)),delta=q.clone().sub(p),length=delta.lengthSq(),t=length?Math.max(0,Math.min(1,h.position.clone().sub(p).dot(delta)/length)):0;if(from.addScaledVector(delta,t).distanceTo(h.position.clone().add(new THREE.Vector3(0,.65,0)))<2.6)return false;}
-  return gridSightClear(this.grid,p.x,p.z,q.x,q.z,stop);
- }
+ sight(p,q,smoke=true,stop=.35){return hasSight(this.grid,p,q,this.hazards,smoke,stop);}
  effect(state,name,time){state.effect=name;state.effectTime=time;if(name==='banana'){state.spinDirection=rollSpinDirection();state.spinTurn=.35;}}
  addHazard(type,actor,time,position){const hazard={id:++this.hazardId,type,owner:actor.id,role:this.round.actors[actor.id].role,time,position:position.clone()};this.hazards.push(hazard);const max=type==='banana'?5:type==='smoke'?3:1,all=this.hazards.filter(h=>h.owner===actor.id&&h.type===type);for(const h of all.slice(0,Math.max(0,all.length-max)))h.time=0;return hazard;}
  smokeCoverage(){updateSmokeCoverage(this.round,this.actors.map(a=>a.group.position),this.hazards.filter(h=>h.type==='smoke'));}
@@ -68,7 +65,7 @@ export class MatchSimulation {
   for(const cache of caches){const q=new THREE.Vector3(...cache.position),d=Math.hypot(q.x-p.x,q.z-p.z);if(d<INTERACT_RADIUS&&Math.abs(p.y-q.y)<2&&this.sight(p,q,false,1.1))return {type:'cache',id:cache.id,d};}return null;
  }
  step(dt=1/60){
-  if(this.round.phase!=='playing')return;this.time+=dt;this.tick++;const starting=this.round.startRemaining>0;stepRound(this.round,dt);if(starting){for(const actor of this.actors){actor.inputQueue.length=0;actor.processedInput=actor.input.seq;actor.input={seq:actor.input.seq,x:0,z:0,interact:false};}return;}this.smokeCoverage();const tilt=this.map==='sunken'?shipTilt(300-this.round.remaining):0,wishes=[];
+  if(this.round.phase!=='playing')return;this.time+=dt;this.tick++;const starting=this.round.startRemaining>0;stepRound(this.round,dt);if(this.round.phase!=='playing')return;if(starting){for(const actor of this.actors){actor.inputQueue.length=0;actor.processedInput=actor.input.seq;actor.input={seq:actor.input.seq,x:0,z:0,interact:false};}return;}this.smokeCoverage();const tilt=this.map==='sunken'?shipTilt(300-this.round.remaining):0,wishes=[];
   for(const actor of this.actors){const state=this.round.actors[actor.id];state.interacting=false;let input=this.players[actor.id].bot?this.botInput(actor,dt):actor.framed?(actor.inputQueue.shift()||{x:0,z:0,interact:false}):this.time-actor.lastInput<.4?actor.input:{x:0,z:0,interact:false};if(input.seq)actor.processedInput=input.seq;let {x,z}=input;
    if(state.caught){x=z=0;actor.mark=null;for(const h of this.hazards)if(h.owner===actor.id&&h.type==='marker')h.time=0;}
    if(state.effect==='banana'&&state.effectTime>0){state.spinTurn-=dt;if(state.spinTurn<=0){state.spinDirection=rollSpinDirection();state.spinTurn=.35;}x=state.spinDirection.x;z=state.spinDirection.z;}
@@ -77,8 +74,8 @@ export class MatchSimulation {
    wishes.push({id:actor.id,wants:input.interact===true});
   }
   this.physics?.step(dt,this.actors);
-  for(const hazard of this.hazards){hazard.time-=dt;if(hazard.type==='banana'&&hazard.time>0)for(const state of this.round.actors){if(state.role===hazard.role||state.caught||state.inSmoke||state.effectTime>0)continue;if(this.actors[state.id].group.position.distanceTo(hazard.position)<.8){this.effect(state,'banana',2);hazard.time=0;break;}}}this.hazards=this.hazards.filter(h=>h.time>0);
-  this.smokeCoverage();const cop=this.actors.find(a=>this.round.actors[a.id].role==='chaser');for(const state of this.round.actors.filter(a=>a.role==='runner')){const p=cop.group.position,q=this.actors[state.id].group.position;if(detectThief(this.round,cop.id,state.id,dt,Math.hypot(p.x-q.x,p.z-q.z),this.time>1.5&&Math.abs(p.y-q.y)<.8&&this.sight(p,q))){this.event('capture',{actor:state.id,position:q.toArray()});this.actors[state.id].mark=null;}}
+  for(const hazard of this.hazards)hazard.time-=dt;this.smokeCoverage();for(const hazard of this.hazards){if(hazard.type==='banana'&&hazard.time>0)for(const state of this.round.actors){if(state.role===hazard.role||state.caught||state.inSmoke||state.effectTime>0)continue;if(this.actors[state.id].group.position.distanceTo(hazard.position)<.8){this.effect(state,'banana',2);hazard.time=0;break;}}}this.hazards=this.hazards.filter(h=>h.time>0);
+  this.smokeCoverage();const cop=this.actors.find(a=>this.round.actors[a.id].role==='chaser');for(const state of this.round.actors.filter(a=>a.role==='runner')){const p=cop.group.position,q=this.actors[state.id].group.position;if(detectThiefAt(this.round,cop.id,state.id,dt,p,q,this.sight(p,q))){this.event('capture',{actor:state.id,position:q.toArray()});this.actors[state.id].mark=null;}}
   for(const cache of this.round.caches)cache.harvester=null;for(const wish of wishes){const target=wish.wants?this.interaction(wish.id):null,actor=this.actors[wish.id],key=target?`${target.type}:${target.id}`:null;if(actor.interactionKey!==key||!target)cancelInteraction(this.round,wish.id);actor.interactionKey=key;if(target?.type==='cache')harvest(this.round,wish.id,target.id,dt,target.d);if(target?.type==='rescue')rescue(this.round,wish.id,target.id,dt,target.d);}
  }
  snapshot(){return {movementVersion:MOVEMENT_VERSION,inputFrames:true,tick:this.tick,time:this.time,worldTime:300-this.round.remaining,map:this.map,round:this.round,poses:this.actors.map(a=>({id:a.id,position:a.group.position.toArray(),angle:a.group.rotation.y,vx:a.vx,vz:a.vz,slideX:a.slideX||0,velocity:a.velocity,grounded:a.grounded,flightFloor:a.flightFloor||0,wasFlying:!!a.wasFlying,flightLanding:a.flightLanding||null,speed:a.speed,ack:a.processedInput,warp:a.warp||0,received:a.input.seq})),hazards:this.hazards.map(h=>({...h,position:h.position.toArray(),time:Number.isFinite(h.time)?h.time:-1})),furniture:this.physics?.furniture.map(f=>({name:f.mesh.name,position:f.mesh.position.toArray(),rotation:f.mesh.quaternion.toArray()}))||[],events:this.events};}
