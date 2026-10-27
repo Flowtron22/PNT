@@ -235,6 +235,8 @@ Jetpack flight emits pooled colored smoke, camera-facing stars and hearts every
 0.12s, starting immediately and stopping when flight ends or capture begins.
 Pink, cyan, yellow, purple and mint particles fade out within 0.85s. All 70 tests
 and production build passed after this update.
+Smoke materials now use smooth shading (`flatShading:false`) for shared cloud
+meshes and pooled particles, keeping the existing 10-by-7 sphere tessellation.
 
 Follow-up: removed the helper hint beneath the map and the entire bottom lobby
 footer bar and its text at the user's request. Lobby markup is in `src/pnt/lobby-ui.js`.
