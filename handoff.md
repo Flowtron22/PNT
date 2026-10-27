@@ -38,6 +38,16 @@ at original dimensions; the preview URL is versioned to avoid stale asset caches
 
 ## Continue here
 
+Hammer visuals now attach to the animated right-hand bone via
+`src/pnt/held-tools.js`, shared by local useTool and multiplayer tool events.
+The grip sits at 55% of the wrist-to-finger offset with a small palm-side offset;
+the handle's 88%-height point is the pivot, and the authored head is flipped to
+hand +Y for the swing. Bone-scale compensation preserves tool size on all nine
+normalized costumes. Existing .48s visual cleanup, gameplay timings, shake and
+stun behavior are unchanged. 105 tests pass including all-costume moving-grip
+and multiplayer attachment tests. Offline posed geometry preview checked at
+`.local/hammer-hand-grip.png`; browser control remains disabled.
+
 Latest: Sunken and Iceberg now use the approved Mall treatment: contact mask^2.3,
 0.4 radius / 65% baked strength / upward normal >0.8, saturation 1.15. Shared
 `bakedArena(arena,id)` applies only to UV1 receivers: SunkenShip (upward-facing

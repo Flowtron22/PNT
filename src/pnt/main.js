@@ -10,6 +10,7 @@ import {renderLobby} from './lobby-ui.js';
 import {createWonderUI} from './menu-effects.js';
 import {createGameplayAudio} from './game-audio.js';
 import {createRoundStart} from './round-start.js';
+import {attachHeldHammer} from './held-tools.js';
 import {createMoneyTrail} from './money-trail.js';
 import {PROFILE_KEY,readProfile,saveProfile,profileName,recordMatch} from './profile.js';
 import {renderHomeWidgets} from './home-widgets.js';
@@ -340,7 +341,7 @@ function useTool(slot,id=0){if(round?.actors[id]?.inSmoke||round?.startRemaining
  if(!activateTool(round,id,slot,tool))return;gameAudio.tool(tool,id,avatars);
  const point=actor.group.position.clone();
  if(tool==='hammer'){
-  setEffect(state,'hammer',.48);actor.hammerImpact=.18/ANIMATION_PLAY_RATE;const visual=prop('propHammer',1.25);visual.position.set(.5,.6,.4);actor.group.add(visual);hazards.push({mesh:visual,type:'visual',time:.48});
+  setEffect(state,'hammer',.48);actor.hammerImpact=.18/ANIMATION_PLAY_RATE;const visual=attachHeldHammer(actor,prop('propHammer',1.25));if(visual)hazards.push({mesh:visual,type:'visual',time:.48});
   for(const other of round.actors){if(other.role===state.role||other.caught||other.inSmoke)continue;const a=avatars[other.id];if(point.distanceTo(a.group.position)<2&&withinSight(point,a.group.position,false))setEffect(other,a.grounded?'stunned':'airStunned',2);}
   if(id===0)say('HAMMER SWING!',.7);
  }else if(tool==='banana'){

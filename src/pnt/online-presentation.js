@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import {createToonSmoke,smokeBombCloud} from './game-fx.js';
+import {attachHeldHammer} from './held-tools.js';
 export function presentOnlineEvent(event,{actors,root,hazards,prop}){
  const actor=actors[event.actor];if(!actor)return;
  if(event.type==='capture'){const mesh=createToonSmoke(.7,16);mesh.position.fromArray(event.position).y+=.8;root.add(mesh);hazards.push({mesh,type:'capture',time:1,spin:new THREE.Vector3(16,20,12)});return;}
  if(event.type!=='tool')return;
- if(event.tool==='hammer'){actor.hammerImpact=.18/1.3;const mesh=prop('propHammer',1.25);mesh.position.set(.5,.6,.4);actor.group.add(mesh);hazards.push({mesh,type:'visual',time:.48});}
+ if(event.tool==='hammer'){actor.hammerImpact=.18/1.3;const mesh=attachHeldHammer(actor,prop('propHammer',1.25));if(mesh)hazards.push({mesh,type:'visual',time:.48});}
  if(event.tool==='rocket'){const mesh=prop('propJet',.8);mesh.position.set(0,.6,-.3);mesh.rotation.y=Math.PI/2;actor.group.add(mesh);hazards.push({mesh,type:'visual',time:5});}
 }
 export function syncOnlineHazards(snapshot,{root,hazards,prop,dispose}){
