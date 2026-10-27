@@ -38,6 +38,13 @@ at original dimensions; the preview URL is versioned to avoid stale asset caches
 
 ## Continue here
 
+Android install fix: manifest was missing its `icons` array. Added square 192/512
+PNG exports of the user's thief head (white padding, aspect ratio preserved),
+plus square touch icon. Generate using `tools/prepare-app-icons.ps1`. HTTPS,
+standalone display and landscape orientation were already configured. No offline
+cache/service-worker behavior was added; current Chrome menu installation does
+not require it. Actual Android install must still be checked on the device.
+
 0.9.17 code review and audio: BGM plays across main menu and matchmaking lobby
 after the first gesture, without duplicate loops; SFX and music lifecycle are
 separate, failed clips can retry, hidden-tab audio stops immediately. Rules share

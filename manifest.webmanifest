@@ -8,5 +8,11 @@
   "orientation": "landscape",
   "background_color": "#201d3c",
   "theme_color": "#171329",
-  "description": "Police N Thief — a four-player chase."
+  "description": "Police N Thief — a four-player chase.",
+  "lang": "en",
+  "categories": ["games"],
+  "icons": [
+    {"src": "/assets/pnt/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "/assets/pnt/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
+  ]
 }
