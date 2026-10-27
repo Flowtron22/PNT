@@ -1,10 +1,14 @@
 # Police N Thief web prototype — handoff
 
 Updated: 27 October 2026 (Asia/Kuala_Lumpur).
-Current local app version: **0.9.9**. Production remains **0.9.8** at `ebbe632`.
+Current app version: **0.9.9**, online multiplayer test release.
 
-**Current user instruction: keep multiplayer local for testing first.** Do not
-push/deploy the multiplayer branch or provision hosting until requested.
+**Current user instruction: deploy multiplayer for a free online test on Render.**
+Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
+`codex/multiplayer-local`, endpoint `https://pnt-multiplayer.onrender.com`.
+Vercel's build command injects that public endpoint; local development still
+discovers the LAN server. Free hosting sleeps when idle and can take about a
+minute to wake. No paid upgrade is authorized.
 See `docs/MULTIPLAYER.md`. Colyseus server and LAN launcher are implemented;
 use `npm run dev:online`, with website port 8491 and game-server port 2567.
 
@@ -93,7 +97,7 @@ Assets have a one-hour cache header, so refresh/reopen when checking updates.
 
 ### Match rules and flow
 
-- PLAY -> Host / Join -> local practice lobby -> four players -> three-second
+- PLAY -> Host / Join -> online lobby (or separate Local Practice) -> four players -> three-second
   countdown -> match loading -> match -> on-stage Victory/Defeat -> fade -> results.
 - Exactly one police versus three thieves. Five-minute round.
 - Thieves win by stealing all money from all caches. Police win by catching all
@@ -109,7 +113,7 @@ Assets have a one-hour cache header, so refresh/reopen when checking updates.
   interaction. Only one helper owns a rescue; competing bots no longer reset it.
 - Host lobby supports bots, map selection, role preference, tools and costumes.
 - Public matchmaking and six-character room-code joining are implemented through
-  the local Colyseus server. Production has no configured multiplayer endpoint.
+  the Colyseus server. Production connects to the Render Free server above.
 
 ### Controls and UI
 

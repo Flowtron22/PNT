@@ -1,7 +1,7 @@
 {
   "framework": null,
   "installCommand": "node -e \"console.log('Local vendored browser dependencies; no install needed')\"",
-  "buildCommand": "npm run build",
+  "buildCommand": "PNT_MULTIPLAYER_URL=https://pnt-multiplayer.onrender.com npm run build",
   "outputDirectory": "dist",
   "headers": [{"source":"/assets/(.*)","headers":[{"key":"Cache-Control","value":"public, max-age=3600"}]}]
 }

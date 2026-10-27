@@ -1,8 +1,24 @@
-# Multiplayer prototype — local testing
+# Multiplayer prototype — local and online testing
 
-Version 0.9.9. Colyseus 0.18 server, JavaScript browser SDK. The user's current
-instruction is **keep multiplayer local for testing first**. Do not publish it
-to Vercel or provision paid hosting as part of this local test.
+Version 0.9.9. Colyseus 0.18 server, JavaScript browser SDK. The user authorized
+a free online test on Render after the local test. No paid upgrade is authorized.
+
+## Online hosting
+
+- Website: `https://police-n-thief.vercel.app/`
+- Game server: `https://pnt-multiplayer.onrender.com`
+- Render service: `srv-dbg9g4vb9u1s73cleivg`, Free, Singapore.
+- Source branch: `codex/multiplayer-local` (public Git repository deployment).
+- Build: `npm --prefix server ci --omit=dev`; start: `npm run multiplayer`.
+- Environment: `NODE_VERSION=24`, `NODE_ENV=production`, `ALLOWED_ORIGINS`
+  includes the exact Vercel origin plus localhost/LAN test origins.
+- Health check: `/health`. Vercel's `buildCommand` sets `PNT_MULTIPLAYER_URL`.
+- Free hosting sleeps after 15 minutes without inbound traffic and can take
+  about a minute to wake. It may restart; rooms are held in memory and are lost
+  on a server restart. Suitable for prototype testing, with no uptime guarantee.
+
+Choose PLAY → HOST LOBBY, then share the code. Other devices choose JOIN LOBBY.
+Internet clients do not need the same Wi-Fi and the developer PC can be off.
 
 ## Run
 
@@ -87,6 +103,10 @@ Two browser clients completed a shared Mall match with matching clock/cash total
 and correct separate victory/defeat results. Tests use loopback, not cellular
 latency or a production load. Real phone testing and internet-latency tuning remain.
 
+On 27 October 2026, four real SDK clients also passed a hosted Render smoke test:
+private room joining, shared Mall match, all 15 furniture poses, acknowledged
+movement input and replicated hammer activation. All test clients left afterward.
+
 ## Future public deployment
 
 Vercel continues to serve the static website. Run the persistent Colyseus server
@@ -99,8 +119,9 @@ Set server `ALLOWED_ORIGINS` to the exact public website origin. Use HTTPS/WSS f
 internet play. On the website build, set `PNT_MULTIPLAYER_URL` to the public HTTPS
 Colyseus URL. The build writes that public endpoint into the generated client
 configuration; no secret belongs in this value. Until configured, the production
-website explicitly reports that the online server is not deployed.
+website explicitly reports that the online server is not deployed. The current
+Vercel configuration supplies the Render endpoint during its Linux build.
 
 This phase uses guest identities and browser-local profiles. Persistent accounts,
 rankings, moderation, internet load testing and multi-process server coordination
-are later work. No hosting account or public multiplayer service was created.
+are later work. The public service uses Render's Free compute plan.
