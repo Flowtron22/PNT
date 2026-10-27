@@ -9,6 +9,12 @@ The 0.4-unit AO radius and upward normal threshold 0.8 keep shading near ground
 contacts. AO strength is baked at 65%; the raw non-color atlas is 2048² / ~165 KB.
 No sun or bounce lighting is included. The previous full lightmap is not loaded.
 
+Visibility correction: the default Three aoMap only affects indirect light and
+was washed out by the Mall's direct lighting. Floor materials now replace that
+ambient-only application with a single final-light multiplier (mask^1.25).
+The contact footprint stays 0.4 units; other materials have no shader override.
+This is an artistic contact shadow under both direct and indirect lighting.
+
 Run `tools/bake-mall-contact.py` in Blender to regenerate; it uses the UVs from
 `mall-lit.glb` and excludes movable props. Offline AO-placement preview:
 `tools/preview-mall-lighting.py -- --contact`. Preview displays albedo multiplied

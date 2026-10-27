@@ -38,6 +38,12 @@ at original dimensions; the preview URL is versioned to avoid stale asset caches
 
 ## Continue here
 
+Contact visibility fix: default aoMap shading was washed out by direct lights.
+Floor-only onBeforeCompile now removes the ambient-only AO chunk and multiplies
+final outgoingLight by contactMask^1.25 once. Radius/receivers are unchanged;
+other objects have no override. Texture audit: range 0.349–1, 1.55% of the atlas
+below 0.98. Browser control remains disabled; do not claim in-game visual QA.
+
 Latest Mall revision replaces the full lighting bake below with **floor contact
 AO only**. Original runtime lighting/materials are restored. `mall-contact-ao.png`
 is a 2048² non-color AO atlas (~165 KB), radius 0.4, strength 65%, normal Z >0.8
