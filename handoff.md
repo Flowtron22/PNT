@@ -209,6 +209,9 @@ desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw
 
 ## Waiting lobby layout checkpoint — 27 October 2026
 
+Follow-up: removed the helper hint beneath the map and the entire bottom lobby
+footer bar and its text at the user's request. Lobby markup is in `src/pnt/lobby-ui.js`.
+
 The user requested restoring the waiting lobby (four players and map selection)
 to its layout before the 0.9.4 desktop overrides. Only the waiting-lobby desktop
 width overrides in `styles/desktop-layout.css` were removed. Host/Join selection
