@@ -38,6 +38,12 @@ at original dimensions; the preview URL is versioned to avoid stale asset caches
 
 ## Continue here
 
+Browser/share branding now uses the user's supplied files unchanged:
+`assets/pnt/thief-head-icon.png` is the tab/touch icon (512×449), and
+`assets/pnt/social-preview.png` is the link-preview image (1200×798). Index head
+includes static Open Graph and large-image Twitter metadata with absolute public
+URLs, image dimensions/alt, title and description. No sharing/posting was done.
+
 Hammer visuals now attach to the animated right-hand bone via
 `src/pnt/held-tools.js`, shared by local useTool and multiplayer tool events.
 The grip sits at 55% of the wrist-to-finger offset with a small palm-side offset;
