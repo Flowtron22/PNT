@@ -1,0 +1,11 @@
+FROM node:24-bookworm-slim
+WORKDIR /app
+COPY server/package*.json ./server/
+RUN npm --prefix server ci --omit=dev
+COPY server ./server
+COPY src ./src
+COPY vendor ./vendor
+COPY assets/pnt/arenas ./assets/pnt/arenas
+ENV NODE_ENV=production PORT=2567
+EXPOSE 2567
+CMD ["node", "server/run.mjs"]

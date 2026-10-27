@@ -1,7 +1,12 @@
 # Police N Thief web prototype — handoff
 
 Updated: 27 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.8**. Environment implementation follows code baseline `6ebac15` on `main`.
+Current local app version: **0.9.9**. Production remains **0.9.8** at `ebbe632`.
+
+**Current user instruction: keep multiplayer local for testing first.** Do not
+push/deploy the multiplayer branch or provision hosting until requested.
+See `docs/MULTIPLAYER.md`. Colyseus server and LAN launcher are implemented;
+use `npm run dev:online`, with website port 8491 and game-server port 2567.
 
 ## Continue here
 
@@ -103,8 +108,8 @@ Assets have a one-hour cache header, so refresh/reopen when checking updates.
 - Rescue unlocks after a ten-second cooldown and takes 1.5 seconds of continuous
   interaction. Only one helper owns a rescue; competing bots no longer reset it.
 - Host lobby supports bots, map selection, role preference, tools and costumes.
-- Public matchmaking / room-code joining are UI placeholders with explicit
-  unavailable feedback. **No browser online multiplayer backend exists yet.**
+- Public matchmaking and six-character room-code joining are implemented through
+  the local Colyseus server. Production has no configured multiplayer endpoint.
 
 ### Controls and UI
 
@@ -183,6 +188,12 @@ Assets have a one-hour cache header, so refresh/reopen when checking updates.
 desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw FBX.
 
 ## Verification and remaining concerns
+
+- Multiplayer 0.9.9: 84 root tests plus five server tests pass. Four real SDK
+  clients cover rooms, permissions, readiness, shared state, reconnect, rematch,
+  public/private isolation, capture, tools, stealing/rescue and Mall physics.
+  Two browser clients completed a shared Mall match with correct per-player
+  results. Actual phone/LAN and internet-latency tests still need user review.
 
 - Iceberg follow-up: the 40% slipperiness reduction was reverted. Original
   `ICE.steering=1.4` and `ICE.braking=2.2` are restored. Police and thief movement

@@ -1,0 +1,23 @@
+{
+  "name": "pnt-multiplayer-server",
+  "version": "0.9.9",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node run.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "bundle-client": "node ../tools/bundle-multiplayer-client.mjs"
+  },
+  "dependencies": {
+    "@colyseus/core": "0.18.23",
+    "@colyseus/sdk": "0.18.8",
+    "@colyseus/tools": "0.18.11",
+    "@colyseus/ws-transport": "0.18.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

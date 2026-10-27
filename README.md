@@ -4,6 +4,11 @@ A browser practice prototype developed by Todak Studios, using PNT characters,
 role-specific running and action animations, logo and all three Unreal arenas.
 The animated menu has Play, Tools, Costume, Setting and Credit pages.
 
+Version 0.9.9 also includes **local-network multiplayer using Colyseus**. Install
+the server once with `npm run server:install`, then run `npm run dev:online`.
+Open the printed LAN address on each device and use Host/Join room codes.
+See [the multiplayer guide](docs/MULTIPLAYER.md). Public hosting is not enabled yet.
+
 ## Play locally
 
 Requires Node.js. Browser dependencies are vendored; no installation is needed.

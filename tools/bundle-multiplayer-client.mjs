@@ -1,0 +1,7 @@
+import {readFileSync,writeFileSync,mkdirSync,existsSync} from 'node:fs';
+import {createRequire} from 'node:module';import {resolve,join} from 'node:path';import {fileURLToPath} from 'node:url';
+const root=fileURLToPath(new URL('../',import.meta.url)),server=join(root,'server'),require=createRequire(join(server,'package.json')),{build}=require('esbuild'),out=join(root,'vendor/colyseus');mkdirSync(out,{recursive:true});
+const result=await build({entryPoints:[join(server,'node_modules/@colyseus/sdk/build/index.mjs')],bundle:true,format:'esm',platform:'browser',minify:true,outfile:join(out,'sdk.mjs'),metafile:true,legalComments:'inline'});
+const packages=new Set();for(const path of Object.keys(result.metafile.inputs)){const absolute=resolve(path),match=absolute.match(/^(.*[\\/]node_modules[\\/](?:@[^\\/]+[\\/])?[^\\/]+)/);if(match)packages.add(match[1]);}
+let notices='Colyseus JavaScript SDK 0.18.8 and bundled dependencies\n';for(const directory of [...packages].sort()){const pkg=JSON.parse(readFileSync(join(directory,'package.json'),'utf8'));notices+=`\n\n${pkg.name} ${pkg.version}\n`;const license=['LICENSE','LICENSE.md','LICENSE.txt','LICENSE-MIT','LICENSE-MIT.txt','license','license.md','LICENSE-MIT.md'].find(p=>existsSync(join(directory,p)));if(!license)throw Error(`Missing licence for ${pkg.name}`);notices+=readFileSync(join(directory,license),'utf8');}
+writeFileSync(join(out,'third-party-notices.txt'),notices);console.log(`Bundled Colyseus browser SDK with ${packages.size} licence notices.`);
