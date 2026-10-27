@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {registerHooks} from 'node:module';import * as THREE from '../../vendor/three/build/three.module.js';
 registerHooks({resolve(s,c,next){return s==='three'?{url:new URL('../../vendor/three/build/three.module.js',import.meta.url).href,shortCircuit:true}:next(s,c);}});
-const {createGameFX,createToonSmoke}=await import('../../src/pnt/game-fx.js');
+const {createGameFX,createToonSmoke,smokeBombCloud,animateSmokeBomb}=await import('../../src/pnt/game-fx.js');
 test('jetpack emits colored smoke, stars and hearts immediately, limits cadence and stops after flight',()=>{
  const scene=new THREE.Scene(),fx=createGameFX(scene),actor={group:new THREE.Group()},state={effect:'rocket',effectTime:5},camera=new THREE.PerspectiveCamera();camera.rotation.set(-.5,.8,0);
  fx.jetpack(actor,state,1/60,camera);assert.equal(scene.children.length,3);
@@ -16,3 +16,5 @@ test('toon run trails are opaque, distance-spaced clusters rather than continuou
 test('smoke clusters reuse opaque sphere geometry with varied sizes and orientations',()=>{const cloud=createToonSmoke(.7,16);assert.equal(cloud.children.length,16);assert.ok(new Set(cloud.children.map(p=>p.scale.x)).size>1);assert.ok(new Set(cloud.children.map(p=>p.rotation.x)).size>1);for(const puff of cloud.children){assert.equal(puff.geometry.type,'SphereGeometry');assert.equal(puff.material.transparent,false);assert.equal(puff.material.depthWrite,true);}});
 
 test('hammer smoke uses the toon sphere mesh, spreads from ground impact and fades away',()=>{const scene=new THREE.Scene(),fx=createGameFX(scene),impact=new THREE.Vector3(4,2,-3);fx.hammer(impact);const puffs=scene.children.filter(m=>m.geometry.type==='SphereGeometry');assert.equal(puffs.length,16);for(const p of puffs){assert.equal(p.position.y,2.08);assert.equal(p.material.opacity,1);assert.equal(p.material.transparent,true);}fx.update(.55);assert.ok(puffs.every(p=>Math.hypot(p.position.x-4,p.position.z+3)>.8));assert.ok(puffs.some(p=>p.material.opacity<1));fx.update(1);assert.ok(puffs.every(p=>!p.visible));});
+
+test('smoke bombs billow without moving the gameplay center or creating extra meshes',()=>{const root=new THREE.Group(),cloud=smokeBombCloud();root.add(cloud);const before=cloud.children.map(p=>p.position.clone()),count=cloud.children.length;for(let i=0;i<600;i++)animateSmokeBomb(root,1/60);assert.equal(cloud.children.length,count);assert.equal(root.position.length(),0);assert.ok(cloud.children.some((p,i)=>p.position.distanceTo(before[i])>.1));for(const puff of cloud.children){assert.ok(puff.position.length()<2);assert.ok(puff.scale.x>0);assert.equal(puff.material.flatShading,false);}});

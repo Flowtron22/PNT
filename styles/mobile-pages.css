@@ -30,3 +30,5 @@
 /* Play cards: prominent left-aligned action title below the icon and kicker. */
 #menu[data-page=play] .flow-option>b{font:clamp(28px,2.7vw,42px)/1.1 Titan;margin-top:10px;padding-top:0;align-self:flex-start;text-align:left}
 @media(max-width:1024px),(pointer:coarse){#menu[data-page=play] .flow-option>b{grid-column:1/-1;grid-row:3;font-size:clamp(24px,3vw,34px);margin-top:8px}}
+/* Native landscape lock where supported; portrait fallback for phone browsers. */
+#phone-landscape{position:fixed;inset:0;z-index:10000;background:#211b32;color:#fff;display:grid;place-items:center;padding:30px;text-align:center;touch-action:manipulation}#phone-landscape>div{max-width:340px}.rotate-phone-icon{display:block;font:90px/1 Rubik;color:#ff961f;margin-bottom:24px}#phone-landscape h2{font:30px/1.15 Titan;margin:0 0 16px}#phone-landscape p{font:700 14px/1.6 Rubik;color:#c7bfd8;margin-bottom:24px}.landscape-required #hud{pointer-events:none}

@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 27 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.13**, online multiplayer test release.
+Current app version: **0.9.14**, online multiplayer test release.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,26 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.14: phone landscape request on first touch where supported, with a rotate-phone
+overlay in unsupported portrait browsers and `orientation: landscape` in the app
+manifest. Mall PBR materials use roughness 1 / metalness 0 (maps cleared), plus a
+Mall-only fill light from the darker side. Detection rim and progress arc are
+about twice as thick without changing gameplay radius. Smoke bomb puffs billow
+in both local and online matches, retaining the same meshes/materials.
+
+Jetpacks bypass navigation and furniture collision while flying. At expiry, the
+shared client/server motion selects a landing cell connected to authored spawns,
+with no blocking cell or isolated roof. See `landing.js`; the grid landing mask is
+built on load on both client and server. Flight-floor/wasFlying fields are included
+in network poses so input replay remains consistent. Online movement requires
+deploying the latest `codex/multiplayer-local` branch on Render.
+
+Original Unreal audio was inspected/exported read-only: 21 gameplay MP3 clips and
+the 64-second looping music now play in-game, with separate sound/music settings.
+See `docs/AUDIO_PORT.md`. Original `Content` has no Git diff. Tests: 97 root tests,
+nine server tests, including safe landing on all three original maps. Browser
+control remains disabled; phone/browser visual and listening checks need user testing.
 
 Environment reference inspected on this workstation: Unreal checkout
 `F:\PROJECTS\PS_3D\GitHub\PSX`. See `docs/ENVIRONMENT_PORT.md` for verified

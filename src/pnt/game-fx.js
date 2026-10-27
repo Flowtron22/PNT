@@ -7,6 +7,13 @@ const starGeometry=new THREE.ShapeGeometry(starShape),heartGeometry=new THREE.Sh
 starGeometry.name='jet-star';heartGeometry.name='jet-heart';
 const jetColors=[0xff80bc,0x8cecff,0xffdb70,0xc3a0ff,0x9af5c4];
 export function createToonSmoke(size=1,count=12){const cloud=new THREE.Group();for(let i=0;i<count;i++){const puff=new THREE.Mesh(smokeGeometry,smokeMaterials[i%smokeMaterials.length]),angle=i*2.39996,radius=(.3+Math.random()*.8)*size;const scale=(.4+Math.random()*.65)*size;puff.position.set(Math.cos(angle)*radius,(Math.random()-.35)*size,Math.sin(angle)*radius);puff.scale.set(scale,scale*(.8+Math.random()*.4),scale);puff.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);cloud.add(puff);}return cloud;}
+export function animateSmokeBomb(root,dt){
+ const cloud=root.children.find(child=>child.userData.smokeBomb);if(!cloud)return;
+ const data=cloud.userData.smokeBomb;data.time+=Math.min(dt,.1);const time=data.time;
+ cloud.rotation.y=time*.14;
+ cloud.children.forEach((puff,i)=>{const base=data.puffs[i],phase=time*.9+i*1.7;puff.position.copy(base.position);puff.position.x+=Math.sin(phase)*.16;puff.position.z+=Math.cos(phase*.83)*.16;puff.position.y+=Math.sin(phase*1.2)*.18;puff.scale.copy(base.scale).multiplyScalar(1+Math.sin(phase)*.12);puff.rotation.y+=dt*(i%2?-.22:.22);});
+}
+export function smokeBombCloud(){const cloud=createToonSmoke(1.2,14);cloud.position.y=.9;cloud.userData.smokeBomb={time:0,puffs:cloud.children.map(puff=>({position:puff.position.clone(),scale:puff.scale.clone()}))};return cloud;}
 export function createGameFX(scene){
  const ring=new THREE.RingGeometry(.84,1,40),items=[],pool=[],MAX=100;
  let jetTimers=new WeakMap();

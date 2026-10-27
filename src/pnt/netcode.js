@@ -2,7 +2,7 @@ import {advanceActor,movementSpeed} from './player-motion.js';
 import {shipTilt} from './environment.js';
 export const NETWORK_STEP=1/60;
 const angleDelta=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
-export function applyPose(actor,pose){actor.group.position.fromArray(pose.position);actor.group.rotation.y=pose.angle;for(const key of ['vx','vz','slideX','velocity','grounded','speed'])actor[key]=pose[key]??0;}
+export function applyPose(actor,pose){actor.group.position.fromArray(pose.position);actor.group.rotation.y=pose.angle;for(const key of ['vx','vz','slideX','velocity','grounded','speed','flightFloor','wasFlying'])actor[key]=pose[key]??0;}
 export function predictInput(actor,state,input,time,options){
  let {x,z}=input;const flying=state.effect==='rocket'&&state.effectTime>0;
  if(state.effect==='banana'&&state.effectTime>0){x=state.spinDirection?.x||0;z=state.spinDirection?.z||0;}

@@ -1,0 +1,10 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {createGameplayAudio} from '../../src/pnt/game-audio.js';
+test('game audio plays exported cues, stops loops on pause/menu and respects independent sound/music controls',async()=>{
+ const originalStorage=globalThis.localStorage,originalFetch=globalThis.fetch,sources=[],storage=new Map();globalThis.localStorage={getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value)};globalThis.fetch=async url=>({ok:true,arrayBuffer:async()=>new TextEncoder().encode(url).buffer});
+ const context={currentTime:1,state:'running',createGain:()=>({gain:{value:1},connect(){},disconnect(){}}),decodeAudioData:async bytes=>new TextDecoder().decode(bytes),createBufferSource(){const source={connect(){},disconnect(){},start(){sources.push(this);},stop(){this.stopped=true;this.onended?.();}};return source;}},engine={ctx:context,master:{},init(){},resume(){}};
+ try{const audio=createGameplayAudio(()=>engine);await audio.prepare();const round={profileId:'match',playerRole:'runner',phase:'playing',collected:0,actors:[{role:'runner',effect:null,effectTime:0,caught:false}]},actors=[{group:{position:{distanceTo:()=>0}}}];audio.update(round,actors,true);assert.ok(sources.some(s=>s.loop&&s.buffer.includes('gameplay-bgm')));audio.tool('hammer',0,actors);assert.ok(sources.some(s=>s.buffer.includes('Tool_Hammer_Activate')));
+  context.currentTime++;round.actors[0].effect='rocket';round.actors[0].effectTime=5;audio.update(round,actors,true);const jet=sources.find(s=>s.loop&&s.buffer.includes('Tool_Jetpack_Flight'));assert.ok(jet);audio.update(round,actors,false);assert.equal(jet.stopped,true);assert.ok(sources.filter(s=>s.loop).every(s=>s.stopped));
+  audio.setEnabled(false);audio.setMusic(false);const count=sources.length;audio.tool('banana',0,actors);audio.update(round,actors,true);assert.equal(sources.length,count);assert.equal(storage.get('pnt-game-sfx'),'off');assert.equal(storage.get('pnt-game-music'),'off');audio.update(null,[],false);assert.ok(sources.every(s=>s.stopped));
+ }finally{globalThis.localStorage=originalStorage;globalThis.fetch=originalFetch;}
+});

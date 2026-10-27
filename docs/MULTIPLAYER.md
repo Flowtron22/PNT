@@ -1,6 +1,6 @@
 # Multiplayer prototype — local and online testing
 
-Version 0.9.11. Colyseus 0.18 server, JavaScript browser SDK. The user authorized
+Version 0.9.14. Colyseus 0.18 server, JavaScript browser SDK. The user authorized
 a free online test on Render after the local test. No paid upgrade is authorized.
 
 ## Online hosting
@@ -112,7 +112,7 @@ npm run test:multiplayer
 npm run build
 ```
 
-The root suite has 90 tests; the server suite has eight tests, including four real
+The root suite has 97 tests; the server suite has nine tests, including four real
 SDK clients joining over HTTP/WebSocket, capacity, host permissions, readiness,
 shared state, cooldown enforcement, reconnect, end/rematch/map switch, public/private
 isolation, timed capture, input validation, stealing, rescue and Mall furniture.
@@ -122,6 +122,11 @@ latency or a production load. Real phone testing and internet-latency tuning rem
 The 0.9.11 tests also cover replay under 200 ms round-trip delay plus jitter,
 smooth buffered motion with uneven 20 Hz arrivals, fixed movement at 30/60/144
 render FPS, bounded extrapolation, teleports and server frame-consumption limits.
+0.9.14 shares airborne obstacle bypass and safe jetpack landing across server,
+practice and prediction. Landing masks flood-fill the original floor from spawns,
+excluding blocked cells and disconnected rooftops. These changes need the server
+deployment as well as the static site update; other visual/audio changes are local
+presentation only.
 
 On 27 October 2026, four real SDK clients also passed a hosted Render smoke test:
 private room joining, shared Mall match, all 15 furniture poses, acknowledged
