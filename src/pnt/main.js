@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {clone} from 'three/addons/utils/SkeletonUtils.js';
-import {createRound,stepRound,beginCapture,activateTool,canAct as canActRule,harvest,rescue,cancelInteraction,INTERACT_RADIUS,RESCUE_SECONDS} from './rules.js';
+import {createRound,stepRound,detectThief,activateTool,canAct as canActRule,harvest,rescue,cancelInteraction,INTERACT_RADIUS,RESCUE_SECONDS} from './rules.js';
 import {normalizeLoadout,equipTool,normalizeCostume} from './loadout.js';
 import {makeAnimator,animationFor,ANIMATION_PLAY_RATE} from './animation.js';
 import {COSTUMES,TOOLS} from './catalog.js';
@@ -22,6 +22,7 @@ import {createResultPortrait} from './result-portrait.js';
 import {createGameFX,createToonSmoke} from './game-fx.js';
 import {stageEndState,rollSpinDirection,movementGroundReference} from './action-state.js';
 import {renderResults} from './results-ui.js';
+import {createDetectionZone} from './detection-zone.js';
 import {findPath,screenToWorld} from './navigation.js';
 import {buildWalkGrid,arenaBounds,solidForGameplay} from './world-navigation.js';
 let resultPortrait=null,bindings=loadBindings(localStorage),bindingCapture=null,cameraShake=0,shakeTime=0,stageFrame=null;
@@ -68,7 +69,7 @@ function loadError(error,retry){console.error(error);$('#loading-title').textCon
 const nextFrame=()=>new Promise(resolve=>requestAnimationFrame(resolve));
 async function getGLB(key,url,onProgress){if(cache.has(key))return cache.get(key);const pending=loader.loadAsync(url,onProgress);cache.set(key,pending);try{return await pending;}catch(e){cache.delete(key);throw e;}}
 async function ensureCostume(){const c=COSTUMES.find(c=>c.id===costume);if(templates[c.id]||!c.file)return;templates[c.id]=await getGLB(c.id,`assets/pnt/costumes/${c.file}.glb`,e=>progress(e.total?Math.min(85,e.loaded/e.total*85):30,`Loading ${c.name}…`));}
-function destroy(a){if(!a)return;a.group.removeFromParent();a.anim.dispose();const skeletons=new Set();a.model.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const skeleton of skeletons)skeleton.dispose();for(const mesh of [a.ring,a.shadow]){mesh.geometry.dispose();mesh.material.dispose();}}
+function destroy(a){if(!a)return;a.detectionZone?.dispose();a.group.removeFromParent();a.anim.dispose();const skeletons=new Set();a.model.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const skeleton of skeletons)skeleton.dispose();for(const mesh of [a.ring,a.shadow]){mesh.geometry.dispose();mesh.material.dispose();}}
 function clearHazards(){gameFX.clear();for(const h of hazards)disposeHazard(h);hazards.length=0;}
 function menu(){clearStageVerdict();resultPortrait?.dispose();resultPortrait=null;restoreMenuArena();room=null;returnToLobby=false;clearLobbyDisplays();round=null;paused=false;clearInput();clearHazards();for(const a of avatars)destroy(a);avatars=[];previewModel();show('menu');openPage('home');}
 function previewModel(){destroy(preview);preview=avatar(templates[costume],0,role);preview.group.position.copy(spot(0,0));preview.group.rotation.y=0;previewClip='idle';previewTime=0;preview.anim.play('idle');labels();}
@@ -245,7 +246,7 @@ function avatar(template,id,actorRole){
  const shadow=new THREE.Mesh(new THREE.CircleGeometry(.35,20),new THREE.MeshBasicMaterial({color:0x09154b,transparent:true,opacity:.25,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.015;group.add(shadow);
  return {id,group,model,anim,ring,shadow,velocity:0,grounded:true,speed:0,wander:id*2.2};
 }
-function populate(){for(const a of avatars)destroy(a);avatars=[];for(const state of round.actors){const template=state.id===0?templates[costume]:(templates[room?.players[state.id]?.costume]||templates[state.role==='chaser'?'police':'thief']);const actor=avatar(template,state.id,state.role);const p=mapData.spawns[state.id];actor.group.position.copy(spot(p[0],p[2]));actor.tools=state.id===0?loadout:state.role==='chaser'?['hammer','rocket']:state.id%2?['banana','smoke']:['rewind','rocket'];avatars.push(actor);}}
+function populate(){for(const a of avatars)destroy(a);avatars=[];for(const state of round.actors){const template=state.id===0?templates[costume]:(templates[room?.players[state.id]?.costume]||templates[state.role==='chaser'?'police':'thief']);const actor=avatar(template,state.id,state.role);const p=mapData.spawns[state.id];actor.group.position.copy(spot(p[0],p[2]));if(state.role==='chaser'){actor.detectionZone=createDetectionZone();actor.group.add(actor.detectionZone.group);}actor.tools=state.id===0?loadout:state.role==='chaser'?['hammer','rocket']:state.id%2?['banana','smoke']:['rewind','rocket'];avatars.push(actor);}}
 async function start(){if(!ready||busy)return;clearStageVerdict();resultPortrait?.dispose();resultPortrait=null;if(room){role=resolveRole(room.preference);room.phase='playing';}returnToLobby=false;clearLobbyDisplays();beginLoading('SETTING UP THE CHASE');await nextFrame();try{await ensureCostume();await loadArena(['mall','sunken','iceberg'][room?.map||0]);progress(55,'Placing the crew…');destroy(preview);preview=null;round=createRound(role,mapData.caches);round.profileId=globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);paused=false;clearInput();clearHazards();populate();buildMarkers();stageFrame=stageFraming(mapData.spawns,mapData.caches);const center=fixedStageCenter(mapData.spawns,mapData.caches),anchor=spot(center.x,center.z);cameraTarget.set(center.x,anchor.y,center.z);cameraShake=0;positionMatchCamera();progress(85,'Warming up materials…');await renderer.compileAsync(scene,matchCamera);renderer.render(scene,matchCamera);progress(100,'Ready. Set. Run!');await nextFrame();$('#role-label').textContent=role==='runner'?'THIEF':'POLICE';$('#role-label').classList.toggle('chaser',role==='chaser');labels();show('hud');endLoading();say(role==='runner'?'HOLD INTERACT TO STEAL CASH!':'CATCH ALL THREE THIEVES!');updateHud();}catch(e){round=null;loadError(e,start);}}
 function canAct(){return round&&canActRule(round,0)&&!paused&&!busy;}
 function interact(){if(canAct())interactHeld=true;}
@@ -303,14 +304,15 @@ function updateGame(dt){
   const moved=move(a,dx,dz,dt,(state.role==='chaser'?3.65:3.4)*1.15*(state.id===0?1.08:1)*(state.effect==='rocket'&&state.effectTime>0?1.8:1));if(!moved&&state.effect==='banana'&&state.effectTime>0)state.spinDirection=rollSpinDirection();if(!moved&&state.id!==0&&!locked&&Math.hypot(dx,dz)>.1){a.routeTime=0;}animate(a,state,dt);wishes.push({id:state.id,wants:wants&&!locked});
  }
  for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];h.time-=dt;if(h.type==='capture'){h.mesh.rotation.x+=dt*h.spin.x;h.mesh.rotation.y+=dt*h.spin.y;h.mesh.rotation.z+=dt*h.spin.z;h.mesh.scale.setScalar(Math.min(1,h.time*4));}else if(h.type==='smoke')h.mesh.rotation.y+=dt*.2;if(h.type==='banana'&&h.time>0)for(const state of round.actors){if(state.caught||state.role===h.ownerRole||state.effectTime>0)continue;if(avatars[state.id].group.position.distanceTo(h.mesh.position)<.8){setEffect(state,'banana',2);h.time=0;break;}}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}
- if(round.remaining<298.5&&chaser.effectTime<=0)for(const r of round.actors.filter(a=>a.role==='runner'&&!a.caught)){const p=cop.group.position,q=avatars[r.id].group.position,d=p.distanceTo(q);if(d<.9&&Math.abs(p.y-q.y)<.8&&withinSight(p,q)&&beginCapture(round,chaser.id,r.id,d)){const cloud=createToonSmoke(.7,16);cloud.position.copy(q).addScaledVector(up,.8);scene.add(cloud);cloud.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);hazards.push({mesh:cloud,type:'capture',owner:r.id,time:1,spin:new THREE.Vector3(12+Math.random()*16,14+Math.random()*18,10+Math.random()*16)});cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAPTURED!':'CATCHING THIEF!',1);}}
+ for(const r of round.actors.filter(a=>a.role==='runner')){const p=cop.group.position,q=avatars[r.id].group.position,d=Math.hypot(p.x-q.x,p.z-q.z);if(detectThief(round,chaser.id,r.id,dt,d,round.remaining<298.5&&Math.abs(p.y-q.y)<.8&&withinSight(p,q))){const cloud=createToonSmoke(.7,16);cloud.position.copy(q).addScaledVector(up,.8);scene.add(cloud);cloud.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);hazards.push({mesh:cloud,type:'capture',owner:r.id,time:1,spin:new THREE.Vector3(12+Math.random()*16,14+Math.random()*18,10+Math.random()*16)});cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAPTURED!':'CATCHING THIEF!',1);}}
+ cop.detectionZone.update(round.actors,round.phase==='playing'&&canActRule(round,chaser.id));
  for(const c of round.caches)c.harvester=null;
  for(const wish of wishes){const target=wish.wants?interactionTarget(wish.id):null,key=target?target.type+':'+target.target.id:null,actor=avatars[wish.id];if(actor.interactionKey!==key||!target)cancelInteraction(round,wish.id);actor.interactionKey=key;if(target)performInteraction(wish.id,target,dt);}
  if(round.phase==='finished'&&!round.endStarted)beginStageVerdict();
 }
 function clearStageVerdict(){document.body.classList.remove('round-ending');$('#stage-verdict').hidden=true;$('#stage-verdict').classList.remove('is-lose');$('#round-fade').style.opacity='0';}
 function beginStageVerdict(){
- round.endStarted=true;round.endElapsed=0;paused=false;clearInput();document.body.classList.add('round-ending');const won=round.winner===round.playerRole;
+ for(const actor of avatars)if(actor.detectionZone)actor.detectionZone.group.visible=false;round.endStarted=true;round.endElapsed=0;paused=false;clearInput();document.body.classList.add('round-ending');const won=round.winner===round.playerRole;
  $('#stage-verdict').classList.toggle('is-lose',!won);$('#stage-verdict-title').textContent=won?'VICTORY!':'DEFEAT';$('#stage-verdict-reason').textContent=round.reason==='timeout'?'TIME UP':round.reason==='money'?'ALL MONEY STOLEN':'ALL THIEVES CAUGHT';$('#stage-verdict').hidden=false;
  uiEffects.sounds.play(won?'victory_fanfare':'defeat_jingle');$('#toast').textContent='';
  for(const a of avatars)a.anim.play(round.actors[a.id].role===round.winner?'dance':'idle');

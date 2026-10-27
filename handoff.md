@@ -89,7 +89,12 @@ Assets have a one-hour cache header, so refresh/reopen when checking updates.
 - Thieves win by stealing all money from all caches. Police win by catching all
   three thieves or when time expires with money remaining.
 - Hold Interact near a cache to steal or near an eligible teammate to rescue.
-- Capture has a one-second smoke sequence before the caught state applies.
+- Police capture requires 1.6 continuous seconds within a 2-unit circular detection
+  radius, on the same floor with clear line of sight. Escape, blocked sight,
+  police tool/stun effects and rescue immunity reset that thief's progress.
+  Thieves remain mobile during detection. At completion caught state applies
+  immediately with a one-second cosmetic smoke effect. The police ground circle
+  shows an orange progress arc for the most advanced target; timers are independent.
 - Rescue unlocks after a ten-second cooldown and takes 1.5 seconds of continuous
   interaction. Only one helper owns a rescue; competing bots no longer reset it.
 - Host lobby supports bots, map selection, role preference, tools and costumes.
