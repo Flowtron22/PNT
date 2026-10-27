@@ -109,3 +109,15 @@ The editable profile and current loadout show real browser-local selections. Onl
 completed practice rounds award wins, matches and XP; leaving early awards nothing.
 Ranks and XP thresholds use the reference progression. These are local practice
 stats, not an online account or an authoritative multiplayer rating.
+
+## iPhone play
+
+Gameplay uses independent pointer IDs: one thumb can hold the stick while other
+fingers activate tools, jump or dash on pointer-down. Delayed compatibility clicks
+are ignored; gameplay touch/pinch gestures are cancelled without blocking menu
+fields. Touch cancel, lost capture, pause and app switching clear held movement.
+
+Safari on iPhone cannot fullscreen arbitrary game content through the desktop API.
+Settings shows Safari → Share → Add to Home Screen instructions when that API is
+unavailable. The manifest and Apple web-app metadata support launching without
+Safari browser bars. No offline asset cache or service worker is installed.

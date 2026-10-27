@@ -59,3 +59,6 @@ html,body{touch-action:manipulation}body.playing{touch-action:none}.lobby-screen
 @media(hover:none),(pointer:coarse),(max-width:759px),(max-height:500px) and (max-width:1000px){#hud .actions .tool-action{background:linear-gradient(145deg,#fff,#e8eaed)}}
 
 @media(hover:none),(pointer:coarse),(max-width:759px),(max-height:500px) and (max-width:1000px){.actions #dash,.actions #tool-action1{width:var(--touch-size);height:var(--touch-size)}}
+
+/* Gameplay owns touch gestures; menu fields and scrolling keep their native behavior. */
+#hud,#hud *,#world{touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}.actions .control-icon,.actions .control-label,.actions .control-slot,.actions small{pointer-events:none}.actions button.is-touch-down:not(:disabled){scale:.92}.fullscreen-help{margin-top:18px;line-height:1.7}

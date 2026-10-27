@@ -10,6 +10,9 @@ import {renderLobby} from './lobby-ui.js';
 import {createWonderUI} from './wonder-ui.js';
 import {PROFILE_KEY,readProfile,saveProfile,profileName,recordMatch} from './profile.js';
 import {renderHomeWidgets} from './home-widgets.js';
+import {bindGameControls} from './touch-controls.js';
+import {configureFullscreen} from './fullscreen.js';
+let touchControls;
 let profile=readProfile(localStorage);
 const $=s=>document.querySelector(s),canvas=$('#world');
 const ui={menu:$('#menu'),hud:$('#hud'),pause:$('#pause'),results:$('#results'),lobby:$('#lobby')};
@@ -28,7 +31,7 @@ let costume=normalizeCostume(localStorage.getItem('pnt-costume'));
 let loadout=normalizeLoadout(localStorage.getItem('pnt-loadout'),localStorage.getItem('pnt-tool')),selectedTool=loadout[0];
 let round=null,avatars=[],preview=null,previewClip='idle',previewTime=0,templates={},clips={},ground=[],bounds=null,grid=null;
 let paused=false,activePage='home',toastTime=0,lastFrame=performance.now(),busy=false;
-const keys=new Set(),input={x:0,z:0},stick={id:null},cameraTarget=new THREE.Vector3(),hazards=[];
+const keys=new Set(),input={x:0,z:0},cameraTarget=new THREE.Vector3(),hazards=[];
 let room=null,returnToLobby=false,lobbyDisplays=[];
 const lobbyCamera=new THREE.PerspectiveCamera(34,1,.05,30);lobbyCamera.position.set(0,1.3,3.2);lobbyCamera.lookAt(0,.8,0);
 let reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -38,7 +41,7 @@ function resize(){const aspect=innerWidth/innerHeight;menuCamera.aspect=aspect;m
 addEventListener('resize',resize);resize();
 function show(name){for(const [key,node]of Object.entries(ui))node.hidden=key!==name;document.body.classList.toggle('playing',name==='hud'||name==='pause'||name==='results');document.body.classList.toggle('lobby-view',name==='lobby');$('#lobby-backdrop').hidden=name!=='lobby';}
 function say(text,seconds=2){$('#toast').textContent=text;toastTime=seconds;}
-function clearInput(){keys.clear();input.x=input.z=0;stick.id=null;$('#stick').style.transform='';}
+function clearInput(){keys.clear();input.x=input.z=0;touchControls?.reset();}
 function pauseGame(){if(!round||round.phase!=='playing'||paused||busy)return;paused=true;clearInput();show('pause');}
 function resume(){paused=false;show('hud');lastFrame=performance.now();}
 function progress(value,text){$('#load-progress').style.width=`${Math.round(value)}%`;$('#load-percent').textContent=`${Math.round(value)}%`;$('#load-status').textContent=text;}
@@ -132,10 +135,10 @@ function openPage(name){if(busy)return;activePage=name;if(preview)preview.group.
   content.innerHTML=`<p class="page-copy">Pick your costume. Bring your own kind of trouble.</p><div class="wardrobe-grid">${COSTUMES.map(c=>choice(c.id,c.name,c.id===costume?'EQUIPPED':'',c.id===costume,'<img src="assets/psx/portraits/'+c.id+'.png" alt="">')).join('')}</div><div class="wardrobe-footer"><p>CHOOSE A COSTUME TO EQUIP</p><small>One wardrobe for everyone. Any costume works as police or thief.</small></div><button id="costume-dance" class="secondary">SHOW YOUR MOVES</button>`;
   for(const b of content.querySelectorAll('[data-choice]'))b.onclick=()=>selectCostume(b.dataset.choice);$('#costume-dance').onclick=()=>demo('dance');
  }else if(name==='settings'){
-  content.innerHTML=`<div class="setting-row"><label for="quality">Graphics<small>Battery uses fewer pixels.</small></label><select id="quality"><option value="balanced">Balanced</option><option value="battery">Battery</option></select></div><div class="setting-row"><label for="motion">Menu motion<small>Gentler menu transitions.</small></label><select id="motion"><option value="normal">Normal</option><option value="reduced">Reduced</option></select></div><div class="setting-row"><label for="ui-sounds">UI sounds<small>Original Wonder Wave menu feedback.</small></label><select id="ui-sounds"><option value="on">On</option><option value="off">Off</option></select></div><p class="page-copy">The match camera stays fixed in a top-down view. Your character follows the joystick or WASD directly. No camera drag is needed.</p><button id="fullscreen" class="secondary">TOGGLE FULLSCREEN</button>`;
-  $('#ui-sounds').value=uiEffects.sounds.enabled?'on':'off';$('#ui-sounds').onchange=e=>uiEffects.sounds.setEnabled(e.target.value==='on');$('#quality').value=quality;$('#quality').onchange=e=>{quality=e.target.value;localStorage.setItem('psx-web-quality',quality);resize();};$('#motion').value=reduced?'reduced':'normal';$('#motion').onchange=e=>{reduced=e.target.value==='reduced';document.body.classList.toggle('reduced-motion',reduced);};$('#fullscreen').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.().catch(()=>{});};
+  content.innerHTML=`<div class="setting-row"><label for="quality">Graphics<small>Battery uses fewer pixels.</small></label><select id="quality"><option value="balanced">Balanced</option><option value="battery">Battery</option></select></div><div class="setting-row"><label for="motion">Menu motion<small>Gentler menu transitions.</small></label><select id="motion"><option value="normal">Normal</option><option value="reduced">Reduced</option></select></div><div class="setting-row"><label for="ui-sounds">UI sounds<small>Original Wonder Wave menu feedback.</small></label><select id="ui-sounds"><option value="on">On</option><option value="off">Off</option></select></div><p class="page-copy">The match camera stays fixed in a top-down view. Your character follows the joystick or WASD directly. No camera drag is needed.</p><button id="fullscreen" class="secondary">FULLSCREEN</button><p id="fullscreen-status" class="page-copy fullscreen-help" role="status"></p>`;
+  $('#ui-sounds').value=uiEffects.sounds.enabled?'on':'off';$('#ui-sounds').onchange=e=>uiEffects.sounds.setEnabled(e.target.value==='on');$('#quality').value=quality;$('#quality').onchange=e=>{quality=e.target.value;localStorage.setItem('psx-web-quality',quality);resize();};$('#motion').value=reduced?'reduced':'normal';$('#motion').onchange=e=>{reduced=e.target.value==='reduced';document.body.classList.toggle('reduced-motion',reduced);};configureFullscreen($('#fullscreen'),$('#fullscreen-status'));
  }else{
-  content.innerHTML=`<div class="credits-copy"><p><b>POLICE N THIEF</b><br>Characters, costumes and animations from the original PSX project.</p><p><b>UI FOUNDATION & INSPIRATION</b><br>Wonder Wave / PURRITORY — Jayden Davis.</p><p><b>BUILT WITH</b><br>Three.js · Titan One · Rubik</p><p><a href="credits.html" target="_blank" rel="noopener">Full credits & licence notices ↗</a></p><p>Web 0.5 · local practice. Online multiplayer is still in development.</p></div>`;
+  content.innerHTML=`<div class="credits-copy"><p><b>POLICE N THIEF</b><br>Characters, costumes and animations from the original PSX project.</p><p><b>UI FOUNDATION & INSPIRATION</b><br>Wonder Wave / PURRITORY — Jayden Davis.</p><p><b>BUILT WITH</b><br>Three.js · Titan One · Rubik</p><p><a href="credits.html" target="_blank" rel="noopener">Full credits & licence notices ↗</a></p><p>Web 0.5.1 · local practice. Online multiplayer is still in development.</p></div>`;
  }
  $('#page-back').focus({preventScroll:true});
 }
@@ -151,9 +154,10 @@ addEventListener('storage',e=>{if(e.key===PROFILE_KEY){profile=readProfile(local
 $('#page-back').onclick=goBack;$('#pause-button').onclick=pauseGame;$('#resume').onclick=resume;$('#leave').onclick=menu;$('#result-menu').onclick=menu;$('#again').onclick=start;
 addEventListener('keydown',e=>{if(e.target.matches('select,input,textarea')||busy)return;if(round&&['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.code==='Escape'){if(paused)resume();else if(round)pauseGame();else goBack();return;}keys.add(e.code);if(round&&!paused&&!e.repeat){if(e.code.startsWith('Shift'))useDash();if(e.code==='Space')jump();if(e.code==='KeyE')useTool(0);if(e.code==='KeyR')useTool(1);}});
 addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',()=>{clearInput();pauseGame();});document.addEventListener('visibilitychange',()=>{lastFrame=performance.now();if(document.hidden)pauseGame();});
-const joystick=$('#joystick');function moveStick(e){const r=joystick.getBoundingClientRect(),radius=r.width*.34;let x=(e.clientX-r.left-r.width/2)/radius,z=-(e.clientY-r.top-r.height/2)/radius;const d=Math.max(1,Math.hypot(x,z));input.x=x/d;input.z=z/d;$('#stick').style.transform=`translate(${input.x*radius}px,${-input.z*radius}px)`;}
-joystick.addEventListener('pointerdown',e=>{if(busy||paused||stick.id!==null)return;stick.id=e.pointerId;joystick.setPointerCapture(e.pointerId);moveStick(e);});joystick.addEventListener('pointermove',e=>{if(e.pointerId===stick.id)moveStick(e);});for(const event of ['pointerup','pointercancel','lostpointercapture'])joystick.addEventListener(event,e=>{if(e.pointerId!==stick.id)return;stick.id=null;input.x=input.z=0;$('#stick').style.transform='';});
-$('#dash').onclick=useDash;$('#jump').onclick=jump;$('#tool-action1').onclick=()=>useTool(0);$('#tool-action2').onclick=()=>useTool(1);
+touchControls=bindGameControls({root:document,joystick:$('#joystick'),knob:$('#stick'),isActive:()=>!ui.hud.hidden&&!busy&&!paused,onMove:(x,z)=>{input.x=x;input.z=z;},actions:[[$('#dash'),useDash],[$('#jump'),jump],[$('#tool-action1'),()=>useTool(0)],[$('#tool-action2'),()=>useTool(1)],[$('#pause-button'),pauseGame]]});
+$('#pause-button').onclick=null;
+for(const name of ['fullscreenchange','webkitfullscreenchange'])document.addEventListener(name,()=>{if(activePage==='settings'&&$('#fullscreen'))configureFullscreen($('#fullscreen'),$('#fullscreen-status'));});
+
 function buildGround(){
   const size=bounds.getSize(new THREE.Vector3()),step=.38,nx=Math.ceil(size.x/step)+1,nz=Math.ceil(size.z/step)+1,heights=new Float32Array(nx*nz).fill(NaN);
   for(let z=0;z<nz;z++)for(let x=0;x<nx;x++){

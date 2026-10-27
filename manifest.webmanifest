@@ -1,0 +1,11 @@
+{
+  "id": "/",
+  "name": "Police N Thief",
+  "short_name": "PNT",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#201d3c",
+  "theme_color": "#171329",
+  "description": "Police N Thief — a four-player chase."
+}
