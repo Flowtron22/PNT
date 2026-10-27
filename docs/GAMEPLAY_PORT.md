@@ -144,3 +144,24 @@ visual verification is unavailable while browser use remains disabled.
 
 Mall, Sunken and Iceberg share `matchView(aspect)`, with no per-map zoom overrides.
 The common view width is multiplied by another 1.1 in this version. 61 tests pass.
+
+
+### 0.9.0 — fixed shared view and configurable controls
+
+The match camera anchors once to the spawn/cache area. It no longer follows the
+local character or rocket elevation. All three maps use the same 30° perspective
+fit with a portrait/landscape adjustment to keep objectives visible; clipping and
+fog distances follow framing. Only a brief, subtle hammer impact shake moves the
+camera, disabled with reduced menu motion.
+
+Desktop uses the mobile three-button triangle and equipped tool icons. Defaults
+are arrows to move, Q/W for tools and E to hold Interact. Settings can rebind all
+seven actions, swap conflicting assignments, reset defaults and save locally.
+WASD is no longer the default because W is explicitly assigned to tool slot 2.
+
+Hammer hits emit ground-level grey toon sphere clouds, radial dispersal and fade
+out from the same smoke geometry used for trails. Rocket and banana effects pulse
+the Vibration API while active; pause, hiding the page, effect completion and the
+Settings toggle cancel vibration. Unsupported browsers show that limitation in
+Settings. iPhone Safari currently does not expose this API, so physical vibration
+cannot be provided there. No Unreal project files or gameplay/network rules changed.

@@ -16,7 +16,7 @@ Open http://localhost:8491. For a phone on the same Wi-Fi, run `npm run dev:lan`
 and use the printed LAN address. `Start Web Preview.cmd` also starts the LAN preview.
 
 Choose thief or police for a five-minute practice with three local bots.
-Desktop: WASD move, E slot 1, R slot 2, F interact, Escape pause.
+Desktop: arrow keys move, Q slot 1, W slot 2, E interact, Escape pause. Remap movement and actions in Settings; mappings save locally. Desktop shows the same tool icons and three-button layout as mobile.
 Mobile: left joystick, two small tool buttons, one large Interact button.
 Hold Interact (F) near a cache to steal, or near an unlocked captured teammate to rescue.
 Phone: virtual stick, two tool buttons, and the large Interact button. The match camera has a fixed
