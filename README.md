@@ -72,7 +72,7 @@ This project does not change the original Unreal multiplayer implementation.
 
 ## Assets and attribution
 
-Browser foundation: Wonder Wave / PURRITORY, Jayden Davis; see LICENSE.
+Browser foundation: Wonder Wave / PURRITORY, Jayden Davis; see `notices/wonder-wave.txt`.
 Three.js is vendored. Rubik and Titan One font OFL notices are in assets/fonts.
 PSX art has a separate provenance and licence review pending; the source-code MIT
 licence does not automatically license that art for public distribution.

@@ -205,3 +205,11 @@ desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw
    Play/Join widths, plus the static Todak credits on portrait and landscape.
 4. Wait for the user's next requested change; there is no unfinished implementation
    task to resume automatically. Keep future releases below 1.0.0.
+
+## Repository licence display follow-up
+
+The root `LICENSE` was moved to `notices/wonder-wave.txt` to remove GitHub's
+repository-wide MIT licence tab while preserving the original foundation notice.
+The build copies `notices/` and still emits `third-party-notices.txt`. Dependency
+licences remain with their packages. Do not restore a root MIT licence just to
+fix an old file reference; use the new notice path.
