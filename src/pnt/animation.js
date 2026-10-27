@@ -13,9 +13,9 @@ export function makeAnimator(model,clips,role){
  }
  let current=null;
  const api={mixer,actions,role,current:null,
-  play(name,{loop=true,fade=.12,restart=false}={}){
-   if(!actions[name])name='idle';if(current===name&&!restart)return;
-   const previous=actions[current],next=actions[name];next.reset();next.enabled=true;next.clampWhenFinished=!loop;next.setLoop(loop?THREE.LoopRepeat:THREE.LoopOnce,loop?Infinity:1);next.setEffectiveTimeScale(ANIMATION_PLAY_RATE);next.setEffectiveWeight(1);next.play();
+  play(name,{loop=true,fade=.12,restart=false,rate=1}={}){
+   if(!actions[name])name='idle';actions[name].setEffectiveTimeScale(ANIMATION_PLAY_RATE*rate);if(current===name&&!restart)return;
+   const previous=actions[current],next=actions[name];next.reset();next.enabled=true;next.clampWhenFinished=!loop;next.setLoop(loop?THREE.LoopRepeat:THREE.LoopOnce,loop?Infinity:1);next.setEffectiveWeight(1);next.play();
    if(previous){previous.fadeOut(fade);next.fadeIn(fade);}current=name;api.current=name;
   },
   update(dt){mixer.update(dt);},

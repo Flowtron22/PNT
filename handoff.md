@@ -186,6 +186,8 @@ desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw
 
 - Iceberg follow-up: slippery steering response time and stopping distance toned
   down about 40%; `ICE.steering=1.4/.6`, `ICE.braking=2.2/.6`. Speed is unchanged.
+- Iceberg police/thief running clips now play twice as fast as the shared 1.3x
+  rate (2.6x authored playback). Other clips, maps and movement speeds are unchanged.
 
 - Version 0.9.8: syntax checks, **81 tests**, and production build passed. Desktop
   browser sessions covered Mall pushing/tumbling, Sunken rocking and Iceberg

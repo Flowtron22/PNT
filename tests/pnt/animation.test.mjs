@@ -31,6 +31,9 @@ test('all supplied action clips have changing rotations and bind to every costum
  for(const name of ['hammer','stunned','airStunned','banana','jet','rocket','busted','bustedIdle','dance'])assert.ok(clips[name]?.tracks.some(t=>{const a=new THREE.Quaternion().fromArray(t.values,0);for(let i=4;i<t.values.length;i+=4)if(a.angleTo(new THREE.Quaternion().fromArray(t.values,i))>.02)return true;return false;}),name+' must have motion');
  for(const file of readdirSync(new URL('../../assets/pnt/costumes/',import.meta.url))){const model=rig('costumes/'+file),anim=makeAnimator(model,clips,'runner');for(const name of Object.keys(clips)){anim.play(name,{fade:0});anim.update(.2);assert.ok(anim.actions[name].getClip().tracks.length>=15,file+': '+name);}anim.dispose();}
 });
+test('run playback can double without restarting and other clips keep their normal rate',()=>{
+ const anim=makeAnimator(rig('thief.glb'),clips,'runner');anim.play('thiefRun',{rate:2,fade:0});anim.update(.1);assert.equal(anim.actions.thiefRun.getEffectiveTimeScale(),2.6);const time=anim.actions.thiefRun.time;anim.play('thiefRun',{rate:2});assert.equal(anim.actions.thiefRun.time,time);anim.play('idle',{fade:0});assert.equal(anim.actions.idle.getEffectiveTimeScale(),1.3);anim.play('thiefRun',{fade:0});assert.equal(anim.actions.thiefRun.getEffectiveTimeScale(),1.3);anim.dispose();
+});
 test('animation priority keeps captured and stunned characters from running',()=>{
  assert.equal(animationFor({caught:false,role:'runner',effectTime:0},true,false),'thiefRun');assert.equal(animationFor({caught:false,role:'chaser',effectTime:0},true,false),'policeRun');assert.equal(animationFor({caught:false,role:'runner',effectTime:1,effect:'banana'},true,false),'banana');assert.equal(animationFor({caught:true,caughtTime:.1},true,true),'airStunned');assert.equal(animationFor({caught:true,caughtTime:2},true,false),'bustedIdle');
 });
