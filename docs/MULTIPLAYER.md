@@ -1,6 +1,6 @@
 # Multiplayer prototype — local and online testing
 
-Version 0.9.9. Colyseus 0.18 server, JavaScript browser SDK. The user authorized
+Version 0.9.10. Colyseus 0.18 server, JavaScript browser SDK. The user authorized
 a free online test on Render after the local test. No paid upgrade is authorized.
 
 ## Online hosting
@@ -60,9 +60,13 @@ starts that website alone with vendored browser dependencies.
   online furniture physics; browsers render its poses.
 - Authoritative snapshots at 20 Hz. Tool/capture events produce client-side VFX;
   cosmetic particle randomness is intentionally not synchronized.
-- Twenty-second reconnection reservation for temporary connection loss. After
+- Two-minute reconnection reservation for temporary connection loss. After
   expiry, a departed player becomes a bot during the match. Host ownership passes
   on final departure. Fully empty rooms are disposed.
+- Initial seat reservations last 60 seconds. During automatic reconnection,
+  transient errors do not open blocking lobby dialogs. An expired reservation
+  closes the stale connection and opens Join with the previous code filled in;
+  started matches cannot be rejoined after that two-minute reservation expires.
 - Per-player results and host-controlled rematches. XP/profile persistence remains
   browser-local. Account refresh/rejoin after reloading the page is not implemented;
   automatic reconnection covers a temporary drop on the same page.
@@ -95,7 +99,7 @@ npm run test:multiplayer
 npm run build
 ```
 
-The root suite has 84 tests; the server suite has five tests, including four real
+The root suite has 85 tests; the server suite has six tests, including four real
 SDK clients joining over HTTP/WebSocket, capacity, host permissions, readiness,
 shared state, cooldown enforcement, reconnect, end/rematch/map switch, public/private
 isolation, timed capture, input validation, stealing, rescue and Mall furniture.

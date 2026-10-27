@@ -8,7 +8,7 @@ const preference=value=>['none','chaser','runner'].includes(value)?value:'none';
 export class GameRoom extends Room {
  async onCreate(options){
   this.roomId=Array.from(randomBytes(6),b=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b%32]).join('');this.maxClients=4;this.maxMessagesPerSecond=90;this.players=[];this.phase='waiting';this.map=0;this.host=null;this.sim=null;this.public=options.public===true;this.countdown=0;this.accumulator=0;this.publishTime=0;
-  await this.setMetadata({public:this.public,map:MAPS[this.map]});await this.setPrivate(!this.public);this.seatReservationTimeout=15;
+  await this.setMetadata({public:this.public,map:MAPS[this.map]});await this.setPrivate(!this.public);this.seatReservationTimeout=60;
   this.onMessage('hello',client=>{this.sendLobby(client);if(this.sim&&this.phase!=='loading')client.send('snapshot',this.sim.snapshot());});
   this.onMessage('input',(client,payload)=>{const id=this.players.findIndex(p=>p.sessionId===client.sessionId);if(this.phase==='playing'&&payload&&typeof payload==='object')this.sim.input(id,payload);});
   this.onMessage('tool',(client,payload)=>{const id=this.players.findIndex(p=>p.sessionId===client.sessionId);if(this.phase==='playing'&&Number.isInteger(payload?.slot))this.sim.tool(id,payload.slot);});
@@ -23,8 +23,8 @@ export class GameRoom extends Room {
   if(this.phase!=='waiting')throw new ServerError(409,'This match has already started.');const bot=this.players.findIndex(p=>p.bot);if(this.players.length>=4&&bot<0)throw new ServerError(409,'This room is full.');
   const player={sessionId:client.sessionId,name:name(options.name),costume:normalizeCostume(options.costume),loadout:normalizeLoadout(options.loadout),preference:preference(options.preference),bot:false,connected:true,ready:false};if(bot>=0)this.players[bot]=player;else this.players.push(player);if(!this.host)this.host=client.sessionId;this.sendLobby();
  }
- onDrop(client){const player=this.players.find(p=>p.sessionId===client.sessionId);if(player)player.connected=false;this.clearInput(client);if(this.phase==='countdown')this.control('cancel');this.sendLobby();this.allowReconnection(client,20);}
- onReconnect(client){const player=this.players.find(p=>p.sessionId===client.sessionId);if(player)player.connected=true;this.sendLobby(client);if(this.sim)client.send('snapshot',this.sim.snapshot());}
+ onDrop(client){const player=this.players.find(p=>p.sessionId===client.sessionId);if(player)player.connected=false;this.clearInput(client);if(this.phase==='countdown')this.control('cancel');this.sendLobby();this.allowReconnection(client,120);}
+ onReconnect(client){const player=this.players.find(p=>p.sessionId===client.sessionId);if(player)player.connected=true;this.sendLobby();if(this.sim)client.send('snapshot',this.sim.snapshot());}
  onLeave(client){
   this.clearInput(client);const index=this.players.findIndex(p=>p.sessionId===client.sessionId);if(index<0)return;
   if(['playing','finished'].includes(this.phase)){this.players[index].bot=true;this.players[index].connected=false;this.players[index].name+=' (bot)';this.players[index].sessionId=null;}

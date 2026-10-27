@@ -7,12 +7,17 @@ export function localSnapshot(snapshot,players,sessionId){
 export class MultiplayerConnection {
  constructor({onLobby,onSnapshot,onNotice,onConnection}){Object.assign(this,{onLobby,onSnapshot,onNotice,onConnection});this.room=null;this.closed=false;this.players=[];this.sequence=0;this.lastSend=0;}
  async connect(mode,profile,code){const endpoint=multiplayerEndpoint();if(!endpoint)throw Error('The online game server has not been deployed yet. Local practice is available.');const {Client}=await import('../../vendor/colyseus/sdk.mjs');this.client=new Client(endpoint);const options={...profile,protocol:1,public:mode==='public'};
-  this.room=mode==='join'?await this.client.joinById(code,options):mode==='public'?await this.client.joinOrCreate('pnt',options):await this.client.create('pnt',options);const room=this.room;room.reconnection.minUptime=0;room.reconnection.minDelay=300;room.reconnection.maxDelay=2000;room.reconnection.maxRetries=10;
+  this.room=mode==='join'?await this.client.joinById(code,options):mode==='public'?await this.client.joinOrCreate('pnt',options):await this.client.create('pnt',options);const room=this.room;room.reconnection.minUptime=0;room.reconnection.minDelay=300;room.reconnection.maxDelay=2000;room.reconnection.maxRetries=60;
   const first=new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('The server did not send the lobby.')),12000);this.firstLobby=()=>{clearTimeout(timer);resolve();};});
   room.onMessage('lobby',data=>{if(this.closed)return;this.players=data.players;const self=data.players.find(p=>p.sessionId===room.sessionId),ordered=self?[self,...data.players.filter(p=>p!==self)]:data.players;this.onLobby({...data,players:ordered,preference:self?.preference||'none',canHost:data.host===room.sessionId,match:data.match?localSnapshot(data.match,this.players,room.sessionId):undefined});this.firstLobby?.();this.firstLobby=null;});
   room.onMessage('snapshot',snapshot=>{if(!this.closed&&this.players.length===4)this.onSnapshot(localSnapshot(snapshot,this.players,room.sessionId));});
-  room.onMessage('notice',notice=>this.onNotice(notice.message));room.onError((_code,message)=>this.onNotice(message||'Multiplayer connection error.'));
-  room.onDrop(()=>this.onConnection('reconnecting'));room.onReconnect(()=>{this.lastSend=0;this.onConnection('connected');room.send('hello');});room.onLeave(()=>{if(!this.closed)this.onConnection('disconnected');});room.send('hello');await first;
+  room.onMessage('notice',notice=>this.onNotice(notice.message));room.onError((code,message)=>this.connectionError(code,message));
+  room.onDrop(()=>{if(!this.closed)this.onConnection('reconnecting');});room.onReconnect(()=>{if(this.closed)return;this.lastSend=0;this.onConnection('connected');room.send('hello');});room.onLeave(()=>{if(!this.closed){this.closed=true;this.onConnection('disconnected');}});room.send('hello');await first;
+ }
+ connectionError(code,message){
+  if(this.closed)return;
+  if(code===524||/seat reservation expired|reconnection token.*expired|failed to reconnect/i.test(message||'')){this.leave();this.onConnection('expired');return;}
+  if(!this.room?.reconnection.isReconnecting)this.onNotice(message||'Multiplayer connection error.');
  }
  send(type,data){if(this.room&&!this.closed&&this.room.connection.isOpen)this.room.send(type,data);}
  input(x,z,interact,now=performance.now(),force=false){if(!force&&now-this.lastSend<50)return;this.lastSend=now;this.send('input',{seq:++this.sequence,x,z,interact});}

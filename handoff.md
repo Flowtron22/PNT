@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 27 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.9**, online multiplayer test release.
+Current app version: **0.9.10**, online multiplayer test release.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -9,6 +9,14 @@ Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
 Vercel's build command injects that public endpoint; local development still
 discovers the LAN server. Free hosting sleeps when idle and can take about a
 minute to wake. No paid upgrade is authorized.
+0.9.10 fixes the background-app timeout: initial seat reservation is 60 seconds,
+reconnection reservation is 120 seconds, and expired reconnections return to Join
+with the previous room code instead of a raw error over a stale lobby.
+Validated 85 client/rules tests and six server tests, including a real SDK client
+returning after 22 seconds away. Reconnection now broadcasts the restored roster
+to every client. Render is a public-repository service: if it does not auto-deploy,
+use Manual Deploy → Deploy latest commit on its dashboard. Browser control was
+disabled in Work settings during the 0.9.10 fix; verify the server deploy separately.
 See `docs/MULTIPLAYER.md`. Colyseus server and LAN launcher are implemented;
 use `npm run dev:online`, with website port 8491 and game-server port 2567.
 
@@ -193,7 +201,7 @@ desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw
 
 ## Verification and remaining concerns
 
-- Multiplayer 0.9.9: 84 root tests plus five server tests pass. Four real SDK
+- Multiplayer 0.9.10: 84 root tests plus five server tests pass. Four real SDK
   clients cover rooms, permissions, readiness, shared state, reconnect, rematch,
   public/private isolation, capture, tools, stealing/rescue and Mall physics.
   Two browser clients completed a shared Mall match with correct per-player

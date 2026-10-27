@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {localSnapshot,multiplayerEndpoint} from '../../src/pnt/multiplayer.js';
+import {localSnapshot,multiplayerEndpoint,MultiplayerConnection} from '../../src/pnt/multiplayer.js';
 import {createRound} from '../../src/pnt/rules.js';
 test('each client sees its own seat first without changing server IDs or teammates',()=>{
  const round=createRound('chaser',[{id:'cash',amount:2000}]);round.actors[3].rescuer=2;round.caches[0].harvester=2;const players=Array.from({length:4},(_,i)=>({sessionId:`p${i}`})),snapshot={round,poses:players.map((_,id)=>({id,position:[id,0,0]})),hazards:[{id:7,owner:2}],events:[{id:8,actor:0}]},guest=localSnapshot(snapshot,players,'p2');
@@ -7,4 +7,13 @@ test('each client sees its own seat first without changing server IDs or teammat
 });
 test('local testing discovers same-computer and Wi-Fi servers, production needs explicit configuration',()=>{
  assert.equal(multiplayerEndpoint({hostname:'localhost',protocol:'http:'}),'http://localhost:2567');assert.equal(multiplayerEndpoint({hostname:'192.168.1.10',protocol:'http:'}),'http://192.168.1.10:2567');assert.equal(multiplayerEndpoint({hostname:'police-n-thief.vercel.app',protocol:'https:'}),'');
+});
+test('expired reconnect leaves the stale room once and temporary reconnect errors stay quiet',()=>{
+ const events=[],notices=[];let leaves=0;
+ const connection=new MultiplayerConnection({onConnection:state=>events.push(state),onNotice:message=>notices.push(message)});
+ connection.room={reconnection:{isReconnecting:true},leave:()=>{leaves++;}};
+ connection.connectionError(1006,'Network unavailable');assert.deepEqual(notices,[]);assert.equal(leaves,0);
+ connection.connectionError(524,'seat reservation expired.');connection.connectionError(524,'seat reservation expired.');
+ assert.equal(leaves,1);assert.equal(connection.room,null);assert.equal(connection.closed,true);assert.deepEqual(events,['expired']);assert.deepEqual(notices,[]);
+ const active=new MultiplayerConnection({onConnection:()=>{},onNotice:message=>notices.push(message)});active.room={reconnection:{isReconnecting:false}};active.connectionError(400,'Invalid action');assert.deepEqual(notices,['Invalid action']);
 });
