@@ -14,10 +14,13 @@ import {bindGameControls} from './touch-controls.js';
 import {configureFullscreen} from './fullscreen.js';
 import {sampleGround,dampVelocity,simulationSteps} from './motion.js';
 import {matchView} from './camera-rig.js';
+import {canTraverse} from './collision.js';
+import {createResultPortrait} from './result-portrait.js';
 import {createGameFX} from './game-fx.js';
 import {renderResults} from './results-ui.js';
 import {findPath,screenToWorld} from './navigation.js';
 import {buildWalkGrid,arenaBounds,solidForGameplay} from './world-navigation.js';
+let resultPortrait=null;
 let touchControls,interactHeld=false,menuArena=null,gameArena=null,mapData=null,menuNavigation=null;
 let profile=readProfile(localStorage);
 const $=s=>document.querySelector(s),canvas=$('#world');
@@ -61,7 +64,7 @@ async function getGLB(key,url,onProgress){if(cache.has(key))return cache.get(key
 async function ensureCostume(){const c=COSTUMES.find(c=>c.id===costume);if(templates[c.id]||!c.file)return;templates[c.id]=await getGLB(c.id,`assets/psx/costumes/${c.file}.glb`,e=>progress(e.total?Math.min(85,e.loaded/e.total*85):30,`Loading ${c.name}…`));}
 function destroy(a){if(!a)return;a.group.removeFromParent();a.anim.dispose();const skeletons=new Set();a.model.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const skeleton of skeletons)skeleton.dispose();for(const mesh of [a.ring,a.shadow]){mesh.geometry.dispose();mesh.material.dispose();}}
 function clearHazards(){gameFX.clear();for(const h of hazards)disposeHazard(h);hazards.length=0;}
-function menu(){restoreMenuArena();room=null;returnToLobby=false;clearLobbyDisplays();round=null;paused=false;clearInput();clearHazards();for(const a of avatars)destroy(a);avatars=[];previewModel();show('menu');openPage('home');}
+function menu(){resultPortrait?.dispose();resultPortrait=null;restoreMenuArena();room=null;returnToLobby=false;clearLobbyDisplays();round=null;paused=false;clearInput();clearHazards();for(const a of avatars)destroy(a);avatars=[];previewModel();show('menu');openPage('home');}
 function previewModel(){destroy(preview);preview=avatar(templates[costume],0,role);preview.group.position.copy(spot(0,0));preview.group.rotation.y=0;previewClip='idle';previewTime=0;preview.anim.play('idle');labels();}
 function labels(){
  renderHomeWidgets(profile,loadout,costume);
@@ -146,7 +149,7 @@ function openPage(name){if(busy)return;activePage=name;if(preview)preview.group.
   content.innerHTML=`<div class="setting-row"><label for="quality">Graphics<small>Battery uses fewer pixels.</small></label><select id="quality"><option value="balanced">Balanced</option><option value="battery">Battery</option></select></div><div class="setting-row"><label for="motion">Menu motion<small>Gentler menu transitions.</small></label><select id="motion"><option value="normal">Normal</option><option value="reduced">Reduced</option></select></div><div class="setting-row"><label for="ui-sounds">UI sounds<small>Original Wonder Wave menu feedback.</small></label><select id="ui-sounds"><option value="on">On</option><option value="off">Off</option></select></div><p class="page-copy">The match camera uses a fixed 30° perspective view. Your character follows the joystick or WASD directly. No camera drag is needed.</p><button id="fullscreen" class="secondary">FULLSCREEN</button><p id="fullscreen-status" class="page-copy fullscreen-help" role="status"></p>`;
   $('#ui-sounds').value=uiEffects.sounds.enabled?'on':'off';$('#ui-sounds').onchange=e=>uiEffects.sounds.setEnabled(e.target.value==='on');$('#quality').value=quality;$('#quality').onchange=e=>{quality=e.target.value;localStorage.setItem('psx-web-quality',quality);resize();};$('#motion').value=reduced?'reduced':'normal';$('#motion').onchange=e=>{reduced=e.target.value==='reduced';document.body.classList.toggle('reduced-motion',reduced);};configureFullscreen($('#fullscreen'),$('#fullscreen-status'));
  }else{
-  content.innerHTML=`<div class="credits-copy"><p><b>POLICE N THIEF</b><br>Characters, costumes and animations from the original PSX project.</p><p><b>UI FOUNDATION & INSPIRATION</b><br>Wonder Wave / PURRITORY — Jayden Davis.</p><p><b>BUILT WITH</b><br>Three.js · Titan One · Rubik</p><p><a href="credits.html" target="_blank" rel="noopener">Full credits & licence notices ↗</a></p><p>Web 0.7.0 · local practice. Online multiplayer is still in development.</p></div>`;
+  content.innerHTML=`<div class="credits-copy"><p><b>POLICE N THIEF</b><br>Characters, costumes and animations from the original PSX project.</p><p><b>UI FOUNDATION & INSPIRATION</b><br>Wonder Wave / PURRITORY — Jayden Davis.</p><p><b>BUILT WITH</b><br>Three.js · Titan One · Rubik</p><p><a href="credits.html" target="_blank" rel="noopener">Full credits & licence notices ↗</a></p><p>Web 0.7.1 · local practice. Online multiplayer is still in development.</p></div>`;
  }
  $('#page-back').focus({preventScroll:true});
 }
@@ -167,17 +170,18 @@ $('#pause-button').onclick=null;
 for(const name of ['fullscreenchange','webkitfullscreenchange'])document.addEventListener(name,()=>{if(activePage==='settings'&&$('#fullscreen'))configureFullscreen($('#fullscreen'),$('#fullscreen-status'));});
 
 async function loadArena(id){
- const [asset,data,nav]=await Promise.all([getGLB('arena-'+id,`assets/psx/arenas/${id}.glb`,e=>progress(e.total?Math.min(50,e.loaded/e.total*50):15,'Loading '+id+' arena…')),fetch(`assets/psx/arenas/${id}.json`).then(r=>{if(!r.ok)throw Error('Missing arena metadata');return r.json();}),fetch(`assets/psx/arenas/${id}.nav.json`).then(r=>{if(!r.ok)throw Error('Missing arena navigation');return r.json();})]);
+ const [asset,data,nav,collision]=await Promise.all([getGLB('arena-'+id,`assets/psx/arenas/${id}.glb`,e=>progress(e.total?Math.min(50,e.loaded/e.total*50):15,'Loading '+id+' arena…')),fetch(`assets/psx/arenas/${id}.json`).then(r=>{if(!r.ok)throw Error('Missing arena metadata');return r.json();}),fetch(`assets/psx/arenas/${id}.nav.json`).then(r=>{if(!r.ok)throw Error('Missing arena navigation');return r.json();}),fetch(`assets/psx/arenas/${id}.collision.json`).then(r=>{if(!r.ok)throw Error('Missing Unreal collision');return r.json();})]);
  gameArena?.removeFromParent();gameArena=asset.scene;gameArena.visible=true;mapData=data;gameArena.position.set(...data.origin.map(v=>-v));scene.add(gameArena);gameArena.updateMatrixWorld(true);menuArena.visible=false;
  ground=[];gameArena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m?.map)m.map.anisotropy=2;}});
- bounds=arenaBounds(gameArena,data);
- grid={...nav,heights:Float32Array.from(nav.heights,v=>v===null?NaN:v)};floor.position.y=-12;floor.material.color.set(id==='mall'?0x77768c:id==='sunken'?0x24638b:0x9bc4d7);
+ bounds=arenaBounds(gameArena,data);renderer.toneMappingExposure=id==='mall'?1.15*1.15:1.15;
+ grid={...nav,blocked:collision.blocked,edges:collision.edges,heights:Float32Array.from(collision.groundHeights||nav.heights,v=>v===null?NaN:v)};floor.position.y=-12;floor.material.color.set(id==='mall'?0x77768c:id==='sunken'?0x24638b:0x9bc4d7);
  const props=[['propBanana','SM_TL_Banana'],['propSmoke','SM_TL_Bomb'],['propHammer','SM_TL_Hammer'],['propJet','jetpack'],['propRewind','rewind']];await Promise.all(props.map(async([key,file])=>{templates[key]=await getGLB(key,`assets/psx/props/${file}.glb`);}));
 }
-function restoreMenuArena(){if(gameArena)gameArena.visible=false;if(menuArena){menuArena.visible=true;({ground,bounds,grid}=menuNavigation);}floor.position.y=-.3;floor.material.color.set(0x77768c);$('#world-markers').replaceChildren();}
+function restoreMenuArena(){renderer.toneMappingExposure=1.15;if(gameArena)gameArena.visible=false;if(menuArena){menuArena.visible=true;({ground,bounds,grid}=menuNavigation);}floor.position.y=-.3;floor.material.color.set(0x77768c);$('#world-markers').replaceChildren();}
 function prop(key,size=1){const source=templates[key];if(!source)return null;const object=clone(source.scene);const box=new THREE.Box3().setFromObject(object),scale=size/Math.max(.01,...box.getSize(new THREE.Vector3()).toArray());object.scale.multiplyScalar(scale);object.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(object),center=b.getCenter(new THREE.Vector3());object.position.add(new THREE.Vector3(-center.x,-b.min.y,-center.z));const root=new THREE.Group();root.add(object);return root;}
 function disposeHazard(h){h.mesh.removeFromParent();if(h.owned)h.mesh.traverse(o=>{if(o.isMesh){o.geometry.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});}
 function withinSight(p,q,smoke=true,stop=.35){
+ if(smoke&&grid?.edges&&!canTraverse(grid,p.x,p.z,q.x,q.z)&&p.distanceTo(q)<1.5)return false;
  const from=p.clone().addScaledVector(up,.65),to=q.clone().addScaledVector(up,.65),delta=to.sub(from),distance=delta.length();if(distance<.1)return true;
  if(smoke)for(const h of hazards.filter(h=>h.type==='smoke'&&h.time>0)){const t=THREE.MathUtils.clamp(h.mesh.position.clone().sub(from).dot(delta)/delta.lengthSq(),0,1),closest=from.clone().addScaledVector(delta,t);if(closest.distanceTo(h.mesh.position.clone().addScaledVector(up,.65))<2.6)return false;}
  ray.set(from,delta.normalize());ray.far=Math.max(0,distance-stop);return !ray.intersectObjects(ground,true).length;
@@ -209,7 +213,7 @@ function buildGround(){grid=buildWalkGrid(ground,bounds);}
 function heightAt(x,z){return grid?sampleGround(grid,x,z):0;}
 function walkable(x,z,y){const h=heightAt(x,z);return Number.isFinite(h)&&h-y<.5&&y-h<1.2;}
 function spot(x,z){let best=null,distance=Infinity;for(let iz=2;iz<grid.nz-2;iz++)for(let ix=2;ix<grid.nx-2;ix++){
-  const y=grid.heights[iz*grid.nx+ix];if(!Number.isFinite(y))continue;const px=bounds.min.x+ix*grid.step,pz=bounds.min.z+iz*grid.step,d=(px-x)**2+(pz-z)**2;
+  const y=grid.heights[iz*grid.nx+ix];if(!Number.isFinite(y)||grid.blocked?.[iz*grid.nx+ix])continue;const px=bounds.min.x+ix*grid.step,pz=bounds.min.z+iz*grid.step,d=(px-x)**2+(pz-z)**2;
   if(d<distance){distance=d;best=new THREE.Vector3(px,y,pz);}
 }if(!best)throw new Error('No walkable ground was found in the Mall export');return best;}
 function avatar(template,id,actorRole){
@@ -222,7 +226,7 @@ function avatar(template,id,actorRole){
  return {id,group,model,anim,ring,shadow,velocity:0,grounded:true,speed:0,wander:id*2.2};
 }
 function populate(){for(const a of avatars)destroy(a);avatars=[];for(const state of round.actors){const template=state.id===0?templates[costume]:(templates[room?.players[state.id]?.costume]||templates[state.role==='chaser'?'police':'thief']);const actor=avatar(template,state.id,state.role);const p=mapData.spawns[state.id];actor.group.position.copy(spot(p[0],p[2]));actor.tools=state.id===0?loadout:state.role==='chaser'?['hammer','rocket']:state.id%2?['banana','smoke']:['rewind','rocket'];avatars.push(actor);}}
-async function start(){if(!ready||busy)return;if(room){role=resolveRole(room.preference);room.phase='playing';}returnToLobby=false;clearLobbyDisplays();beginLoading('SETTING UP THE CHASE');await nextFrame();try{await ensureCostume();await loadArena(['mall','sunken','iceberg'][room?.map||0]);progress(55,'Placing the crew…');destroy(preview);preview=null;round=createRound(role,mapData.caches);round.profileId=globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);paused=false;clearInput();clearHazards();populate();buildMarkers();cameraTarget.copy(avatars[0].group.position);positionMatchCamera();progress(85,'Warming up materials…');await renderer.compileAsync(scene,matchCamera);renderer.render(scene,matchCamera);progress(100,'Ready. Set. Run!');await nextFrame();$('#role-label').textContent=role==='runner'?'THIEF':'POLICE';$('#role-label').classList.toggle('chaser',role==='chaser');labels();show('hud');endLoading();say(role==='runner'?'HOLD INTERACT TO STEAL CASH!':'CATCH ALL THREE THIEVES!');updateHud();}catch(e){round=null;loadError(e,start);}}
+async function start(){if(!ready||busy)return;resultPortrait?.dispose();resultPortrait=null;if(room){role=resolveRole(room.preference);room.phase='playing';}returnToLobby=false;clearLobbyDisplays();beginLoading('SETTING UP THE CHASE');await nextFrame();try{await ensureCostume();await loadArena(['mall','sunken','iceberg'][room?.map||0]);progress(55,'Placing the crew…');destroy(preview);preview=null;round=createRound(role,mapData.caches);round.profileId=globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);paused=false;clearInput();clearHazards();populate();buildMarkers();cameraTarget.copy(avatars[0].group.position);positionMatchCamera();progress(85,'Warming up materials…');await renderer.compileAsync(scene,matchCamera);renderer.render(scene,matchCamera);progress(100,'Ready. Set. Run!');await nextFrame();$('#role-label').textContent=role==='runner'?'THIEF':'POLICE';$('#role-label').classList.toggle('chaser',role==='chaser');labels();show('hud');endLoading();say(role==='runner'?'HOLD INTERACT TO STEAL CASH!':'CATCH ALL THREE THIEVES!');updateHud();}catch(e){round=null;loadError(e,start);}}
 function canAct(){return round&&round.phase==='playing'&&!paused&&!busy&&!round.actors[0].caught&&round.actors[0].effectTime<=0;}
 function interact(){if(canAct())interactHeld=true;}
 function stopInteract(){interactHeld=false;if(round)cancelInteraction(round,0);}
@@ -249,7 +253,7 @@ function useTool(slot,id=0){
 function limitItems(owner,type,max){const all=hazards.filter(h=>h.owner===owner&&h.type===type&&h.time>0);for(let i=0;i<all.length-max;i++)all[i].time=0;}
 
 function move(a,dx,dz,dt,speed){const p=a.group.position,magnitude=Math.hypot(dx,dz);if(magnitude>.01){dx/=Math.max(1,magnitude);dz/=Math.max(1,magnitude);}a.vx=dampVelocity(a.vx||0,dx*speed,dt);a.vz=dampVelocity(a.vz||0,dz*speed,dt);const nx=p.x+a.vx*dt,nz=p.z+a.vz*dt;let moved=false;
- if(Math.hypot(a.vx,a.vz)>.01){if(walkable(nx,p.z,p.y)){p.x=nx;moved=true;}else a.vx=0;if(walkable(p.x,nz,p.y)){p.z=nz;moved=true;}else a.vz=0;}
+ if(Math.hypot(a.vx,a.vz)>.01){if(walkable(nx,p.z,p.y)&&canTraverse(grid,p.x,p.z,nx,p.z)){p.x=nx;moved=true;}else a.vx=0;if(walkable(p.x,nz,p.y)&&canTraverse(grid,p.x,p.z,p.x,nz)){p.z=nz;moved=true;}else a.vz=0;}
  if(magnitude>.06&&moved){const angle=Math.atan2(a.vx,a.vz);a.group.rotation.y+=Math.atan2(Math.sin(angle-a.group.rotation.y),Math.cos(angle-a.group.rotation.y))*Math.min(1,dt*14);}
  const h=heightAt(p.x,p.z),flying=round?.actors[a.id]?.effect==='rocket'&&round.actors[a.id].effectTime>0;if(flying&&Number.isFinite(h)){p.y=THREE.MathUtils.damp(p.y,h+1.8,6,dt);a.velocity=0;}else{a.velocity-=16*dt;p.y+=a.velocity*dt;}if(!flying&&Number.isFinite(h)&&(p.y<=h||a.grounded&&Math.abs(p.y-h)<.55)){p.y=THREE.MathUtils.damp(p.y,h,30,dt);a.velocity=0;a.grounded=true;}else a.grounded=false;if(p.y<bounds.min.y-3){p.copy(spot(0,0));a.velocity=0;}a.speed=THREE.MathUtils.damp(a.speed,magnitude>.05&&moved?1:0,10,dt);return moved;
 }
@@ -282,7 +286,7 @@ function updateGame(dt){
  for(const wish of wishes){const target=wish.wants?interactionTarget(wish.id):null,key=target?target.type+':'+target.target.id:null,actor=avatars[wish.id];if(actor.interactionKey!==key||!target)cancelInteraction(round,wish.id);actor.interactionKey=key;if(target)performInteraction(wish.id,target,dt);}
  if(round.phase==='finished'){
   paused=false;stopInteract();const won=round.winner===round.playerRole;if(!round.profileRecorded){profile=recordMatch(readProfile(localStorage),{id:round.profileId,won});saveProfile(localStorage,profile);round.profileRecorded=true;labels();}
-  show('results');renderResults(ui.results,{round,won,profile,costume,players:room?.players||[],map:mapData?.id||'mall',sounds:uiEffects.sounds,onAgain:start,onMenu:menu,reduced});
+  show('results');renderResults(ui.results,{round,won,profile,costume,players:room?.players||[],map:mapData?.id||'mall',sounds:uiEffects.sounds,onAgain:start,onMenu:menu,reduced});try{resultPortrait=createResultPortrait(ui.results.querySelector('.result-character-host'),templates[costume],clips,won);}catch(error){console.warn('Character portrait could not be rendered',error);}
  }
 }
 function updateHud(){
@@ -295,7 +299,7 @@ function updateHud(){
 function positionMatchCamera(){const view=matchView(menuCamera.aspect);matchCamera.position.copy(cameraTarget).add(new THREE.Vector3(...view.offset));matchCamera.lookAt(cameraTarget);}
 
 async function boot(){beginLoading('GETTING READY');try{let done=0;const names=['thief','police','mall-slice'];const items=await Promise.all(names.map(async name=>{const value=await getGLB(name,`assets/psx/${name}.glb`);progress(++done/4*70,`Loading ${name==='mall-slice'?'Mall promenade':name}…`);return value;}));templates={thief:items[0],police:items[1]};const response=await fetch('assets/psx/animations/clips.json?v=idle-b1');if(!response.ok)throw new Error('Animation download failed');const data=await response.json();clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));progress(75,'Preparing the walkable arena…');const arena=items[2].scene;menuArena=arena;arena.updateMatrixWorld(true);const initial=new THREE.Box3().setFromObject(arena),center=initial.getCenter(new THREE.Vector3());arena.position.add(new THREE.Vector3(-center.x,-initial.min.y,-center.z));scene.add(arena);arena.updateMatrixWorld(true);arena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){m.roughness=Math.max(.7,m.roughness||0);if(m.map)m.map.anisotropy=2;}}});bounds=new THREE.Box3().setFromObject(arena);buildGround();menuNavigation={ground,bounds,grid};await ensureCostume();progress(90,'Warming up characters and fonts…');previewModel();await document.fonts.ready;await renderer.compileAsync(scene,menuCamera);progress(100,'All set. Let’s play.');ready=true;document.body.dataset.assets='ready';show('menu');endLoading();openPage('home');}catch(e){document.body.dataset.assets='error';loadError(e,()=>location.reload());}}
-function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed=Math.max(0,(now-lastFrame)/1000),dt=Math.min(elapsed,.05);lastFrame=now;uiEffects.tick(dt);
+function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed=Math.max(0,(now-lastFrame)/1000),dt=Math.min(elapsed,.05);lastFrame=now;uiEffects.tick(dt);if(resultPortrait&&!ui.results.hidden)resultPortrait.update(dt);
  if(ready){if(room&&!ui.lobby.hidden&&!busy&&!document.hidden){if(stepLobby(room,elapsed))start();else if(room.phase==='countdown'){$('#lobby-counter').textContent=Math.ceil(room.countdown);}}if(round){if(round.phase==='playing'&&!paused&&!busy){const steps=simulationSteps(elapsed);for(let i=0;i<steps.count&&round.phase==='playing';i++){updateGame(steps.dt);gameFX.update(steps.dt);}updateHud();}const target=avatars[0]?.group.position;if(target){const groundY=heightAt(target.x,target.z);const desired=new THREE.Vector3(target.x,Number.isFinite(groundY)?groundY:0,target.z);cameraTarget.lerp(desired,1-Math.exp(-Math.min(elapsed,.15)*8));positionMatchCamera();}}
  else if(preview){preview.anim.update(dt);if(previewTime>0){previewTime-=dt;if(previewTime<=0)preview.anim.play('idle');}const p=preview.group.position,narrow=innerWidth<760,pagePreview=narrow&&activePage!=='home';const distance=pagePreview?9:4.6,offset=distance*Math.tan(THREE.MathUtils.degToRad(menuCamera.fov/2))*menuCamera.aspect*(activePage==='home'?(narrow?.28:.16):.43);menuCamera.position.set(p.x,p.y+1.45,p.z+distance);menuCamera.lookAt(p.x-offset,p.y+(pagePreview?3:.8),p.z);}}
  if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('#toast').textContent='';}updateMarkers();if(!ui.lobby.hidden&&!busy)renderLobbyCharacters(dt);else renderer.render(scene,round?matchCamera:menuCamera);

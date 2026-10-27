@@ -129,3 +129,8 @@ audio, with real PNT money and player totals. The perspective camera views from
 the opposite side with 30% wider framing. Movement uses bounded fixed substeps,
 velocity damping and interpolated ground height. Hammer impact rings and running
 dust are bounded WebGL effects; Unreal Niagara graphs cannot execute in a browser.
+
+Version 0.7.1 adds another 10% camera framing, +15% Mall exposure, and an alpha
+WebGL character portrait on results. Native Unreal Pawn capsule collision is sampled
+into per-cell occupancy and swept edge masks for all three maps. Movement and bot
+routes share those blockers, including invisible Unreal blocking volumes.

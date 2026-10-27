@@ -66,3 +66,26 @@ Validation for 0.7: 50 automated tests pass, including movement interpolation,
 frame-rate independence, camera geometry, result totals and bounded VFX lifetime.
 Visual browser verification was unavailable because local browser use was disabled
 in Work settings during this pass.
+
+## Version 0.7.1 collision and presentation
+
+`tools/export-unreal-collision-grid.py` opens each source level in UE 5.6 and runs
+Pawn-profile capsule sweeps against its actual simple mesh collision and blocking
+volumes. It does not save source packages. The web capsule uses radius 0.28m and
+half-height 0.72m, with up to 0.45m of step-up clearance, scaled for the web character.
+The prepared 0.38m grid records occupancy, ground clearance and four swept movement
+edges per cell. Both player movement and bot pathfinding obey it. These are sampled
+native collision constraints, not exact runtime Chaos geometry or dynamic physics.
+All four gameplay spawns have routes to all four caches on every map.
+
+`tools/export-unreal-collision.py` also inspects/export boxes and available convex
+primitives into local audit files. Some convex vertices are not exposed by Python;
+the native sweep export covers those collision bodies without a guessed mesh hull.
+
+The result character is rendered directly from its GLB into a transparent WebGL
+canvas. It uses no black-backed portrait image, and its GPU context is released on
+retry or return to menu. The camera width is another 10% larger than 0.7.0; Mall's
+scene exposure is multiplied by 1.15 and restored when leaving Mall.
+
+52 automated tests and the Unreal protected-file baseline pass. Browser verification
+is unavailable while local browser use is disabled in Work settings.
