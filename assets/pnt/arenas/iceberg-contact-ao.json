@@ -1,0 +1,10 @@
+{
+  "radius": 0.4,
+  "strength": 0.65,
+  "upwardNormalThreshold": 0.8,
+  "receivers": [
+    "sm_ib_icefloor"
+  ],
+  "resolution": 2048,
+  "type": "floor contact AO only"
+}

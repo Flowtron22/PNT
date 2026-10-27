@@ -1,5 +1,23 @@
 # Mall baked lighting
 
+## Shared treatment on all maps
+
+`bakedArena(arena,id)` now applies the approved contrast (mask^2.3) and 1.15×
+saturation to Mall, Sunken and Iceberg. Sunken uses only `SunkenShip` as a bake
+receiver, with the upward-normal mask restricting shading to deck-facing surfaces.
+Iceberg uses only `sm_ib_icefloor`; its emissive texture and transparency remain.
+Both retain their original scene lighting and map mechanics, including ship tilt.
+
+Generate the new UV-equipped variants and atlases with Blender:
+`tools/bake-arena-contact.py -- sunken` or `-- iceberg` (arguments after `--`).
+Only receivers get a second UV; original materials and polygon assignments are
+restored before export. Original GLBs are preserved. Water and invisible collision
+meshes are excluded from bake rays. Validate with
+`node tools/verify-mall-lighting.mjs sunken` (or `iceberg`).
+Preview with `tools/preview-mall-lighting.py -- --contact --arena=sunken`.
+Offline previews preserve transparency/emissive textures and show AO placement,
+not the runtime camera, scene lighting or saturation grading.
+
 ## Current: floor contact AO only
 
 The broad full-lighting bake was rejected visually. The runtime now uses original

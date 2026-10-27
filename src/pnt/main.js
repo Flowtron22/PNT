@@ -18,7 +18,7 @@ import {configureFullscreen} from './fullscreen.js';
 import {configureLandscape} from './landscape.js';
 import {sampleGround,simulationSteps} from './motion.js';
 import {landingMask} from './landing.js';
-import {matteMall,bakedMall} from './arena-appearance.js';
+import {matteMall,bakedArena} from './arena-appearance.js';
 import {matchView,fixedStageCenter,stageFraming,shakeOffset} from './camera-rig.js';
 import {DEFAULT_BINDINGS,BINDING_LABELS,keyLabel,rebind,loadBindings,saveBindings,movementInput} from './keybindings.js';
 import {createHaptics} from './haptics.js';
@@ -271,10 +271,10 @@ for(const name of ['fullscreenchange','webkitfullscreenchange'])document.addEven
 function restoreRemoteFurniture(){for(const f of remoteFurniture){f.parent.add(f.mesh);f.mesh.position.copy(f.position);f.mesh.quaternion.copy(f.quaternion);f.mesh.scale.copy(f.scale);}remoteFurniture=[];}
 function prepareRemoteFurniture(){const meshes=[];gameArena.traverse(o=>{if(o.isMesh&&/^BP_Coffee(Chair|Table)/.test(o.name))meshes.push(o);});remoteFurniture=meshes.map(mesh=>{const item={mesh,parent:mesh.parent,position:mesh.position.clone(),quaternion:mesh.quaternion.clone(),scale:mesh.scale.clone()};matchRoot.attach(mesh);return item;});}
 async function loadArena(id){
- const [asset,data,nav,collision]=await Promise.all([getGLB('arena-'+id,`assets/pnt/arenas/${id==='mall'?'mall-lit':id}.glb?v=mall-bake-1`,e=>progress(e.total?Math.min(50,e.loaded/e.total*50):15,'Loading '+id+' arena…')),fetch(`assets/pnt/arenas/${id}.json`).then(r=>{if(!r.ok)throw Error('Missing arena metadata');return r.json();}),fetch(`assets/pnt/arenas/${id}.nav.json?v=environment-098`).then(r=>{if(!r.ok)throw Error('Missing arena navigation');return r.json();}),fetch(`assets/pnt/arenas/${id}.collision.json?v=environment-098`).then(r=>{if(!r.ok)throw Error('Missing Unreal collision');return r.json();})]);
+ const [asset,data,nav,collision]=await Promise.all([getGLB('arena-'+id,`assets/pnt/arenas/${id}-lit.glb?v=contact-1`,e=>progress(e.total?Math.min(50,e.loaded/e.total*50):15,'Loading '+id+' arena…')),fetch(`assets/pnt/arenas/${id}.json`).then(r=>{if(!r.ok)throw Error('Missing arena metadata');return r.json();}),fetch(`assets/pnt/arenas/${id}.nav.json?v=environment-098`).then(r=>{if(!r.ok)throw Error('Missing arena navigation');return r.json();}),fetch(`assets/pnt/arenas/${id}.collision.json?v=environment-098`).then(r=>{if(!r.ok)throw Error('Missing Unreal collision');return r.json();})]);
  restoreRemoteFurniture();furniturePhysics?.dispose();furniturePhysics=null;matchRoot.rotation.set(0,0,0);matchRoot.position.set(0,0,0);shipAngle=0;
  gameArena?.removeFromParent();gameArena=asset.scene;gameArena.visible=true;mapData=data;gameArena.position.set(...data.origin.map(v=>-v));matchRoot.add(gameArena);matchRoot.updateMatrixWorld(true);menuArena.visible=false;
- mallFill.visible=id==='mall';if(id==='mall'){matteMall(gameArena);await bakedMall(gameArena);}ground=[];gameArena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m?.map)m.map.anisotropy=2;}});
+ mallFill.visible=id==='mall';if(id==='mall')matteMall(gameArena);await bakedArena(gameArena,id);ground=[];gameArena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m?.map)m.map.anisotropy=2;}});
  bounds=arenaBounds(gameArena,data);sunlight.intensity=id==='mall'?2.4:3;fill.intensity=id==='mall'?.96:1.2;hemisphere.intensity=id==='mall'?1.92:2.4;renderer.toneMappingExposure=id==='mall'?1.15*1.15:1.15;
  grid={...nav,blocked:collision.blocked,edges:collision.edges,heights:Float32Array.from(collision.groundHeights||nav.heights,v=>v===null?NaN:v)};grid.landingMask=landingMask(grid,data.spawns);floor.position.y=-12;floor.material.color.set(id==='mall'?0x77768c:id==='sunken'?0x24638b:0x9bc4d7);
  if(id==='sunken')gameArena.getObjectByName('SunkenShip').getWorldPosition(shipPivot);if(id==='mall'&&!online){progress(50,'Preparing movable furniture…');furniturePhysics=await createMallPhysics(gameArena,matchRoot,grid);}if(id==='mall'&&online)prepareRemoteFurniture();

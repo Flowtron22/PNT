@@ -8,9 +8,10 @@ function inspect(file){
   for(const child of node.children||[])visit(child,matrix);
  }for(const root of json.scenes[json.scene||0].nodes)visit(root,new THREE.Matrix4());return entries;
 }
-const original=inspect('assets/pnt/arenas/mall.glb'),baked=inspect('assets/pnt/arenas/mall-lit.glb');
+const arena=process.argv[2]||'mall',metadata=JSON.parse(fs.readFileSync(`assets/pnt/arenas/${arena}-contact-ao.json`));
+const original=inspect(`assets/pnt/arenas/${arena}.glb`),baked=inspect(`assets/pnt/arenas/${arena}-lit.glb`);
 assert.equal(baked.length,original.length);
 for(const a of original){const name=a.name;const b=baked.find(b=>(b.name===name||name==='StaticMesh'&&/^StaticMesh\.\d+$/.test(b.name))&&a.box.min.distanceTo(b.box.min)<.001);assert.ok(b,`Missing ${name}`);assert.equal(b.triangles,a.triangles,`${name} triangles`);assert.ok(a.box.min.distanceTo(b.box.min)<.001&&a.box.max.distanceTo(b.box.max)<.001,`${name} transformed bounds changed`);
- assert.deepEqual(b.materialCounts,a.materialCounts,`${name} material triangle assignments`);const moving=/^BP_Coffee(Chair|Table)/.test(name);assert.ok(b.primitives.every(p=>(p.attributes.TEXCOORD_1!==undefined)===!moving),`${name} lightmap UV assignment`);
+ assert.deepEqual(b.materialCounts,a.materialCounts,`${name} material triangle assignments`);const needsUV=arena==='mall'?!/^BP_Coffee(Chair|Table)/.test(name):metadata.receivers.includes(name);assert.ok(b.primitives.every(p=>(p.attributes.TEXCOORD_1!==undefined)===needsUV),`${name} lightmap UV assignment`);
 }
-console.log(`Verified ${baked.length} mesh placements/triangle counts; fixed UV1 present; 15 movable props excluded.`);
+console.log(`Verified ${arena}: ${baked.length} mesh placements, triangle/material counts and receiver UV1 assignment.`);

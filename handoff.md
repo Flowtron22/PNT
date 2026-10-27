@@ -38,6 +38,16 @@ at original dimensions; the preview URL is versioned to avoid stale asset caches
 
 ## Continue here
 
+Latest: Sunken and Iceberg now use the approved Mall treatment: contact mask^2.3,
+0.4 radius / 65% baked strength / upward normal >0.8, saturation 1.15. Shared
+`bakedArena(arena,id)` applies only to UV1 receivers: SunkenShip (upward-facing
+deck portions; vertical geometry stays white) and sm_ib_icefloor. Original GLBs
+remain untouched; runtime loads all three `*-lit.glb` variants. Regenerate the
+new maps with `tools/bake-arena-contact.py -- sunken` / `-- iceberg` in Blender.
+Geometry/material checks passed for Mall 58, Sunken 50, Iceberg 45 mesh nodes;
+Three loader checks preserve transparency/emission, AO receivers and shader
+composition. 103 tests passed. Offline previews only; browser remains disabled.
+
 Contact visibility fix: default aoMap shading was washed out by direct lights.
 Floor-only onBeforeCompile now removes the ambient-only AO chunk and multiplies
 final outgoingLight by contactMask^2.3 once (latest contrast increase).
