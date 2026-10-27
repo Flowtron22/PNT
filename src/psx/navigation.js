@@ -10,4 +10,4 @@ export function findPath(grid,from,to){
  }
  const result=[];for(let i=closest;i!==start;i=prev[i])result.push({x:minX+(i%nx)*step,z:minZ+Math.floor(i/nx)*step});return result.reverse();
 }
-export function screenToWorld(x,z){return {x:z,z:-x};}
+export function screenToWorld(x,z){return {x:-z,z:x};}

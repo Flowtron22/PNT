@@ -12,6 +12,10 @@ import {PROFILE_KEY,readProfile,saveProfile,profileName,recordMatch} from './pro
 import {renderHomeWidgets} from './home-widgets.js';
 import {bindGameControls} from './touch-controls.js';
 import {configureFullscreen} from './fullscreen.js';
+import {sampleGround,dampVelocity,simulationSteps} from './motion.js';
+import {matchView} from './camera-rig.js';
+import {createGameFX} from './game-fx.js';
+import {renderResults} from './results-ui.js';
 import {findPath,screenToWorld} from './navigation.js';
 import {buildWalkGrid,arenaBounds,solidForGameplay} from './world-navigation.js';
 let touchControls,interactHeld=false,menuArena=null,gameArena=null,mapData=null,menuNavigation=null;
@@ -21,13 +25,14 @@ const ui={menu:$('#menu'),hud:$('#hud'),pause:$('#pause'),results:$('#results'),
 const scene=new THREE.Scene();scene.background=new THREE.Color('#70688f');scene.fog=new THREE.Fog('#70688f',38,85);
 const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
-const menuCamera=new THREE.PerspectiveCamera(40,1,.05,120),matchCamera=new THREE.OrthographicCamera(-12.5,12.5,7,-7,.05,120);
+const menuCamera=new THREE.PerspectiveCamera(40,1,.05,120),matchCamera=new THREE.PerspectiveCamera(30,1,.1,180);
 scene.add(new THREE.HemisphereLight(0xeaf4ff,0x6c728e,2.4));
 const sunlight=new THREE.DirectionalLight(0xfff1df,3);sunlight.position.set(8,16,7);scene.add(sunlight);
 const fill=new THREE.DirectionalLight(0xb6d8ff,1.2);fill.position.set(-8,7,-4);scene.add(fill);
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(180,180),new THREE.MeshStandardMaterial({color:0x77768c,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.3;scene.add(floor);
 const ray=new THREE.Raycaster(),up=new THREE.Vector3(0,1,0),down=new THREE.Vector3(0,-1,0);
 const loader=new GLTFLoader(),cache=new Map();
+const gameFX=createGameFX(scene);
 const smokeGeometry=new THREE.IcosahedronGeometry(1,1),smokeMaterial=new THREE.MeshBasicMaterial({color:0xa3a8b6,transparent:true,opacity:.4,depthWrite:false});
 let ready=false,role='runner',quality=localStorage.getItem('psx-web-quality')||'balanced';
 let costume=normalizeCostume(localStorage.getItem('pnt-costume'));
@@ -40,7 +45,7 @@ const lobbyCamera=new THREE.PerspectiveCamera(34,1,.05,30);lobbyCamera.position.
 let reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const uiEffects=createWonderUI({blocked:()=>busy||!$('#loading').hidden||!ui.hud.hidden,reduced:()=>reduced});
 document.body.classList.toggle('reduced-motion',reduced);
-function resize(){const aspect=innerWidth/innerHeight;menuCamera.aspect=aspect;menuCamera.updateProjectionMatrix();const width=aspect<1?10.5:Math.max(15,Math.min(25,15*aspect)),height=width/aspect;matchCamera.left=-width/2;matchCamera.right=width/2;matchCamera.top=height/2;matchCamera.bottom=-height/2;matchCamera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,quality==='battery'?1:1.5));renderer.setSize(innerWidth,innerHeight,false);}
+function resize(){const aspect=innerWidth/innerHeight;menuCamera.aspect=aspect;menuCamera.updateProjectionMatrix();matchCamera.aspect=aspect;matchCamera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,quality==='battery'?1:1.5));renderer.setSize(innerWidth,innerHeight,false);}
 addEventListener('resize',resize);resize();
 function show(name){for(const [key,node]of Object.entries(ui))node.hidden=key!==name;document.body.classList.toggle('playing',name==='hud'||name==='pause'||name==='results');document.body.classList.toggle('lobby-view',name==='lobby');$('#lobby-backdrop').hidden=name!=='lobby';}
 function say(text,seconds=2){$('#toast').textContent=text;toastTime=seconds;}
@@ -55,7 +60,7 @@ const nextFrame=()=>new Promise(resolve=>requestAnimationFrame(resolve));
 async function getGLB(key,url,onProgress){if(cache.has(key))return cache.get(key);const pending=loader.loadAsync(url,onProgress);cache.set(key,pending);try{return await pending;}catch(e){cache.delete(key);throw e;}}
 async function ensureCostume(){const c=COSTUMES.find(c=>c.id===costume);if(templates[c.id]||!c.file)return;templates[c.id]=await getGLB(c.id,`assets/psx/costumes/${c.file}.glb`,e=>progress(e.total?Math.min(85,e.loaded/e.total*85):30,`Loading ${c.name}…`));}
 function destroy(a){if(!a)return;a.group.removeFromParent();a.anim.dispose();const skeletons=new Set();a.model.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const skeleton of skeletons)skeleton.dispose();for(const mesh of [a.ring,a.shadow]){mesh.geometry.dispose();mesh.material.dispose();}}
-function clearHazards(){for(const h of hazards)disposeHazard(h);hazards.length=0;}
+function clearHazards(){gameFX.clear();for(const h of hazards)disposeHazard(h);hazards.length=0;}
 function menu(){restoreMenuArena();room=null;returnToLobby=false;clearLobbyDisplays();round=null;paused=false;clearInput();clearHazards();for(const a of avatars)destroy(a);avatars=[];previewModel();show('menu');openPage('home');}
 function previewModel(){destroy(preview);preview=avatar(templates[costume],0,role);preview.group.position.copy(spot(0,0));preview.group.rotation.y=0;previewClip='idle';previewTime=0;preview.anim.play('idle');labels();}
 function labels(){
@@ -138,10 +143,10 @@ function openPage(name){if(busy)return;activePage=name;if(preview)preview.group.
   content.innerHTML=`<p class="page-copy">Pick your costume. Bring your own kind of trouble.</p><div class="wardrobe-grid">${COSTUMES.map(c=>choice(c.id,c.name,c.id===costume?'EQUIPPED':'',c.id===costume,'<img src="assets/psx/portraits/'+c.id+'.png" alt="">')).join('')}</div><div class="wardrobe-footer"><p>CHOOSE A COSTUME TO EQUIP</p><small>One wardrobe for everyone. Any costume works as police or thief.</small></div><button id="costume-dance" class="secondary">SHOW YOUR MOVES</button>`;
   for(const b of content.querySelectorAll('[data-choice]'))b.onclick=()=>selectCostume(b.dataset.choice);$('#costume-dance').onclick=()=>demo('dance');
  }else if(name==='settings'){
-  content.innerHTML=`<div class="setting-row"><label for="quality">Graphics<small>Battery uses fewer pixels.</small></label><select id="quality"><option value="balanced">Balanced</option><option value="battery">Battery</option></select></div><div class="setting-row"><label for="motion">Menu motion<small>Gentler menu transitions.</small></label><select id="motion"><option value="normal">Normal</option><option value="reduced">Reduced</option></select></div><div class="setting-row"><label for="ui-sounds">UI sounds<small>Original Wonder Wave menu feedback.</small></label><select id="ui-sounds"><option value="on">On</option><option value="off">Off</option></select></div><p class="page-copy">The match camera stays fixed in a top-down view. Your character follows the joystick or WASD directly. No camera drag is needed.</p><button id="fullscreen" class="secondary">FULLSCREEN</button><p id="fullscreen-status" class="page-copy fullscreen-help" role="status"></p>`;
+  content.innerHTML=`<div class="setting-row"><label for="quality">Graphics<small>Battery uses fewer pixels.</small></label><select id="quality"><option value="balanced">Balanced</option><option value="battery">Battery</option></select></div><div class="setting-row"><label for="motion">Menu motion<small>Gentler menu transitions.</small></label><select id="motion"><option value="normal">Normal</option><option value="reduced">Reduced</option></select></div><div class="setting-row"><label for="ui-sounds">UI sounds<small>Original Wonder Wave menu feedback.</small></label><select id="ui-sounds"><option value="on">On</option><option value="off">Off</option></select></div><p class="page-copy">The match camera uses a fixed 30° perspective view. Your character follows the joystick or WASD directly. No camera drag is needed.</p><button id="fullscreen" class="secondary">FULLSCREEN</button><p id="fullscreen-status" class="page-copy fullscreen-help" role="status"></p>`;
   $('#ui-sounds').value=uiEffects.sounds.enabled?'on':'off';$('#ui-sounds').onchange=e=>uiEffects.sounds.setEnabled(e.target.value==='on');$('#quality').value=quality;$('#quality').onchange=e=>{quality=e.target.value;localStorage.setItem('psx-web-quality',quality);resize();};$('#motion').value=reduced?'reduced':'normal';$('#motion').onchange=e=>{reduced=e.target.value==='reduced';document.body.classList.toggle('reduced-motion',reduced);};configureFullscreen($('#fullscreen'),$('#fullscreen-status'));
  }else{
-  content.innerHTML=`<div class="credits-copy"><p><b>POLICE N THIEF</b><br>Characters, costumes and animations from the original PSX project.</p><p><b>UI FOUNDATION & INSPIRATION</b><br>Wonder Wave / PURRITORY — Jayden Davis.</p><p><b>BUILT WITH</b><br>Three.js · Titan One · Rubik</p><p><a href="credits.html" target="_blank" rel="noopener">Full credits & licence notices ↗</a></p><p>Web 0.6.0 · local practice. Online multiplayer is still in development.</p></div>`;
+  content.innerHTML=`<div class="credits-copy"><p><b>POLICE N THIEF</b><br>Characters, costumes and animations from the original PSX project.</p><p><b>UI FOUNDATION & INSPIRATION</b><br>Wonder Wave / PURRITORY — Jayden Davis.</p><p><b>BUILT WITH</b><br>Three.js · Titan One · Rubik</p><p><a href="credits.html" target="_blank" rel="noopener">Full credits & licence notices ↗</a></p><p>Web 0.7.0 · local practice. Online multiplayer is still in development.</p></div>`;
  }
  $('#page-back').focus({preventScroll:true});
 }
@@ -180,7 +185,7 @@ function withinSight(p,q,smoke=true,stop=.35){
 function steerBot(a,target,dt){
  a.routeTime=(a.routeTime||0)-dt;const p=a.group.position;
  if(a.routeTime<=0||!a.route||!a.routeGoal||a.routeGoal.distanceToSquared(target)>1){a.route=findPath(grid,p,target);a.routeGoal=target.clone();a.routeTime=.8;}
- while(a.route.length&&Math.hypot(a.route[0].x-p.x,a.route[0].z-p.z)<.22)a.route.shift();const next=a.route[0]||target;return {x:next.x-p.x,z:next.z-p.z};
+ while(a.route.length&&Math.hypot(a.route[0].x-p.x,a.route[0].z-p.z)<.22)a.route.shift();const next=a.route[0]||target,dx=next.x-p.x,dz=next.z-p.z,d=Math.hypot(dx,dz);return d>.06?{x:dx/d,z:dz/d}:{x:0,z:0};
 }
 function interactionTarget(id){
  const a=avatars[id],state=round.actors[id];if(!a||state.role!=='runner')return null;const p=a.group.position;
@@ -201,8 +206,8 @@ function updateMarkers(){
 
 function buildGround(){grid=buildWalkGrid(ground,bounds);}
 
-function heightAt(x,z){if(!grid)return 0;const ix=Math.round((x-bounds.min.x)/grid.step),iz=Math.round((z-bounds.min.z)/grid.step);return ix<0||iz<0||ix>=grid.nx||iz>=grid.nz?NaN:grid.heights[iz*grid.nx+ix];}
-function walkable(x,z,y){const h=heightAt(x,z);return Number.isFinite(h)&&h-y<.65;}
+function heightAt(x,z){return grid?sampleGround(grid,x,z):0;}
+function walkable(x,z,y){const h=heightAt(x,z);return Number.isFinite(h)&&h-y<.5&&y-h<1.2;}
 function spot(x,z){let best=null,distance=Infinity;for(let iz=2;iz<grid.nz-2;iz++)for(let ix=2;ix<grid.nx-2;ix++){
   const y=grid.heights[iz*grid.nx+ix];if(!Number.isFinite(y))continue;const px=bounds.min.x+ix*grid.step,pz=bounds.min.z+iz*grid.step,d=(px-x)**2+(pz-z)**2;
   if(d<distance){distance=d;best=new THREE.Vector3(px,y,pz);}
@@ -228,7 +233,7 @@ function useTool(slot,id=0){
  if(!activateTool(round,id,slot,tool))return;
  const point=actor.group.position.clone();
  if(tool==='hammer'){
-  setEffect(state,'hammer',.48);const visual=prop('propHammer',1.25);visual.position.set(.5,.6,.4);actor.group.add(visual);hazards.push({mesh:visual,type:'visual',time:.48});
+  setEffect(state,'hammer',.48);actor.hammerImpact=.18;const visual=prop('propHammer',1.25);visual.position.set(.5,.6,.4);actor.group.add(visual);hazards.push({mesh:visual,type:'visual',time:.48});
   for(const other of round.actors){if(other.role===state.role||other.caught)continue;const a=avatars[other.id];if(point.distanceTo(a.group.position)<2&&withinSight(point,a.group.position,false))setEffect(other,a.grounded?'stunned':'airStunned',2);}
   if(id===0)say('HAMMER SWING!',.7);
  }else if(tool==='banana'){
@@ -243,17 +248,17 @@ function useTool(slot,id=0){
 }
 function limitItems(owner,type,max){const all=hazards.filter(h=>h.owner===owner&&h.type===type&&h.time>0);for(let i=0;i<all.length-max;i++)all[i].time=0;}
 
-function move(a,dx,dz,dt,speed){const p=a.group.position,magnitude=Math.hypot(dx,dz);if(magnitude>.01){dx/=Math.max(1,magnitude);dz/=Math.max(1,magnitude);}const nx=p.x+dx*speed*dt,nz=p.z+dz*speed*dt;let moved=false;
- if(magnitude>.01){if(walkable(nx,p.z,p.y)){p.x=nx;moved=true;}if(walkable(p.x,nz,p.y)){p.z=nz;moved=true;}}
- if(magnitude>.06&&moved){const angle=Math.atan2(dx,dz);a.group.rotation.y+=Math.atan2(Math.sin(angle-a.group.rotation.y),Math.cos(angle-a.group.rotation.y))*Math.min(1,dt*14);}
- const h=heightAt(p.x,p.z),flying=round?.actors[a.id]?.effect==='rocket'&&round.actors[a.id].effectTime>0;if(flying&&Number.isFinite(h)){p.y=THREE.MathUtils.damp(p.y,h+1.8,6,dt);a.velocity=0;}else{a.velocity-=16*dt;p.y+=a.velocity*dt;}if(!flying&&Number.isFinite(h)&&p.y<=h){p.y=h;a.velocity=0;a.grounded=true;}else a.grounded=false;if(p.y<bounds.min.y-3){p.copy(spot(0,0));a.velocity=0;}a.speed=THREE.MathUtils.damp(a.speed,magnitude>.05&&moved?1:0,10,dt);return moved;
+function move(a,dx,dz,dt,speed){const p=a.group.position,magnitude=Math.hypot(dx,dz);if(magnitude>.01){dx/=Math.max(1,magnitude);dz/=Math.max(1,magnitude);}a.vx=dampVelocity(a.vx||0,dx*speed,dt);a.vz=dampVelocity(a.vz||0,dz*speed,dt);const nx=p.x+a.vx*dt,nz=p.z+a.vz*dt;let moved=false;
+ if(Math.hypot(a.vx,a.vz)>.01){if(walkable(nx,p.z,p.y)){p.x=nx;moved=true;}else a.vx=0;if(walkable(p.x,nz,p.y)){p.z=nz;moved=true;}else a.vz=0;}
+ if(magnitude>.06&&moved){const angle=Math.atan2(a.vx,a.vz);a.group.rotation.y+=Math.atan2(Math.sin(angle-a.group.rotation.y),Math.cos(angle-a.group.rotation.y))*Math.min(1,dt*14);}
+ const h=heightAt(p.x,p.z),flying=round?.actors[a.id]?.effect==='rocket'&&round.actors[a.id].effectTime>0;if(flying&&Number.isFinite(h)){p.y=THREE.MathUtils.damp(p.y,h+1.8,6,dt);a.velocity=0;}else{a.velocity-=16*dt;p.y+=a.velocity*dt;}if(!flying&&Number.isFinite(h)&&(p.y<=h||a.grounded&&Math.abs(p.y-h)<.55)){p.y=THREE.MathUtils.damp(p.y,h,30,dt);a.velocity=0;a.grounded=true;}else a.grounded=false;if(p.y<bounds.min.y-3){p.copy(spot(0,0));a.velocity=0;}a.speed=THREE.MathUtils.damp(a.speed,magnitude>.05&&moved?1:0,10,dt);return moved;
 }
-function animate(a,state,dt){let name=animationFor(state,a.speed>.16,!a.grounded);if(name==='rocket'&&state.effectTime<4.5)name='jet';a.anim.play(name,{loop:!['hammer','stunned','airStunned','busted','rocket'].includes(name)});a.anim.update(dt);a.group.userData.animation=name;}
+function animate(a,state,dt){let name=animationFor(state,a.speed>.16,!a.grounded);if(name==='rocket'&&state.effectTime<4.5)name='jet';a.anim.play(name,{loop:!['hammer','stunned','airStunned','busted','rocket'].includes(name)});a.anim.update(dt);a.group.userData.animation=name;gameFX.run(a,dt);if(a.hammerImpact>0){a.hammerImpact-=dt;if(a.hammerImpact<=0)gameFX.hammer(a.group.position);}}
 function updateGame(dt){
  stepRound(round,dt);const chaser=round.actors.find(a=>a.role==='chaser'),cop=avatars[chaser.id],wishes=[];
  for(const state of round.actors){
   const a=avatars[state.id];state.interacting=false;
-  if(state.caught){cancelInteraction(round,state.id);a.mark=null;for(const h of hazards)if(h.type==='marker'&&h.owner===state.id)h.time=0;move(a,0,0,dt,0);animate(a,state,dt);continue;}
+  if(state.caught){a.vx=a.vz=0;cancelInteraction(round,state.id);a.mark=null;for(const h of hazards)if(h.type==='marker'&&h.owner===state.id)h.time=0;move(a,0,0,dt,0);animate(a,state,dt);continue;}
   let dx=0,dz=0,wants=false;
   if(state.id===0){const sx=input.x+(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),sz=-input.z-(keys.has('KeyW')||keys.has('ArrowUp')?1:0)+(keys.has('KeyS')||keys.has('ArrowDown')?1:0);const direction=screenToWorld(sx,sz);dx=direction.x;dz=direction.z;wants=interactHeld;}
   else if(state.role==='chaser'){
@@ -267,9 +272,9 @@ function updateGame(dt){
    else {const choices=round.caches.filter(c=>c.remaining>0).sort((a,b)=>{const score=c=>p.distanceToSquared(new THREE.Vector3(...c.position))+(avatars.some(o=>o.id!==state.id&&o.goalCache===c.id)?50:0);return score(a)-score(b);});if(choices[0]){a.goalCache=choices[0].id;target=new THREE.Vector3(...choices[0].position);wants=true;}}
    if(target&&dx===0&&dz===0){if(Math.hypot(p.x-target.x,p.z-target.z)>1.5){const d=steerBot(a,target,dt);dx=d.x;dz=d.z;}}
   }
-  const locked=state.effectTime>0&&state.effect!=='rocket';if(locked)dx=dz=0;
+  const locked=state.effectTime>0&&state.effect!=='rocket';if(locked){dx=dz=0;a.vx=a.vz=0;}
   if(state.effect==='rocket'&&state.effectTime>0&&Math.hypot(dx,dz)<.1){dx=Math.sin(a.group.rotation.y);dz=Math.cos(a.group.rotation.y);}
-  const moved=move(a,dx,dz,dt,(state.role==='chaser'?3.65:3.4)*(state.id===0?1.08:1)*(state.effect==='rocket'&&state.effectTime>0?1.8:1));if(!moved&&state.id!==0&&!locked&&Math.hypot(dx,dz)>.1){a.routeTime=0;a.wander+=dt*4;move(a,Math.sin(a.wander),Math.cos(a.wander),dt,2.5);}animate(a,state,dt);wishes.push({id:state.id,wants:wants&&!locked});
+  const moved=move(a,dx,dz,dt,(state.role==='chaser'?3.65:3.4)*(state.id===0?1.08:1)*(state.effect==='rocket'&&state.effectTime>0?1.8:1));if(!moved&&state.id!==0&&!locked&&Math.hypot(dx,dz)>.1){a.routeTime=0;}animate(a,state,dt);wishes.push({id:state.id,wants:wants&&!locked});
  }
  for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];h.time-=dt;if(h.type==='banana'&&h.time>0)for(const state of round.actors){if(state.caught||state.role===h.ownerRole||state.effectTime>0)continue;if(avatars[state.id].group.position.distanceTo(h.mesh.position)<.8){setEffect(state,'banana',2);h.time=0;break;}}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}
  if(round.remaining<298.5&&chaser.effectTime<=0)for(const r of round.actors.filter(a=>a.role==='runner'&&!a.caught)){const p=cop.group.position,q=avatars[r.id].group.position,d=p.distanceTo(q);if(d<.9&&Math.abs(p.y-q.y)<.8&&withinSight(p,q)&&tag(round,chaser.id,r.id,d)){cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAUGHT! YOUR TEAM CAN RELEASE YOU.':'THIEF CAUGHT!',1.2);}}
@@ -277,9 +282,8 @@ function updateGame(dt){
  for(const wish of wishes){const target=wish.wants?interactionTarget(wish.id):null,key=target?target.type+':'+target.target.id:null,actor=avatars[wish.id];if(actor.interactionKey!==key||!target)cancelInteraction(round,wish.id);actor.interactionKey=key;if(target)performInteraction(wish.id,target,dt);}
  if(round.phase==='finished'){
   paused=false;stopInteract();const won=round.winner===round.playerRole;if(!round.profileRecorded){profile=recordMatch(readProfile(localStorage),{id:round.profileId,won});saveProfile(localStorage,profile);round.profileRecorded=true;labels();}
-  $('#result-title').textContent=round.winner==='runner'?'Cleaned out!':round.reason==='captured'?'All thieves caught!':'Money protected!';$('#result-eyebrow').textContent=won?'YOU WIN':'ROUND OVER';$('#result-copy').textContent=round.reason==='money'?'Every money cache was emptied. The thieves win.':round.reason==='captured'?'All three thieves were caught at the same time. The police win.':'Time ran out with money remaining. The police win.';show('results');
+  show('results');renderResults(ui.results,{round,won,profile,costume,players:room?.players||[],map:mapData?.id||'mall',sounds:uiEffects.sounds,onAgain:start,onMenu:menu,reduced});
  }
- updateHud();
 }
 function updateHud(){
  const seconds=Math.ceil(round.remaining);$('#timer').textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;$('#money-status').textContent='$'+Math.floor(round.collected).toLocaleString()+' / $'+round.totalMoney.toLocaleString();
@@ -288,10 +292,11 @@ function updateHud(){
  const target=interactionTarget(0);$('#interact').disabled=state.caught||state.effectTime>0||state.role==='chaser';const hint=$('#interaction-hint');hint.textContent=state.caught?(state.releaseCooldown>0?'RELEASE UNLOCKS IN '+Math.ceil(state.releaseCooldown)+'s':'WAIT FOR A TEAMMATE TO RELEASE YOU'):state.role==='chaser'?'CATCH ALL THIEVES · PROTECT THE CACHES':target?.type==='rescue'?(target.target.releaseCooldown>0?'TEAMMATE LOCKED '+Math.ceil(target.target.releaseCooldown)+'s':'HOLD INTERACT · RELEASE TEAMMATE'):target?.type==='money'?(state.interacting?'STEALING · YOU $'+Math.floor(state.money).toLocaleString():interactHeld&&target.target.harvester!==null?'A TEAMMATE IS USING THIS CACHE':'HOLD INTERACT · STEAL MONEY'):'FIND A MONEY CACHE';
 }
 
-function positionMatchCamera(){matchCamera.position.copy(cameraTarget).add(new THREE.Vector3(13,22,0));matchCamera.lookAt(cameraTarget);}
+function positionMatchCamera(){const view=matchView(menuCamera.aspect);matchCamera.position.copy(cameraTarget).add(new THREE.Vector3(...view.offset));matchCamera.lookAt(cameraTarget);}
+
 async function boot(){beginLoading('GETTING READY');try{let done=0;const names=['thief','police','mall-slice'];const items=await Promise.all(names.map(async name=>{const value=await getGLB(name,`assets/psx/${name}.glb`);progress(++done/4*70,`Loading ${name==='mall-slice'?'Mall promenade':name}…`);return value;}));templates={thief:items[0],police:items[1]};const response=await fetch('assets/psx/animations/clips.json?v=idle-b1');if(!response.ok)throw new Error('Animation download failed');const data=await response.json();clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));progress(75,'Preparing the walkable arena…');const arena=items[2].scene;menuArena=arena;arena.updateMatrixWorld(true);const initial=new THREE.Box3().setFromObject(arena),center=initial.getCenter(new THREE.Vector3());arena.position.add(new THREE.Vector3(-center.x,-initial.min.y,-center.z));scene.add(arena);arena.updateMatrixWorld(true);arena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){m.roughness=Math.max(.7,m.roughness||0);if(m.map)m.map.anisotropy=2;}}});bounds=new THREE.Box3().setFromObject(arena);buildGround();menuNavigation={ground,bounds,grid};await ensureCostume();progress(90,'Warming up characters and fonts…');previewModel();await document.fonts.ready;await renderer.compileAsync(scene,menuCamera);progress(100,'All set. Let’s play.');ready=true;document.body.dataset.assets='ready';show('menu');endLoading();openPage('home');}catch(e){document.body.dataset.assets='error';loadError(e,()=>location.reload());}}
 function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed=Math.max(0,(now-lastFrame)/1000),dt=Math.min(elapsed,.05);lastFrame=now;uiEffects.tick(dt);
- if(ready){if(room&&!ui.lobby.hidden&&!busy&&!document.hidden){if(stepLobby(room,elapsed))start();else if(room.phase==='countdown'){$('#lobby-counter').textContent=Math.ceil(room.countdown);}}if(round){if(round.phase==='playing'&&!paused&&!busy)updateGame(dt);const target=avatars[0]?.group.position;if(target){const groundY=heightAt(target.x,target.z);const desired=new THREE.Vector3(target.x,Number.isFinite(groundY)?groundY:0,target.z);cameraTarget.lerp(desired,1-Math.exp(-dt*8));positionMatchCamera();}}
+ if(ready){if(room&&!ui.lobby.hidden&&!busy&&!document.hidden){if(stepLobby(room,elapsed))start();else if(room.phase==='countdown'){$('#lobby-counter').textContent=Math.ceil(room.countdown);}}if(round){if(round.phase==='playing'&&!paused&&!busy){const steps=simulationSteps(elapsed);for(let i=0;i<steps.count&&round.phase==='playing';i++){updateGame(steps.dt);gameFX.update(steps.dt);}updateHud();}const target=avatars[0]?.group.position;if(target){const groundY=heightAt(target.x,target.z);const desired=new THREE.Vector3(target.x,Number.isFinite(groundY)?groundY:0,target.z);cameraTarget.lerp(desired,1-Math.exp(-Math.min(elapsed,.15)*8));positionMatchCamera();}}
  else if(preview){preview.anim.update(dt);if(previewTime>0){previewTime-=dt;if(previewTime<=0)preview.anim.play('idle');}const p=preview.group.position,narrow=innerWidth<760,pagePreview=narrow&&activePage!=='home';const distance=pagePreview?9:4.6,offset=distance*Math.tan(THREE.MathUtils.degToRad(menuCamera.fov/2))*menuCamera.aspect*(activePage==='home'?(narrow?.28:.16):.43);menuCamera.position.set(p.x,p.y+1.45,p.z+distance);menuCamera.lookAt(p.x-offset,p.y+(pagePreview?3:.8),p.z);}}
  if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('#toast').textContent='';}updateMarkers();if(!ui.lobby.hidden&&!busy)renderLobbyCharacters(dt);else renderer.render(scene,round?matchCamera:menuCamera);
 }

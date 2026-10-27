@@ -20,7 +20,7 @@ Desktop: WASD move, E slot 1, R slot 2, F interact, Escape pause.
 Mobile: left joystick, two small tool buttons, one large Interact button.
 Hold Interact (F) near a cache to steal, or near an unlocked captured teammate to rescue.
 Phone: virtual stick, two tool buttons, and the large Interact button. The match camera has a fixed
-orthographic top-down view; movement follows the screen directions.
+30-degree perspective view; movement follows the screen directions.
 
 The Tools page follows the Unreal layout: two equipped slots at the top, a catalog
 below left, and selected-tool details with Equip Slot 1/2 buttons below right.
@@ -121,6 +121,11 @@ are ignored; gameplay touch/pinch gestures are cancelled without blocking menu
 fields. Touch cancel, lost capture, pause and app switching clear held movement.
 
 Safari on iPhone cannot fullscreen arbitrary game content through the desktop API.
-Settings shows Safari → Share → Add to Home Screen instructions when that API is
-unavailable. The manifest and Apple web-app metadata support launching without
+Settings keeps the fullscreen toggle without installation-guide text. The manifest and Apple web-app metadata support launching without
 Safari browser bars. No offline asset cache or service worker is installed.
+
+Version 0.7 reuses Wonder Wave result-screen splats, team bars and victory/defeat
+audio, with real PNT money and player totals. The perspective camera views from
+the opposite side with 30% wider framing. Movement uses bounded fixed substeps,
+velocity damping and interpolated ground height. Hammer impact rings and running
+dust are bounded WebGL effects; Unreal Niagara graphs cannot execute in a browser.
