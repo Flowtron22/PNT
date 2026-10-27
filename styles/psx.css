@@ -88,3 +88,6 @@ body.menu-view #lobby-backdrop{z-index:0}body.menu-view #world{z-index:1}body.me
 .key-mapping{margin:24px 0;padding:18px;border-radius:18px;background:#181629a8}.key-mapping h2{font:22px Titan;margin:0 0 10px}.key-mapping p{font:13px/1.6 Rubik;color:#ddd}#key-binding-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}.binding-button{min-height:46px;padding:10px;border:2px solid #ffffff40;border-radius:12px;background:#393148;color:white;font:700 13px Rubik}.binding-button:hover,.binding-button:focus-visible{border-color:#ffd268;background:#554566}.control-key{pointer-events:none}
 
 @media(hover:hover) and (pointer:fine){#hud .actions .tool-action{background:linear-gradient(145deg,#fff,#e8eaed)}}
+
+/* Removed menu helper copy leaves no empty labels or status spacing. */
+.choice small:empty,#binding-status:empty,#join-status:empty{display:none}
