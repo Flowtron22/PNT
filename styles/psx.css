@@ -48,7 +48,7 @@ html,body{touch-action:manipulation}body.playing{touch-action:none}.lobby-screen
  .actions button:active:not(:disabled){scale:.92;box-shadow:inset 0 3px 5px #a1a8b155,0 1px 3px #0003}.actions button:disabled{opacity:.55;cursor:default}
  .actions #interact{right:0;bottom:0;width:calc(var(--touch-size) + 16px);height:calc(var(--touch-size) + 16px)}
 
- .actions #tool-action1{right:6px;bottom:calc(var(--touch-size) + 16px + var(--touch-gap));width:calc(var(--touch-size) - 6px);height:calc(var(--touch-size) - 6px)}
+ .actions #tool-action1{right:calc(var(--touch-size)*.4);bottom:calc(var(--touch-size) + 16px + var(--touch-gap));width:calc(var(--touch-size) - 6px);height:calc(var(--touch-size) - 6px)}
  .actions #tool-action2{right:calc(var(--touch-size) + 16px + var(--touch-gap));bottom:8px;width:calc(var(--touch-size) - 6px);height:calc(var(--touch-size) - 6px)}
  .actions .control-icon{display:block;width:32px;height:32px;object-fit:contain;flex:none}.actions img.control-icon{filter:grayscale(1);opacity:.8;width:35px;height:35px}.actions .control-label{font:800 7px/1 Rubik;letter-spacing:.04em}.actions .control-slot{display:grid;place-items:center;position:absolute;right:-3px;top:-3px;width:19px;height:19px;border:2px solid #fff;border-radius:50%;background:#858c97;color:white;font:800 10px Rubik}
  .actions small{display:none;margin:0}.actions .cooling-down small{display:grid;position:absolute;inset:0;place-items:center;border-radius:50%;background:#ffffffd9;color:#555e69;font:20px Titan}
