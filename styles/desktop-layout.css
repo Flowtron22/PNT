@@ -1,0 +1,17 @@
+/* Auto desktop layout: cap content width rather than stretching with the monitor.
+   Phones, including iPhone 14 Plus landscape, retain their existing rules. */
+@media(min-width:1025px) and (hover:hover) and (pointer:fine){
+ #menu,#lobby,#results{--desktop-content:min(1200px,calc(100vw - 96px));--desktop-inset:max(48px,calc((100vw - 1200px)/2))}
+ #menu[data-page=play] .page-panel,#menu[data-page=join] .page-panel{left:var(--desktop-inset);right:auto;width:var(--desktop-content);max-width:1200px}
+ #menu[data-page=play] .flow-options,#menu[data-page=join] .flow-options{width:100%;max-width:1200px;gap:24px}
+ #menu[data-page=play] .flow-option,#menu[data-page=join] .flow-option{min-width:0;min-height:310px;padding:28px}
+ #menu[data-page=play] .flow-option>b{font-size:36px}
+ #menu[data-page=tools] .page-panel,#menu[data-page=costume] .page-panel{width:min(58vw,840px)}
+ #menu[data-page=settings] .page-panel{width:min(46vw,620px)}
+ #lobby .lobby-top{width:var(--desktop-content);max-width:1200px;margin-inline:auto}
+ #lobby .lobby-roster{width:min(100%,1040px);max-width:var(--desktop-content)}
+ #lobby .lobby-bottom{width:var(--desktop-content);max-width:1200px}
+ #results .iw-res__body{left:var(--desktop-inset);right:var(--desktop-inset)}
+ #results .iw-res__head{left:var(--desktop-inset)}
+ #results .result-hero{right:var(--desktop-inset);width:min(28%,350px)}
+}
