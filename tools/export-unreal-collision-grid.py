@@ -1,7 +1,7 @@
 """Sample source Unreal Pawn capsule collision; no source package is modified."""
 import unreal,json,time
 from pathlib import Path
-ROOT=Path('D:/Projects/PNT/PNT/PNT');out=ROOT/'assets/psx/arenas';summary={}
+ROOT=Path('D:/Projects/PNT/PNT/PNT');out=ROOT/'assets/pnt/arenas';summary={}
 for key,num,title in [('mall','01','Mall'),('sunken','02','Sunken'),('iceberg','03','Iceberg')]:
  unreal.EditorLoadingAndSavingUtils.load_map('/Game/_MyGame/Maps/Level_'+num+'_'+title);world=unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world();meta=json.loads((out/(key+'.json')).read_text());nav=json.loads((out/(key+'.nav.json')).read_text());origin=meta['origin'];nx=nav['nx'];nz=nav['nz'];step=nav['step'];heights=nav['heights'];blocked=[0]*len(heights);edges=[0]*len(heights)
  def point(i):return unreal.Vector((nav['minX']+i%nx*step+origin[0])*100,(nav['minZ']+i//nx*step+origin[2])*100,(heights[i]+origin[1]+.84)*100)

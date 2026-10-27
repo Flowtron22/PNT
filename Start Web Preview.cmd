@@ -10,6 +10,6 @@ pushd "%~dp0"
 echo Starting Police N Thief Web...
 echo Keep this window open while you play. Close it to stop the web server.
 echo For a phone, use the Wi-Fi address printed below on the same network.
-node tools/psx-serve.mjs --lan --open
+node tools/pnt-serve.mjs --lan --open
 if errorlevel 1 pause
 popd

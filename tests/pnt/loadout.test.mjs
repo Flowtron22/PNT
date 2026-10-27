@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {normalizeLoadout,equipTool,normalizeCostume} from '../../src/psx/loadout.js';
-import {COSTUMES} from '../../src/psx/catalog.js';
+import {normalizeLoadout,equipTool,normalizeCostume} from '../../src/pnt/loadout.js';
+import {COSTUMES} from '../../src/pnt/catalog.js';
 test('old single-tool saves migrate to two valid distinct slots',()=>{
  assert.deepEqual(normalizeLoadout(null,'rocket'),['rocket','hammer']);
  assert.deepEqual(normalizeLoadout('["banana","banana"]'),['banana','hammer']);

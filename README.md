@@ -1,8 +1,8 @@
 # Police N Thief Web
 
-A browser practice prototype based on Wonder Wave, using exported PSX characters,
+A browser practice prototype developed by Todak Studios, using PNT characters,
 role-specific running and action animations, logo and all three Unreal arenas.
-The Wonder Wave style menu has Play, Tools, Costume, Setting and Credit pages.
+The animated menu has Play, Tools, Costume, Setting and Credit pages.
 
 ## Play locally
 
@@ -18,7 +18,7 @@ and use the printed LAN address. `Start Web Preview.cmd` also starts the LAN pre
 Choose thief or police for a five-minute practice with three local bots.
 Desktop: arrow keys move, Q slot 1, W slot 2, E interact, Escape pause. Remap movement and actions in Settings; mappings save locally. Desktop shows the same tool icons and three-button layout as mobile.
 Mobile: left joystick, two small tool buttons, one large Interact button.
-Hold Interact (F) near a cache to steal, or near an unlocked captured teammate to rescue.
+Hold Interact (E) near a cache to steal, or near an unlocked captured teammate to rescue.
 Phone: virtual stick, two tool buttons, and the large Interact button. The match camera has a fixed
 30-degree perspective view; movement follows the screen directions.
 
@@ -72,18 +72,18 @@ This project does not change the original Unreal multiplayer implementation.
 
 ## Assets and attribution
 
-Browser foundation: Wonder Wave / PURRITORY, Jayden Davis; see `notices/wonder-wave.txt`.
+Browser foundation: the menu foundation (see notices/foundation.txt); see `notices/foundation.txt`.
 Three.js is vendored. Rubik and Titan One font OFL notices are in assets/fonts.
-PSX art has a separate provenance and licence review pending; the source-code MIT
+PNT art has a separate provenance and licence review pending; the source-code third-party
 licence does not automatically license that art for public distribution.
 
-The optional Unreal export script requires UE 5.6 and the original PSX project at
+The optional Unreal export script requires UE 5.6 and the original PNT project at
 its configured source path. It exports copies without saving source packages.
 Local reports, exported provenance manifests, build output and credentials are excluded
 from version control.
 
 `tools/convert-character-animations.mjs` converts the supplied animation FBXs into
-`assets/psx/animations/clips.json`, remapping their axes and bone names to the exported
+`assets/pnt/animations/clips.json`, remapping their axes and bone names to the exported
 GLB rigs. Police run uses the original `sk_chr_ch_runA` animation exported as FBX to
 `.local/police-run.fbx`. This export is required only to regenerate clips, not to build.
 The conversion rejects static clips. Bone-motion and per-costume binding tests guard
@@ -97,14 +97,14 @@ its module path as the first argument). These prepared assets are checked in;
 Vercel needs no FBX converter, image processor, or Unreal installation.
 
 `tools/prepare-lobby-assets.mjs` creates compact WebP copies of the original Unreal
-map thumbnails and copies its Host/Join icons. Pass the PSXWonderUI `Resources`
+map thumbnails and copies its Host/Join icons. Pass the PNTWonderUI `Resources`
 directory and, optionally, a `sharp` module path. Prepared assets are checked in.
 
-## Wonder Wave menu feedback and local profile
+## the reference UI menu feedback and local profile
 
-The original procedural UI audio engine is retained verbatim under `src/wonder-wave`,
+The original procedural UI audio engine is retained verbatim under `src/menu-audio`,
 with its source spring tuning, pointer ink fill, tile tilt and press feedback adapted
-in `src/psx/wonder-ui.js` and `styles/wonder-ui.css`. Audio unlocks after the first
+in `src/pnt/menu-effects.js` and `styles/menu-ui.css`. Audio unlocks after the first
 click or key press; Settings can mute it. `tools/ui-audio-check.html` renders all
 seven UI cues offline for a browser smoke check.
 
@@ -124,7 +124,7 @@ Safari on iPhone cannot fullscreen arbitrary game content through the desktop AP
 Settings keeps the fullscreen toggle without installation-guide text. The manifest and Apple web-app metadata support launching without
 Safari browser bars. No offline asset cache or service worker is installed.
 
-Version 0.7 reuses Wonder Wave result-screen splats, team bars and victory/defeat
+Version 0.7 reuses the reference UI result-screen splats, team bars and victory/defeat
 audio, with real PNT money and player totals. The perspective camera views from
 the opposite side with 30% wider framing. Movement uses bounded fixed substeps,
 velocity damping and interpolated ground height. Hammer impact rings and running

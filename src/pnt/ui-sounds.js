@@ -1,5 +1,5 @@
-import {AudioEngine} from '../wonder-wave/audio/audio.js';
-// Keep Wonder Wave's synthesis, envelopes, pitch jitter, reverb and gain staging.
+import {AudioEngine} from '../menu-audio/audio/audio.js';
+// Keep the menu foundation's synthesis, envelopes, pitch jitter, reverb and gain staging.
 // Wet gameplay texture prewarming and music are unnecessary for the menu sounds.
 class MenuAudio extends AudioEngine{_warm(){}}
 export function createUISounds(){

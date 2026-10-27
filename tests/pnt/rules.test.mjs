@@ -1,5 +1,5 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
-import {createRound,tag,stepRound,activateTool,harvest,rescue,cancelInteraction,RELEASE_COOLDOWN,TOOL_COOLDOWNS} from '../../src/psx/rules.js';
+import {createRound,tag,stepRound,activateTool,harvest,rescue,cancelInteraction,RELEASE_COOLDOWN,TOOL_COOLDOWNS} from '../../src/pnt/rules.js';
 const caches=[{id:'a',amount:20,position:[0,0,0]},{id:'b',amount:20,position:[1,0,1]}];
 test('both playable roles create exactly one police and three thieves with a five-minute match',()=>{for(const role of ['runner','chaser']){const r=createRound(role,caches);assert.equal(r.actors[0].role,role);assert.equal(r.actors.filter(a=>a.role==='chaser').length,1);assert.equal(r.remaining,300);assert.equal(r.totalMoney,40);}});
 test('only an active police in range can capture, with repeat and invalid captures rejected',()=>{const r=createRound('chaser');assert.equal(tag(r,1,2,.2),false);assert.equal(tag(r,0,1,2),false);assert.equal(tag(r,0,1,.5),true);assert.equal(tag(r,0,1,.5),false);assert.equal(r.actors[1].releaseCooldown,RELEASE_COOLDOWN);assert.equal(tag(r,0,2,NaN),false);});

@@ -1,4 +1,4 @@
-// Adapted from Wonder Wave menus.js (_fx, _setFocus, _spatial, _updateCursor).
+// Adapted from the menu foundation menus.js (_fx, _setFocus, _spatial, _updateCursor).
 // Spring, cursor tuning, tilt strengths and feedback timing retain their source values.
 import {Spring,splatSVG,restartAnim} from '../ui/ui-util.js';
 import {createUISounds} from './ui-sounds.js';

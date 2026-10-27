@@ -7,7 +7,7 @@ def get(obj,key,default=None):
  except:return default
 def v(p,origin):return [round(p.x*.01-origin[0],5),round(p.z*.01-origin[1],5),round(p.y*.01-origin[2],5)]
 for key,num,title in [('mall','01','Mall'),('sunken','02','Sunken'),('iceberg','03','Iceberg')]:
- unreal.EditorLoadingAndSavingUtils.load_map('/Game/_MyGame/Maps/Level_'+num+'_'+title);origin=json.loads((ROOT/'assets/psx/arenas'/(key+'.json')).read_text())['origin'];shapes=[];errors=[]
+ unreal.EditorLoadingAndSavingUtils.load_map('/Game/_MyGame/Maps/Level_'+num+'_'+title);origin=json.loads((ROOT/'assets/pnt/arenas'/(key+'.json')).read_text())['origin'];shapes=[];errors=[]
  for actor in unreal.get_editor_subsystem(unreal.EditorActorSubsystem).get_all_level_actors():
   loc=actor.get_actor_location()
   if abs(loc.y)>5000 or abs(loc.x)>6000 or 'lobby' in actor.get_actor_label().lower():continue

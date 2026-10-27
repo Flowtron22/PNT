@@ -11,11 +11,11 @@ THREE.TextureLoader.prototype.load=()=>new THREE.Texture();
 const {FBXLoader}=await import('../vendor/three/jsm/loaders/FBXLoader.js');
 const input=resolve(process.argv[2]||join(root,'../assets/characters/3d_Assets/anim'));
 const sources={idle:'sk_chr_idleB',thiefRun:'sk_chr_thief_runA',hammer:'sk_chr_hamsmash',stunned:'sk_chr_stunGR',airStunned:'sk_chr_stunAIR',banana:'sk_chr_spin',jet:'sk_chr_jetpack',rocket:'sk_chr_thief_rocketlaunch',busted:'sk_rn_busted',bustedIdle:'sk_rn_busted_idleA',dance:'sk_thief_00_danceA',policeRun:resolve(root,'.local/police-run.fbx')};
-const glb=readFileSync(join(root,'assets/psx/thief.glb'));
+const glb=readFileSync(join(root,'assets/pnt/thief.glb'));
 const gltf=JSON.parse(glb.subarray(20,20+glb.readUInt32LE(12)));
 const normalize=s=>s.replace(/[_\- ]/g,'').toLowerCase();
 const names=new Map(gltf.nodes.filter(n=>n.name).map(n=>[normalize(n.name),n.name]));
-const output={version:3,source:'Original PSX FBX animations; idle uses sk_chr_idleB with authored root position; police run exported from sk_chr_ch_runA; root-local basis corrected',clips:{}};
+const output={version:3,source:'Original PNT FBX animations; idle uses sk_chr_idleB with authored root position; police run exported from sk_chr_ch_runA; root-local basis corrected',clips:{}};
 for(const [name,file]of Object.entries(sources)){
  const data=readFileSync(file.endsWith('.fbx')?file:join(input,file+'.fbx'));
  const group=new FBXLoader().parse(data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength),'');
@@ -51,5 +51,5 @@ for(const [name,file]of Object.entries(sources)){
  output.clips[name]={name,duration:clip.duration,tracks};
  console.log(`${name}: ${tracks.length} bones, ${dynamic.length} animated, ${clip.duration.toFixed(2)}s`);
 }
-mkdirSync(join(root,'assets/psx/animations'),{recursive:true});
-writeFileSync(join(root,'assets/psx/animations/clips.json'),JSON.stringify(output));
+mkdirSync(join(root,'assets/pnt/animations'),{recursive:true});
+writeFileSync(join(root,'assets/pnt/animations/clips.json'),JSON.stringify(output));

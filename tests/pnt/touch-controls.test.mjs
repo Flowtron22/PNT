@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {bindGameControls} from '../../src/psx/touch-controls.js';
-import {configureFullscreen,fullscreenMode} from '../../src/psx/fullscreen.js';
+import {bindGameControls} from '../../src/pnt/touch-controls.js';
+import {configureFullscreen,fullscreenMode} from '../../src/pnt/fullscreen.js';
 class Control extends EventTarget{style={};disabled=false;classes=new Set();classList={add:n=>this.classes.add(n),remove:n=>this.classes.delete(n)};getBoundingClientRect(){return {left:0,top:0,width:100,height:100};}setPointerCapture(id){this.capture=id;}}
 const fire=(target,type,data={})=>{const e=new Event(type,{cancelable:true});Object.assign(e,data);target.dispatchEvent(e);return e;};
 function fixture(){const root=new EventTarget(),joystick=new Control(),knob=new Control(),a=new Control(),b=new Control(),moves=[],calls=[];let active=true;const bindings=bindGameControls({root,joystick,knob,actions:[[a,()=>calls.push('a')],[b,()=>calls.push('b')]],isActive:()=>active,onMove:(x,z)=>moves.push([x,z])});return {root,joystick,knob,a,b,moves,calls,bindings,setActive:v=>active=v};}

@@ -1,6 +1,6 @@
-import {PROGRESSION} from '../wonder-wave/config.js';
+import {PROGRESSION} from '../menu-audio/config.js';
 export const PROFILE_KEY='pnt-profile';
-// Wonder Wave's rank milestones and progression; stats belong to this browser's PSX practice.
+// the menu foundation's rank milestones and progression; stats belong to this browser's PNT practice.
 export const RANKS=[{level:1,name:'Fresh Recruit'},{level:5,name:'Turf Scrapper'},{level:10,name:'Ink Slinger'},{level:20,name:'Splat Veteran'},{level:30,name:'Tide Legend'}];
 const number=(value,fallback=0)=>Number.isFinite(+value)?Math.max(0,Math.min(1e8,Math.floor(+value))):fallback;
 export function profileName(value){return String(value??'').replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,20);}

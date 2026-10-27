@@ -1,7 +1,7 @@
 import {createRequire} from 'node:module';import fs from 'node:fs';
 const require=createRequire(import.meta.url);const sharp=require(process.argv[2]||'sharp');
-for(const file of fs.readdirSync('assets/psx/costumes')){
- const path='assets/psx/costumes/'+file,b=fs.readFileSync(path),length=b.readUInt32LE(12),j=JSON.parse(b.subarray(20,20+length)),bin=b.subarray(28+length),images=new Map(j.images?.map(i=>[i.bufferView,i])||[]);const parts=[];let offset=0;
+for(const file of fs.readdirSync('assets/pnt/costumes')){
+ const path='assets/pnt/costumes/'+file,b=fs.readFileSync(path),length=b.readUInt32LE(12),j=JSON.parse(b.subarray(20,20+length)),bin=b.subarray(28+length),images=new Map(j.images?.map(i=>[i.bufferView,i])||[]);const parts=[];let offset=0;
  for(let i=0;i<j.bufferViews.length;i++){
   const view=j.bufferViews[i];let chunk=bin.subarray(view.byteOffset||0,(view.byteOffset||0)+view.byteLength);
   if(images.has(i)){const meta=await sharp(chunk).metadata();if(meta.width>512||meta.height>512)chunk=await sharp(chunk).resize(512,512,{fit:'inside',withoutEnlargement:true}).png({compressionLevel:9}).toBuffer();images.get(i).mimeType='image/png';}

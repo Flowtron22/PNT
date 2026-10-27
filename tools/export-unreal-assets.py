@@ -3,7 +3,7 @@ import unreal, json, hashlib
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
-OUT=ROOT/'assets/psx'
+OUT=ROOT/'assets/pnt'
 OUT.mkdir(parents=True,exist_ok=True)
 report={'source_project':'D:/Projects/PNT/PSX','exporter':'Unreal 5.6 GLTFExporter','licence_review':'pending; local prototype only','assets':[]}
 options=unreal.GLTFExportOptions()

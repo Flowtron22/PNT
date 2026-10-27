@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 27 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.6**. Code baseline before this document: `6ace5d1` on `main`.
+Current app version: **0.9.7**. Code baseline before this document: `6ace5d1` on `main`.
 
 ## Continue here
 
@@ -12,15 +12,15 @@ this repository. Do not recreate the game or switch to the Unreal checkout.
 - Branch: `main`
 - Live site: https://police-n-thief.vercel.app/
 - Original machine's web checkout: `D:\Projects\PNT\PNT\PNT`
-- Original Unreal reference: `D:\Projects\PNT\PSX`
-- WonderWave UI reference: `D:\Projects\wonder-wave`
+- Original Unreal reference: separate external checkout; verify its location on the workstation.
+- UI reference: separate external reference checkout; not included in this repository.
 - Original character/FBX source location supplied by user:
   `D:\Projects\PNT\PNT\assets\characters\3d_Assets`
 
-The original Unreal and WonderWave folders and raw FBX source are separate from
+The original Unreal and the reference UI folders and raw FBX source are separate from
 this Git checkout. Transfer those folders separately if you need to re-export
 assets or inspect original mechanics. The browser-ready exported assets are in
-`assets/psx` and are sufficient to run this prototype from the repository.
+`assets/pnt` and are sufficient to run this prototype from the repository.
 Local Windows paths will need updating on the other workstation.
 
 ## User rules and preferences
@@ -35,10 +35,10 @@ Local Windows paths will need updating on the other workstation.
   work sessions, repeated checks, unnecessary confirmation and speculative changes.
 - iPhone 14 Plus layout was reported good. Preserve that layout while improving
   other phones and desktop. Do not shrink all devices indiscriminately.
-- Match WonderWave's button hover animation, wiggle, sound and visual language.
+- Match the reference UI's button hover animation, wiggle, sound and visual language.
 - Credits should be **static**, with the white Todak logo and
   **Developed by Todak Studios**. No Ureka logo or upward credits animation.
-- MIT/GitHub references were removed from the in-game credits presentation.
+- third-party/GitHub references were removed from the in-game credits presentation.
   Third-party licence files/notices remain in the repository and distribution.
 - Only three mobile action buttons: two small tool buttons and one large Interact
   in a triangle on the right. Joystick on the left. No jump or dash controls.
@@ -144,41 +144,41 @@ Assets have a one-hour cache header, so refresh/reopen when checking updates.
 
 | File | Responsibility |
 | --- | --- |
-| `src/psx/main.js` | Three.js scene, menu/page wiring, game loop, actors/bots, tools, HUD |
-| `src/psx/rules.js` | Round, capture, money, rescue ownership, tool cooldown rules |
-| `src/psx/animation.js` | Animation binding, role run clips and priorities |
-| `src/psx/camera-rig.js` | Fixed center, shared perspective framing and shake |
-| `src/psx/collision.js`, `navigation.js`, `world-navigation.js`, `motion.js` | Collision, sight, paths, movement/substeps |
-| `src/psx/game-fx.js`, `action-state.js` | Pooled smoke/impact effects and action helpers |
-| `src/psx/touch-controls.js`, `keybindings.js`, `haptics.js` | Independent pointers, keyboard mappings, vibration |
-| `src/psx/lobby-state.js`, `lobby-ui.js` | Local lobby state and rendered controls |
-| `src/psx/home-widgets.js`, `profile.js` | Profile, progression and equipped-kit widgets |
-| `src/psx/wonder-ui.js`, `ui-sounds.js` | WonderWave hover/focus/press motion and sounds |
-| `src/psx/results-ui.js`, `result-portrait.js` | Results UI and transparent animated character |
-| `src/psx/credits-ui.js` | Static Todak-only credits markup |
-| `styles/psx.css` | Base UI, touch/action triangle and compact crew heads |
-| `styles/wonder-ui.css` | WonderWave styles, profile/results/credits |
+| `src/pnt/main.js` | Three.js scene, menu/page wiring, game loop, actors/bots, tools, HUD |
+| `src/pnt/rules.js` | Round, capture, money, rescue ownership, tool cooldown rules |
+| `src/pnt/animation.js` | Animation binding, role run clips and priorities |
+| `src/pnt/camera-rig.js` | Fixed center, shared perspective framing and shake |
+| `src/pnt/collision.js`, `navigation.js`, `world-navigation.js`, `motion.js` | Collision, sight, paths, movement/substeps |
+| `src/pnt/game-fx.js`, `action-state.js` | Pooled smoke/impact effects and action helpers |
+| `src/pnt/touch-controls.js`, `keybindings.js`, `haptics.js` | Independent pointers, keyboard mappings, vibration |
+| `src/pnt/lobby-state.js`, `lobby-ui.js` | Local lobby state and rendered controls |
+| `src/pnt/home-widgets.js`, `profile.js` | Profile, progression and equipped-kit widgets |
+| `src/pnt/menu-effects.js`, `ui-sounds.js` | the reference UI hover/focus/press motion and sounds |
+| `src/pnt/results-ui.js`, `result-portrait.js` | Results UI and transparent animated character |
+| `src/pnt/credits-ui.js` | Static Todak-only credits markup |
+| `styles/pnt.css` | Base UI, touch/action triangle and compact crew heads |
+| `styles/menu-ui.css` | the reference UI styles, profile/results/credits |
 | `styles/mobile-pages.css` | Phone Play/Join/lobby/results; safe areas and orientation |
 | `styles/desktop-layout.css` | Desktop maximum content widths; does not alter mobile |
 | `index.html` | Static screen/HUD markup, imports and stylesheet order |
-| `build/psx-web.mjs` | Static build, standalone credits and separate third-party notices |
+| `build/pnt-web.mjs` | Static build, standalone credits and separate third-party notices |
 | `tools/` | Local server, offline exports, conversions and navigation diagnostics |
-| `tests/psx/` | Node tests for rules, animations, collision, controls and effects |
+| `tests/pnt/` | Node tests for rules, animations, collision, controls and effects |
 | `docs/GAMEPLAY_PORT.md` | Unreal mechanics evidence, tuning and implementation history |
 
-`src/wonder-wave` is retained foundation/reference code; the active game entry is
-`src/psx/main.js`. Preserve stylesheet order: psx -> wonder-ui -> mobile-pages ->
+`src/menu-audio` is retained foundation/reference code; the active game entry is
+`src/pnt/main.js`. Preserve stylesheet order: pnt -> menu-ui -> mobile-pages ->
 desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw FBX.
 
 ## Verification and remaining concerns
 
-- Last full suite run: **69 tests passed** at 0.9.0. Subsequent small UI changes
+- Last full suite run: **69 tests passed** during this project naming cleanup. Earlier small UI changes
   passed relevant syntax checks and production builds; do not claim the full suite
   was rerun after each later CSS/copy change.
 - Latest production build passed at 0.9.6. No code changes are part of this handoff.
 - Original Unreal baseline: 123 protected files unchanged at last check. If those
   reference files are transferred, its script is
-  `D:\Projects\PNT\PSX\Scripts\WonderUI\check_baseline.ps1`.
+  `D:\Projects\PNT\PNT\Scripts\WonderUI\check_baseline.ps1`.
 - Browser/computer access was disabled in the previous session. Visual verification
   and real iPhone/Android testing could not be performed there. Check whether
   browser tools are available on the new workstation; do not mistake HTTP checks
@@ -208,8 +208,18 @@ desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw
 
 ## Repository licence display follow-up
 
-The root `LICENSE` was moved to `notices/wonder-wave.txt` to remove GitHub's
-repository-wide MIT licence tab while preserving the original foundation notice.
+The root `LICENSE` was moved to `notices/foundation.txt` to remove GitHub's
+repository-wide third-party licence tab while preserving the original foundation notice.
 The build copies `notices/` and still emits `third-party-notices.txt`. Dependency
-licences remain with their packages. Do not restore a root MIT licence just to
+licences remain with their packages. Do not restore a root third-party licence just to
 fix an old file reference; use the new notice path.
+
+## Project naming cleanup
+
+Active game code is now `src/pnt`, browser assets `assets/pnt`, tests `tests/pnt`,
+base styles `styles/pnt.css`, menu styles `styles/menu-ui.css`, menu interactions
+`src/pnt/menu-effects.js`, shared audio `src/menu-audio`, build `build/pnt-web.mjs`
+and preview server `tools/pnt-serve.mjs`. Use these paths, not older historical paths.
+The preserved foundation attribution is `notices/foundation.txt`. Original external
+source locations are machine-specific; inspect export script defaults before rerunning
+exports. Do not assume the Unreal reference folder was renamed by this web cleanup.

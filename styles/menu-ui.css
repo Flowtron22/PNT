@@ -59,7 +59,7 @@
 .iw-kitcard__kind { margin-top: .3em; font: 800 var(--fs-xs) / 1 'Rubik', sans-serif; letter-spacing: .12em; text-transform: uppercase; opacity: .65; }
 .iw-kitcard__chips { display: flex; flex-wrap: wrap; gap: calc(var(--u) * .5); }
 
-/* Wonder Wave button ink, spring easing and pointer-driven tile perspective. */
+/* the menu foundation button ink, spring easing and pointer-driven tile perspective. */
 .nav-button.iw-btn{--fill:var(--a);transform:rotate(var(--tilt,0deg));transition:transform .42s var(--spring),box-shadow .25s,color .12s .04s;outline:none}
 .nav-button.iw-btn:nth-child(1){--tilt:-2.2deg}.nav-button.iw-btn:nth-child(2){--tilt:1.3deg}.nav-button.iw-btn:nth-child(3){--tilt:1.4deg}.nav-button.iw-btn:nth-child(4){--tilt:-1.1deg}.nav-button.iw-btn:nth-child(5){--tilt:1.6deg}
 .nav-button.iw-btn:before{display:none}.nav-button.iw-btn.hero{--fill:#fff}.iw-btn__blob{position:absolute;z-index:-1;left:var(--mx,0%);top:var(--my,50%);width:260%;aspect-ratio:1;background:var(--fill);border-radius:43% 57% 51% 49% / 47% 42% 58% 53%;transform:translate(-50%,-50%) scale(0) rotate(-40deg);transition:transform .55s var(--out);pointer-events:none}.iw-btn__blob:after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 70% 30%,#ffffff47,transparent 40%)}
@@ -76,7 +76,7 @@
 button[data-ww-bound]:focus-visible{outline:none}
 
 
-/* Wonder Wave results panel and coverage treatment, adapted to money totals. */
+/* the menu foundation results panel and coverage treatment, adapted to money totals. */
 .iw-res__scrim { position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(180deg, rgba(10, 8, 18, .42) 0%, rgba(10, 8, 18, 0) 17%, rgba(10, 8, 18, 0) 34%, rgba(10, 8, 18, .74) 50%, rgba(10, 8, 18, .9) 100%); animation: iw-fade .6s both; }
 .iw-res__head { position: absolute; left: calc(var(--u) * 3.8); top: calc(var(--u) * 2.6); isolation: isolate; }
@@ -112,7 +112,7 @@ button[data-ww-bound]:focus-visible{outline:none}
 
 .result-character-host{height:100%;width:70%;flex:none}.result-character{display:block;width:100%;height:100%;background:transparent;filter:drop-shadow(0 7px 0 #0003)}
 
-/* Wonder Wave credits: static centered studio branding and accent headings. */
+/* the menu foundation credits: static centered studio branding and accent headings. */
 #menu[data-page=credits] .page-panel{left:5vw;top:5vh;bottom:6vh;width:90vw;overflow:hidden;background:none}
 #menu[data-page=credits] #page-title{font-size:clamp(30px,4vw,58px)}
 #menu[data-page=credits] .character-label{display:none}

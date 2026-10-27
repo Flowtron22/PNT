@@ -1,7 +1,7 @@
 import {splatSVG,esc} from '../ui/ui-util.js';
-import {PROGRESSION} from '../wonder-wave/config.js';
+import {PROGRESSION} from '../menu-audio/config.js';
 export function resultSummary(round){return {stolen:Math.floor(round.collected),total:round.totalMoney,protected:Math.max(0,Math.ceil(round.totalMoney-round.collected)),caught:round.actors.filter(a=>a.role==='runner'&&a.caught).length,seconds:Math.floor(300-round.remaining)};}
-// Adapted Wonder Wave results: splat title, animated team bar, score rows, XP and staggered reveal.
+// Adapted the menu foundation results: splat title, animated team bar, score rows, XP and staggered reveal.
 export function renderResults(root,{round,won,profile,costume,players,map,sounds,onAgain,onMenu,reduced=false,playOutcome=true}){
  const stats=resultSummary(round),share=stats.total?stats.stolen/stats.total:0,reason=round.reason==='money'?'EVERY CACHE EMPTIED':round.reason==='captured'?'ALL THIEVES CAUGHT':'TIME UP · MONEY PROTECTED';
  root.className='dialog-screen iw-results '+(won?'is-win':'is-lose')+(reduced?'':' is-intro');

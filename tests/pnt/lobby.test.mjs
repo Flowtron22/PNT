@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createLobby,addBot,removeBot,canStartLobby,beginCountdown,cancelCountdown,stepLobby,cycleMap,resolveRole,validateRoomCode,MAPS} from '../../src/psx/lobby-state.js';
+import {createLobby,addBot,removeBot,canStartLobby,beginCountdown,cancelCountdown,stepLobby,cycleMap,resolveRole,validateRoomCode,MAPS} from '../../src/pnt/lobby-state.js';
 const fullRoom=()=>{const room=createLobby('oyen');for(let i=0;i<3;i++)addBot(room);return room;};
 test('hosting creates one local player, and bot controls preserve the host and capacity',()=>{
  const room=createLobby('police');assert.equal(room.mode,'practice');assert.equal(room.players.length,1);assert.equal(room.players[0].costume,'police');assert.equal(removeBot(room),false);assert.equal(beginCountdown(room),false);

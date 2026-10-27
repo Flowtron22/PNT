@@ -1,6 +1,6 @@
 # Unreal gameplay port
 
-Source: `D:/Projects/PNT/PSX`, revision `9625f30a2f02b1febec99108455a5a9f891f20db`.
+Source: `D:/Projects/PNT/PNT`, revision `9625f30a2f02b1febec99108455a5a9f891f20db`.
 Read `updates.md`; inspected Blueprint defaults, `DT_Skills`, and all three level actor
 placements through Unreal 5.6 Python without saving any source packages.
 
@@ -15,7 +15,7 @@ placements through Unreal 5.6 Python without saving any source packages.
   10s and MultiTap enabled. Smoke's prose says 45s, but its structured DurationVFX
   says 20s; this port uses the structured value. Rewind's mesh is the engine Cube
   referenced by its original Blueprint, not an invented replacement.
-- Each level's original gameplay spawn and cache locations are in `assets/psx/arenas`.
+- Each level's original gameplay spawn and cache locations are in `assets/pnt/arenas`.
   Unreal-to-exported glTF positions use `(X,Z,Y)/100`; origin offsets retain alignment.
 
 ## Requested behavior and explicit web tuning
@@ -55,7 +55,7 @@ Unreal's Python commandlet and never save source packages.
 
 ## Version 0.7 polish
 
-Wonder Wave result-screen styling, splat generator and source victory_fanfare /
+the reference UI result-screen styling, splat generator and source victory_fanfare /
 defeat_jingle / judge_reveal / xp_tick sounds are reused with PNT match data.
 Footstep dust and hammer shockwave are WebGL equivalents of the original effects;
 Niagara runtime graphs are not portable to Three.js. These particles have a bounded

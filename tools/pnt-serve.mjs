@@ -18,7 +18,7 @@ const server=createServer(async(req,res)=>{
   }catch{res.writeHead(404);res.end('Not found');}
 });
 server.listen(port,lan?'0.0.0.0':'127.0.0.1',()=>{
-  console.log(`PSX Web: http://localhost:${port}`);
+  console.log(`PNT Web: http://localhost:${port}`);
   if(lan) for(const entries of Object.values(networkInterfaces()))for(const item of entries||[])if(item.family==='IPv4'&&!item.internal)console.log(`Phone on the same Wi-Fi: http://${item.address}:${port}`);
   if(process.argv.includes('--open')&&process.platform==='win32')spawn('cmd.exe',['/d','/c','start','','http://localhost:'+port],{windowsHide:true,stdio:'ignore'}).unref();
 });

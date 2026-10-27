@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DEFAULT_BINDINGS,rebind,loadBindings,saveBindings,movementInput,keyLabel} from '../../src/psx/keybindings.js';
-import {createHaptics} from '../../src/psx/haptics.js';
+import {DEFAULT_BINDINGS,rebind,loadBindings,saveBindings,movementInput,keyLabel} from '../../src/pnt/keybindings.js';
+import {createHaptics} from '../../src/pnt/haptics.js';
 test('Q/W/E actions are independent of arrow-key movement',()=>{const b={...DEFAULT_BINDINGS};assert.equal(b.tool1,'KeyQ');assert.equal(b.tool2,'KeyW');assert.equal(b.interact,'KeyE');assert.deepEqual(movementInput(new Set(['ArrowUp','KeyW']),b),{x:0,z:-1});assert.deepEqual(movementInput(new Set(['KeyQ','KeyW','KeyE']),b),{x:0,z:0});});
 test('rebinding swaps conflicts and persists without duplicate actions',()=>{const b=rebind(DEFAULT_BINDINGS,'up','KeyW');assert.equal(b.up,'KeyW');assert.equal(b.tool2,'ArrowUp');assert.equal(new Set(Object.values(b)).size,7);let saved;const storage={getItem:()=>saved,setItem:(k,v)=>{saved=v;}};saveBindings(storage,b);assert.deepEqual(loadBindings(storage),b);assert.equal(rebind(b,'up','Escape'),null);assert.equal(rebind(b,'missing','KeyQ'),null);assert.equal(keyLabel('KeyW'),'W');assert.equal(keyLabel('ArrowUp'),'↑');});
 test('invalid or blocked saved settings restore usable defaults',()=>{assert.deepEqual(loadBindings({getItem:()=>'{'}),DEFAULT_BINDINGS);assert.deepEqual(loadBindings({getItem:()=>{throw Error();}}),DEFAULT_BINDINGS);assert.deepEqual(loadBindings({getItem:()=>JSON.stringify({tool1:'Escape',up:null})}),DEFAULT_BINDINGS);});

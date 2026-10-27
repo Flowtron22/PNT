@@ -1,7 +1,7 @@
 """Read-only export of all three gameplay arenas, original cache placements, and tools."""
 import unreal,json,re,statistics
 from pathlib import Path
-ROOT=Path('D:/Projects/PNT/PNT/PNT');SOURCE=Path('D:/Projects/PNT/PSX');OUT=ROOT/'assets/psx';LOCAL=ROOT/'.local/ue-gameplay'
+ROOT=Path('D:/Projects/PNT/PNT/PNT');SOURCE=Path('D:/Projects/PNT/PSX');OUT=ROOT/'assets/pnt';LOCAL=ROOT/'.local/ue-gameplay'
 audit=json.loads((LOCAL/'audit.json').read_text())
 base=SOURCE/'Content/AGameOfTagKit/Blueprints/BP_GameOfTagCharacter.uasset'
 names=set(s.decode('ascii') for s in re.findall(rb'[A-Za-z_][A-Za-z_0-9 ]{2,100}',base.read_bytes()))

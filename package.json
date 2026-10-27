@@ -1,14 +1,14 @@
 {
   "name": "police-n-thief-web",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "private": true,
   "type": "module",
-  "description": "Local browser prototype based on Wonder Wave, using exported PSX assets.",
+  "description": "Police N Thief browser prototype by Todak Studios.",
   "scripts": {
-    "dev": "node tools/psx-serve.mjs",
-    "dev:lan": "node tools/psx-serve.mjs --lan",
-    "build": "node build/psx-web.mjs",
-    "check": "node --check src/psx/main.js && node --check src/psx/rules.js && node --check src/psx/animation.js && node --check src/psx/catalog.js && node --check src/psx/loadout.js && node --check tools/psx-serve.mjs && node --check tools/convert-character-animations.mjs && node --check tools/optimize-costumes.mjs && node --check build/psx-web.mjs && node --check src/psx/lobby-state.js && node --check src/psx/lobby-ui.js && node --check tools/prepare-lobby-assets.mjs && node --check src/psx/wonder-ui.js && node --check src/psx/ui-sounds.js && node --check src/psx/profile.js && node --check src/psx/home-widgets.js && node --check src/psx/touch-controls.js && node --check src/psx/fullscreen.js && node --check src/psx/navigation.js && node --check src/psx/world-navigation.js && node --check src/psx/motion.js && node --check src/psx/camera-rig.js && node --check src/psx/results-ui.js && node --check src/psx/game-fx.js && node --check src/psx/collision.js && node --check src/psx/result-portrait.js && node --check src/psx/action-state.js && node --check src/psx/keybindings.js && node --check src/psx/haptics.js && node --check src/psx/credits-ui.js",
-    "test": "node --test tests/psx/*.test.mjs"
+    "dev": "node tools/pnt-serve.mjs",
+    "dev:lan": "node tools/pnt-serve.mjs --lan",
+    "build": "node build/pnt-web.mjs",
+    "check": "node --check src/pnt/main.js && node --check src/pnt/rules.js && node --check src/pnt/animation.js && node --check src/pnt/catalog.js && node --check src/pnt/loadout.js && node --check tools/pnt-serve.mjs && node --check tools/convert-character-animations.mjs && node --check tools/optimize-costumes.mjs && node --check build/pnt-web.mjs && node --check src/pnt/lobby-state.js && node --check src/pnt/lobby-ui.js && node --check tools/prepare-lobby-assets.mjs && node --check src/pnt/menu-effects.js && node --check src/pnt/ui-sounds.js && node --check src/pnt/profile.js && node --check src/pnt/home-widgets.js && node --check src/pnt/touch-controls.js && node --check src/pnt/fullscreen.js && node --check src/pnt/navigation.js && node --check src/pnt/world-navigation.js && node --check src/pnt/motion.js && node --check src/pnt/camera-rig.js && node --check src/pnt/results-ui.js && node --check src/pnt/game-fx.js && node --check src/pnt/collision.js && node --check src/pnt/result-portrait.js && node --check src/pnt/action-state.js && node --check src/pnt/keybindings.js && node --check src/pnt/haptics.js && node --check src/pnt/credits-ui.js",
+    "test": "node --test tests/pnt/*.test.mjs"
   }
 }
