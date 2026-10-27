@@ -8,9 +8,10 @@ for(const name of ['thief.glb','police.glb','mall-slice.glb','logo.png','animati
 if(out!==join(root,'dist'))throw new Error('Unsafe output path');
 rmSync(out,{recursive:true,force:true});mkdirSync(out,{recursive:true});
 for(const path of inputs){const target=join(out,path);mkdirSync(dirname(target),{recursive:true});cpSync(join(root,path),target,{recursive:true,filter:source=>!source.endsWith('asset-manifest.json')&&!['idle.glb','run.glb'].includes(source.split(/[\\/]/).at(-1))});}
-const esc=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;');
 let notices=readFileSync(join(root,'LICENSE'),'utf8');
 const three=join(root,'vendor/three/LICENSE');if(existsSync(three))notices+='\n\nTHREE.JS\n'+readFileSync(three,'utf8');
-const credits=`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Credits · Police N Thief</title><style>body{max-width:900px;margin:50px auto;padding:20px;font:16px system-ui}pre{white-space:pre-wrap}</style><a href="/">Back to game</a><h1>Credits and licences</h1><p>Browser foundation: Wonder Wave / PURRITORY, Jayden Davis. Game assets: PSX project; licence review pending before public distribution. Titan One and Rubik use the SIL Open Font License; full notices are included with the font files.</p><pre>${esc(notices)}</pre>`;
+// Retain dependency notices in the distribution, separate from the studio credits UI.
+writeFileSync(join(out,'third-party-notices.txt'),notices);
+const credits=`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Credits · Police N Thief</title><link rel="stylesheet" href="styles/psx.css"><link rel="stylesheet" href="styles/wonder-ui.css"><style>body{overflow:auto;min-height:100dvh;background:#211b32}main{max-width:620px;margin:50px auto;padding:25px;text-align:center}a{display:block;text-align:left;color:white;margin-bottom:50px}h1{font:44px Titan}</style><main><a href="/">← BACK</a><h1>CREDITS</h1><section class="studio-credit"><h3>Developed by</h3><img class="todak-credit-logo" src="assets/psx/ui/todak-studios.png" alt="Todak Studios"><p>Todak Studios</p></section><section class="studio-credit"><img class="ureka-credit-logo" src="assets/psx/ui/ureka-games.png" alt="Ureka Games"></section></main></html>`;
 writeFileSync(join(out,'credits.html'),credits);writeFileSync(join(root,'credits.html'),credits);
 console.log('Static browser build ready in dist/. No deployment was performed.');
