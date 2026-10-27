@@ -1,6 +1,6 @@
 {
   "name": "police-n-thief-web",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "type": "module",
   "description": "Local browser prototype based on Wonder Wave, using exported PSX assets.",

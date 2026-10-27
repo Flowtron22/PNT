@@ -16,7 +16,9 @@ Open http://localhost:8491. For a phone on the same Wi-Fi, run `npm run dev:lan`
 and use the printed LAN address. `Start Web Preview.cmd` also starts the LAN preview.
 
 Choose runner or chaser for a 60-second practice with three local bots.
-Desktop: WASD move, Shift dash, Space jump, E slot 1, R slot 2, Escape pause.
+Desktop: WASD move, E slot 1, R slot 2, F interact, Escape pause.
+Mobile: left joystick, two small tool buttons, one large Interact button.
+Interact is a placeholder; object stealing and money rewards are not implemented.
 Phone: virtual stick and Jump, Dash and tool buttons. The match camera has a fixed
 orthographic top-down view; movement follows the screen directions.
 
@@ -113,7 +115,7 @@ stats, not an online account or an authoritative multiplayer rating.
 ## iPhone play
 
 Gameplay uses independent pointer IDs: one thumb can hold the stick while other
-fingers activate tools, jump or dash on pointer-down. Delayed compatibility clicks
+fingers activate tools or Interact on pointer-down. Delayed compatibility clicks
 are ignored; gameplay touch/pinch gestures are cancelled without blocking menu
 fields. Touch cancel, lost capture, pause and app switching clear held movement.
 
