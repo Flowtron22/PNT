@@ -11,9 +11,12 @@ No sun or bounce lighting is included. The previous full lightmap is not loaded.
 
 Visibility correction: the default Three aoMap only affects indirect light and
 was washed out by the Mall's direct lighting. Floor materials now replace that
-ambient-only application with a single final-light multiplier (mask^1.65).
+ambient-only application with a single final-light multiplier (mask^2.3).
 The contact footprint stays 0.4 units; other materials have no shader override.
 This is an artistic contact shadow under both direct and indirect lighting.
+Mall scenery and movable props also receive 1.15× display-space saturation after
+tone mapping/color conversion. This composes with the floor-contact shader;
+characters, HUD, menu and other maps are unchanged.
 
 Run `tools/bake-mall-contact.py` in Blender to regenerate; it uses the UVs from
 `mall-lit.glb` and excludes movable props. Offline AO-placement preview:

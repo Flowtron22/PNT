@@ -40,10 +40,12 @@ at original dimensions; the preview URL is versioned to avoid stale asset caches
 
 Contact visibility fix: default aoMap shading was washed out by direct lights.
 Floor-only onBeforeCompile now removes the ambient-only AO chunk and multiplies
-final outgoingLight by contactMask^1.65 once (increased from 1.25 for contrast).
+final outgoingLight by contactMask^2.3 once (latest contrast increase).
 Radius/receivers are unchanged;
 other objects have no override. Texture audit: range 0.349–1, 1.55% of the atlas
 below 0.98. Browser control remains disabled; do not claim in-game visual QA.
+Latest tuning also increases Mall scenery/props saturation 15% after color-space
+conversion; shader hooks compose with contact AO. Other maps/characters/HUD unchanged.
 
 Latest Mall revision replaces the full lighting bake below with **floor contact
 AO only**. Original runtime lighting/materials are restored. `mall-contact-ao.png`

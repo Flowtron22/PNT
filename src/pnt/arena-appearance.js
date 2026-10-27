@@ -2,6 +2,15 @@ import * as THREE from 'three';
 export function matteMall(arena){arena.traverse(object=>{if(!object.isMesh)return;for(const material of Array.isArray(object.material)?object.material:[object.material]){if(!material||material.isMeshBasicMaterial)continue;material.roughness=1;material.metalness=0;material.roughnessMap=null;material.metalnessMap=null;material.needsUpdate=true;}});}
 const floorReceiver=name=>/^(sm_mainfloor|sm_boutiqeuA_floor|sm_cafeA_floor|sm_cafeB_floor|SM_bridge2)$/.test(name);
 let mallLight;
+function saturateMall(arena){
+ const materials=new Set();arena.traverse(object=>{if(object.isMesh)for(const material of Array.isArray(object.material)?object.material:[object.material])materials.add(material);});
+ for(const material of materials){const previous=material.onBeforeCompile,key=material.customProgramCacheKey();
+  material.onBeforeCompile=function(shader,renderer){previous.call(this,shader,renderer);shader.fragmentShader=shader.fragmentShader.replace('#include <colorspace_fragment>',`#include <colorspace_fragment>
+   float mallLuma = dot( gl_FragColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
+   gl_FragColor.rgb = clamp( mix( vec3( mallLuma ), gl_FragColor.rgb, 1.15 ), 0.0, 1.0 );`);};
+  material.customProgramCacheKey=()=>key+'-mall-saturation-115';material.needsUpdate=true;
+ }
+}
 export async function bakedMall(arena){
  if(arena.userData.bakedLighting)return;
  mallLight??=new THREE.TextureLoader().loadAsync('assets/pnt/arenas/mall-contact-ao.png?v=contact-1').then(texture=>{texture.flipY=false;texture.channel=1;texture.colorSpace=THREE.NoColorSpace;texture.anisotropy=2;return texture;});
@@ -14,10 +23,10 @@ export async function bakedMall(arena){
    // Replace the ambient-only AO application so the mask is applied once.
    material.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <aomap_fragment>','').replace('#include <opaque_fragment>',`#ifdef USE_AOMAP
     float groundContact = texture2D( aoMap, vAoMapUv ).r;
-    outgoingLight *= pow( clamp( groundContact, 0.0, 1.0 ), 1.65 );
+    outgoingLight *= pow( clamp( groundContact, 0.0, 1.0 ), 2.3 );
     #endif
     #include <opaque_fragment>`);};
-   material.customProgramCacheKey=()=> 'mall-ground-contact-v3';materials.set(source,material);return material;};
+   material.customProgramCacheKey=()=> 'mall-ground-contact-v4';materials.set(source,material);return material;};
   object.material=Array.isArray(object.material)?object.material.map(convert):convert(object.material);
- });arena.userData.bakedLighting=true;
+ });saturateMall(arena);arena.userData.bakedLighting=true;
 }
