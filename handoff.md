@@ -113,8 +113,9 @@ Assets have a one-hour cache header, so refresh/reopen when checking updates.
 - Removed user-marked helper copy from Home, Tools, Costume, Settings, Play and Join.
   Dynamic errors remain available when a user attempts an unsupported action.
 - Host/Join titles are larger and raised beneath the icon/kicker.
-- Desktop Play/Join/lobby/results widths cap at 1200px automatically on fine-pointer
-  desktop screens above 1024px. Mobile styles retain dynamic viewport/safe areas.
+- Desktop Play/Join/results widths cap at 1200px automatically on fine-pointer
+  desktop screens above 1024px. Waiting lobby uses its original responsive widths.
+  Mobile styles retain dynamic viewport/safe areas.
 - Latest change (0.9.6): wide FREE/LOCKED crew text became small costume head
   portraits (34px, 28px in short landscape), a cross when caught, tiny release
   countdown and orange local-player outline. Accessible labels retain details.
@@ -205,6 +206,18 @@ desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw
    Play/Join widths, plus the static Todak credits on portrait and landscape.
 4. Wait for the user's next requested change; there is no unfinished implementation
    task to resume automatically. Keep future releases below 1.0.0.
+
+## Waiting lobby layout checkpoint — 27 October 2026
+
+The user requested restoring the waiting lobby (four players and map selection)
+to its layout before the 0.9.4 desktop overrides. Only the waiting-lobby desktop
+width overrides in `styles/desktop-layout.css` were removed. Host/Join selection
+cards and mobile layout remain as before this restoration. Version stays 0.9.7.
+
+The previous larger lobby layout is saved at Git tag
+`checkpoint/lobby-larger-2026-10-27` (commit `7716009`). If the user asks to return
+to it, restore only the `#lobby` rules from that tag's `styles/desktop-layout.css`;
+do not reset the whole repository or overwrite unrelated later changes.
 
 ## Repository licence display follow-up
 
