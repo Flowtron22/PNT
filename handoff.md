@@ -209,6 +209,12 @@ desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw
 
 ## Waiting lobby layout checkpoint — 27 October 2026
 
+Latest gameplay tuning: all character clips play at 1.3x via `ANIMATION_PLAY_RATE`
+in `src/pnt/animation.js`. Both police and thief movement speeds use a 1.5x
+multiplier in `main.js`, for players and bots. Preview/results clip durations and
+hammer impact timing track the faster animation rate. Gameplay round/effect timers
+retain their previous durations. Syntax checks, all 69 tests and production build passed.
+
 Follow-up: removed the helper hint beneath the map and the entire bottom lobby
 footer bar and its text at the user's request. Lobby markup is in `src/pnt/lobby-ui.js`.
 

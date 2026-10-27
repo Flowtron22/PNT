@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+export const ANIMATION_PLAY_RATE=1.3;
 export function makeAnimator(model,clips,role){
  const mixer=new THREE.AnimationMixer(model),actions={};
  const bones=new Map();model.traverse(o=>{if(o.isBone)bones.set(o.name.replace(/[_\- ]/g,'').toLowerCase(),o.name);});
@@ -14,7 +15,7 @@ export function makeAnimator(model,clips,role){
  const api={mixer,actions,role,current:null,
   play(name,{loop=true,fade=.12,restart=false}={}){
    if(!actions[name])name='idle';if(current===name&&!restart)return;
-   const previous=actions[current],next=actions[name];next.reset();next.enabled=true;next.clampWhenFinished=!loop;next.setLoop(loop?THREE.LoopRepeat:THREE.LoopOnce,loop?Infinity:1);next.setEffectiveTimeScale(1);next.setEffectiveWeight(1);next.play();
+   const previous=actions[current],next=actions[name];next.reset();next.enabled=true;next.clampWhenFinished=!loop;next.setLoop(loop?THREE.LoopRepeat:THREE.LoopOnce,loop?Infinity:1);next.setEffectiveTimeScale(ANIMATION_PLAY_RATE);next.setEffectiveWeight(1);next.play();
    if(previous){previous.fadeOut(fade);next.fadeIn(fade);}current=name;api.current=name;
   },
   update(dt){mixer.update(dt);},

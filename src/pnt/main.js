@@ -3,7 +3,7 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {clone} from 'three/addons/utils/SkeletonUtils.js';
 import {createRound,stepRound,beginCapture,activateTool,canAct as canActRule,harvest,rescue,cancelInteraction,INTERACT_RADIUS,RESCUE_SECONDS} from './rules.js';
 import {normalizeLoadout,equipTool,normalizeCostume} from './loadout.js';
-import {makeAnimator,animationFor} from './animation.js';
+import {makeAnimator,animationFor,ANIMATION_PLAY_RATE} from './animation.js';
 import {COSTUMES,TOOLS} from './catalog.js';
 import {createLobby,addBot,removeBot,beginCountdown,cancelCountdown,stepLobby,cycleMap,resolveRole,validateRoomCode,PREFERENCES,BOTS} from './lobby-state.js';
 import {renderLobby} from './lobby-ui.js';
@@ -76,7 +76,7 @@ function labels(){refreshControlHints();
  $('#costume-label').textContent=COSTUMES.find(c=>c.id===costume).name.toUpperCase();$('#equipped-label').textContent=loadout.map(id=>TOOLS.find(t=>t.id===id).name.toUpperCase()).join(' / ');
  loadout.forEach((id,slot)=>{const tool=TOOLS.find(t=>t.id===id);$('#tool-action-label'+(slot+1)).textContent=tool.key;$('#tool-action-icon'+(slot+1)).src='assets/pnt/'+tool.icon+'.png';$('#tool-action'+(slot+1)).setAttribute('aria-label','Use slot '+(slot+1)+': '+tool.name);});
 }
-function demo(name){const loop=['idle','thiefRun','policeRun','jet','bustedIdle','dance'].includes(name);previewClip=name;previewTime=loop?0:clips[name]?.duration||1;preview?.anim.play(name,{loop,restart:true});}
+function demo(name){const loop=['idle','thiefRun','policeRun','jet','bustedIdle','dance'].includes(name);previewClip=name;previewTime=loop?0:(clips[name]?.duration||1)/ANIMATION_PLAY_RATE;preview?.anim.play(name,{loop,restart:true});}
 function goBack(){
  if(busy)return;uiEffects.sounds.play('ui_back');
  if(room&&!ui.lobby.hidden){const help=$('#room-help');if(help&&!help.hidden){help.hidden=true;return;}if(cancelCountdown(room)){refreshLobby();return;}quitLobby();return;}
@@ -256,7 +256,7 @@ function useTool(slot,id=0){
  if(!activateTool(round,id,slot,tool))return;
  const point=actor.group.position.clone();
  if(tool==='hammer'){
-  setEffect(state,'hammer',.48);actor.hammerImpact=.18;const visual=prop('propHammer',1.25);visual.position.set(.5,.6,.4);actor.group.add(visual);hazards.push({mesh:visual,type:'visual',time:.48});
+  setEffect(state,'hammer',.48);actor.hammerImpact=.18/ANIMATION_PLAY_RATE;const visual=prop('propHammer',1.25);visual.position.set(.5,.6,.4);actor.group.add(visual);hazards.push({mesh:visual,type:'visual',time:.48});
   for(const other of round.actors){if(other.role===state.role||other.caught)continue;const a=avatars[other.id];if(point.distanceTo(a.group.position)<2&&withinSight(point,a.group.position,false))setEffect(other,a.grounded?'stunned':'airStunned',2);}
   if(id===0)say('HAMMER SWING!',.7);
  }else if(tool==='banana'){
@@ -299,7 +299,7 @@ function updateGame(dt){
   if(state.effect==='banana'&&state.effectTime>0){state.spinTurn-=dt;if(state.spinTurn<=0){state.spinDirection=rollSpinDirection();state.spinTurn=.35;}dx=state.spinDirection.x;dz=state.spinDirection.z;wants=false;}
   const locked=state.captureRemaining>0||state.effectTime>0&&!['rocket','banana'].includes(state.effect);if(locked){dx=dz=0;a.vx=a.vz=0;}
   if(state.effect==='rocket'&&state.effectTime>0&&Math.hypot(dx,dz)<.1){dx=Math.sin(a.group.rotation.y);dz=Math.cos(a.group.rotation.y);}
-  const moved=move(a,dx,dz,dt,(state.role==='chaser'?3.65:3.4)*(state.id===0?1.08:1)*(state.effect==='rocket'&&state.effectTime>0?1.8:1));if(!moved&&state.effect==='banana'&&state.effectTime>0)state.spinDirection=rollSpinDirection();if(!moved&&state.id!==0&&!locked&&Math.hypot(dx,dz)>.1){a.routeTime=0;}animate(a,state,dt);wishes.push({id:state.id,wants:wants&&!locked});
+  const moved=move(a,dx,dz,dt,(state.role==='chaser'?3.65:3.4)*1.5*(state.id===0?1.08:1)*(state.effect==='rocket'&&state.effectTime>0?1.8:1));if(!moved&&state.effect==='banana'&&state.effectTime>0)state.spinDirection=rollSpinDirection();if(!moved&&state.id!==0&&!locked&&Math.hypot(dx,dz)>.1){a.routeTime=0;}animate(a,state,dt);wishes.push({id:state.id,wants:wants&&!locked});
  }
  for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];h.time-=dt;if(h.type==='capture'){h.mesh.rotation.x+=dt*h.spin.x;h.mesh.rotation.y+=dt*h.spin.y;h.mesh.rotation.z+=dt*h.spin.z;h.mesh.scale.setScalar(Math.min(1,h.time*4));}else if(h.type==='smoke')h.mesh.rotation.y+=dt*.2;if(h.type==='banana'&&h.time>0)for(const state of round.actors){if(state.caught||state.role===h.ownerRole||state.effectTime>0)continue;if(avatars[state.id].group.position.distanceTo(h.mesh.position)<.8){setEffect(state,'banana',2);h.time=0;break;}}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}
  if(round.remaining<298.5&&chaser.effectTime<=0)for(const r of round.actors.filter(a=>a.role==='runner'&&!a.caught)){const p=cop.group.position,q=avatars[r.id].group.position,d=p.distanceTo(q);if(d<.9&&Math.abs(p.y-q.y)<.8&&withinSight(p,q)&&beginCapture(round,chaser.id,r.id,d)){const cloud=createToonSmoke(.7,16);cloud.position.copy(q).addScaledVector(up,.8);scene.add(cloud);cloud.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);hazards.push({mesh:cloud,type:'capture',owner:r.id,time:1,spin:new THREE.Vector3(12+Math.random()*16,14+Math.random()*18,10+Math.random()*16)});cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAPTURED!':'CATCHING THIEF!',1);}}
