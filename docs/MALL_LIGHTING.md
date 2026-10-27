@@ -11,7 +11,7 @@ No sun or bounce lighting is included. The previous full lightmap is not loaded.
 
 Visibility correction: the default Three aoMap only affects indirect light and
 was washed out by the Mall's direct lighting. Floor materials now replace that
-ambient-only application with a single final-light multiplier (mask^1.25).
+ambient-only application with a single final-light multiplier (mask^1.65).
 The contact footprint stays 0.4 units; other materials have no shader override.
 This is an artistic contact shadow under both direct and indirect lighting.
 

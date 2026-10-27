@@ -14,10 +14,10 @@ export async function bakedMall(arena){
    // Replace the ambient-only AO application so the mask is applied once.
    material.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <aomap_fragment>','').replace('#include <opaque_fragment>',`#ifdef USE_AOMAP
     float groundContact = texture2D( aoMap, vAoMapUv ).r;
-    outgoingLight *= pow( clamp( groundContact, 0.0, 1.0 ), 1.25 );
+    outgoingLight *= pow( clamp( groundContact, 0.0, 1.0 ), 1.65 );
     #endif
     #include <opaque_fragment>`);};
-   material.customProgramCacheKey=()=> 'mall-ground-contact-v2';materials.set(source,material);return material;};
+   material.customProgramCacheKey=()=> 'mall-ground-contact-v3';materials.set(source,material);return material;};
   object.material=Array.isArray(object.material)?object.material.map(convert):convert(object.material);
  });arena.userData.bakedLighting=true;
 }
