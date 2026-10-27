@@ -6,9 +6,8 @@ test('hosting creates one local player, and bot controls preserve the host and c
  const room=createLobby('police');assert.equal(room.mode,'practice');assert.equal(room.players.length,1);assert.equal(room.players[0].costume,'police');assert.equal(removeBot(room),false);assert.equal(beginCountdown(room),false);
  for(let i=0;i<3;i++)assert.equal(addBot(room),true);assert.equal(addBot(room),false);assert.equal(room.players.length,4);assert.equal(room.players.filter(p=>p.bot).length,3);assert.equal(removeBot(room),true);assert.equal(room.players[0].bot,false);assert.equal(canStartLobby(room),false);
 });
-test('unavailable map previews cannot launch a Mall match under the wrong name',()=>{
- const room=fullRoom();assert.equal(canStartLobby(room),true);cycleMap(room,1);assert.equal(MAPS[room.map].id,'sunken');assert.equal(canStartLobby(room),false);assert.equal(beginCountdown(room),false);cycleMap(room,1);assert.equal(beginCountdown(room),false);cycleMap(room,1);assert.equal(MAPS[room.map].id,'mall');assert.equal(canStartLobby(room),true);
-});
+test('all three real arenas can start and invalid stages cannot',()=>{const room=fullRoom();for(const id of ['mall','sunken','iceberg']){assert.equal(MAPS[room.map].id,id);assert.equal(canStartLobby(room),true);cycleMap(room,1);}room.map=99;assert.equal(canStartLobby(room),false);});
+
 test('full lobby counts down once, prevents roster/map changes, and transitions to loading',()=>{
  const room=fullRoom();assert.equal(beginCountdown(room),true);assert.equal(addBot(room),false);assert.equal(removeBot(room),false);assert.equal(cycleMap(room,1),false);assert.equal(beginCountdown(room),false);for(let i=0;i<40;i++)stepLobby(room,.1);assert.equal(room.phase,'loading');assert.equal(room.countdown,0);assert.equal(stepLobby(room,.1),false);
 });

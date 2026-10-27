@@ -10,8 +10,10 @@ export const COSTUMES=[
  {id:'raptor',name:'Raptor',tag:'Tiny arms. Big escape.',file:'raptor'},
 ];
 export const TOOLS=[
- {id:'hammer',name:'Hammer',key:'SMASH',icon:'hammer',clip:'hammer',description:'Swing at nearby opponents. A hit stuns them for 2 seconds; airborne opponents tumble. 8 second cooldown.'},
- {id:'banana',name:'Banana',key:'DROP',icon:'banana',clip:'banana',description:'Leave a peel behind you. An opponent who steps on it spins out for 2 seconds. 8 second cooldown.'},
- {id:'rocket',name:'Rocket Jet',key:'BOOST',icon:'rocket',clip:'rocket',description:'Launch, then boost forward with the jetpack. You can steer during the boost. 8 second cooldown.'},
+ {id:'hammer',name:'Hammer',key:'SMASH',icon:'hammer',clip:'hammer',cooldown:10,type:'STUN',description:'Stun opponents within 2 metres for 2 seconds. 10 second cooldown.'},
+ {id:'banana',name:'Banana Skin',key:'DROP',icon:'banana',clip:'banana',cooldown:5,type:'TRAP',description:'Drop a peel that spins an opponent for 2 seconds. Peels last 15 seconds; maximum 5. 5 second cooldown.'},
+ {id:'rocket',name:'Jetpack',key:'BOOST',icon:'rocket',clip:'rocket',cooldown:15,type:'MOVEMENT',description:'Launch and fly for 5 seconds. Steer with movement. 15 second cooldown.'},
+ {id:'smoke',name:'Smoke Bomb',key:'SMOKE',icon:'smoke',clip:'idle',cooldown:30,type:'COVER',description:'Deploy a smoke cloud that blocks sight and capture through it for 20 seconds. Maximum 3 clouds. 30 second cooldown.'},
+ {id:'rewind',name:'Rewind Box',key:'MARK',icon:'rewind',clip:'idle',cooldown:10,type:'RETURN',description:'First press places a marker. Press again to return to it. Cannot escape capture. 10 second cooldown after returning.'},
 ];
 export const ANIMATION_PREVIEWS=[['idle','Idle'],['thiefRun','Thief run'],['policeRun','Police run'],['hammer','Hammer'],['stunned','Stunned'],['airStunned','Air stunned'],['banana','Banana spin'],['rocket','Rocket launch'],['jet','Rocket jet'],['busted','Busted'],['bustedIdle','Caught idle'],['dance','Dance']];

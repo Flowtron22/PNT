@@ -1,0 +1,116 @@
+{
+  "id": "iceberg",
+  "origin": [
+    -6.325,
+    159.88870208343505,
+    0.675
+  ],
+  "spawns": [
+    [
+      4.775,
+      0.89,
+      -6.525
+    ],
+    [
+      6.075,
+      0.89,
+      5.125
+    ],
+    [
+      -6.075,
+      0.89,
+      -7.475
+    ],
+    [
+      -4.775,
+      0.89,
+      8.875
+    ]
+  ],
+  "caches": [
+    {
+      "id": "iceberg-0",
+      "position": [
+        -2.8781,
+        -2.6723,
+        -15.4337
+      ],
+      "amount": 2000
+    },
+    {
+      "id": "iceberg-1",
+      "position": [
+        12.5232,
+        -2.6767,
+        -6.9572
+      ],
+      "amount": 2000
+    },
+    {
+      "id": "iceberg-2",
+      "position": [
+        8.5826,
+        -2.6767,
+        16.5581
+      ],
+      "amount": 2000
+    },
+    {
+      "id": "iceberg-3",
+      "position": [
+        -5.0779,
+        -2.6767,
+        11.7707
+      ],
+      "amount": 2000
+    }
+  ],
+  "source": "/Game/_MyGame/Maps/Level_03_Iceberg",
+  "selected": [
+    "sm_ib_icecliff",
+    "sm_ib_frozendeep",
+    "sm_ib_shipcrash",
+    "sm_ib_seamonster",
+    "sm_ib_icecube",
+    "sm_ib_icefloor",
+    "sm_ib_icecube2",
+    "sm_ib_icecube3",
+    "sm_ib_icecube4",
+    "sm_ib_icecube5",
+    "sm_ib_icecube6",
+    "sm_ib_icecube7",
+    "sm_ib_icecube9",
+    "sm_ib_icecube10",
+    "sm_ib_icecube11",
+    "sm_ib_icecube12",
+    "sm_ib_icecube13",
+    "sm_ib_icecube14",
+    "sm_ib_icecube16",
+    "sm_ib_icecube17",
+    "sm_ib_icecube18",
+    "sm_ib_icecube19",
+    "sm_ib_icecube20",
+    "sm_ib_icecube21",
+    "sm_ib_icecube22",
+    "sm_ib_icecube23",
+    "sm_ib_icecube24",
+    "sm_ib_icecube25",
+    "sm_ib_icecube26",
+    "sm_ib_icecube27",
+    "sm_ib_icecube28",
+    "sm_ib_icecube29",
+    "sm_ib_icecube30",
+    "sm_ib_icecube15",
+    "sm_ib_icecube31",
+    "sm_ib_icecube32",
+    "sm_ib_icecube33",
+    "sm_ib_icecube34",
+    "sm_ib_icecube35",
+    "sm_ib_icecube8",
+    "sm_ib_icecube36",
+    "BP_Money_Ship",
+    "BP_Money_Ship2",
+    "BP_Money_Ship3",
+    "BP_Money_Ship4"
+  ]
+}

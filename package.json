@@ -1,6 +1,6 @@
 {
   "name": "police-n-thief-web",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "description": "Local browser prototype based on Wonder Wave, using exported PSX assets.",
@@ -8,7 +8,7 @@
     "dev": "node tools/psx-serve.mjs",
     "dev:lan": "node tools/psx-serve.mjs --lan",
     "build": "node build/psx-web.mjs",
-    "check": "node --check src/psx/main.js && node --check src/psx/rules.js && node --check src/psx/animation.js && node --check src/psx/catalog.js && node --check src/psx/loadout.js && node --check tools/psx-serve.mjs && node --check tools/convert-character-animations.mjs && node --check tools/optimize-costumes.mjs && node --check build/psx-web.mjs && node --check src/psx/lobby-state.js && node --check src/psx/lobby-ui.js && node --check tools/prepare-lobby-assets.mjs && node --check src/psx/wonder-ui.js && node --check src/psx/ui-sounds.js && node --check src/psx/profile.js && node --check src/psx/home-widgets.js && node --check src/psx/touch-controls.js && node --check src/psx/fullscreen.js",
+    "check": "node --check src/psx/main.js && node --check src/psx/rules.js && node --check src/psx/animation.js && node --check src/psx/catalog.js && node --check src/psx/loadout.js && node --check tools/psx-serve.mjs && node --check tools/convert-character-animations.mjs && node --check tools/optimize-costumes.mjs && node --check build/psx-web.mjs && node --check src/psx/lobby-state.js && node --check src/psx/lobby-ui.js && node --check tools/prepare-lobby-assets.mjs && node --check src/psx/wonder-ui.js && node --check src/psx/ui-sounds.js && node --check src/psx/profile.js && node --check src/psx/home-widgets.js && node --check src/psx/touch-controls.js && node --check src/psx/fullscreen.js && node --check src/psx/navigation.js && node --check src/psx/world-navigation.js",
     "test": "node --test tests/psx/*.test.mjs"
   }
 }

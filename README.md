@@ -1,7 +1,7 @@
 # Police N Thief Web
 
 A browser practice prototype based on Wonder Wave, using exported PSX characters,
-role-specific running and action animations, logo and a selected Mall promenade slice.
+role-specific running and action animations, logo and all three Unreal arenas.
 The Wonder Wave style menu has Play, Tools, Costume, Setting and Credit pages.
 
 ## Play locally
@@ -15,19 +15,20 @@ npm run dev
 Open http://localhost:8491. For a phone on the same Wi-Fi, run `npm run dev:lan`
 and use the printed LAN address. `Start Web Preview.cmd` also starts the LAN preview.
 
-Choose runner or chaser for a 60-second practice with three local bots.
+Choose thief or police for a five-minute practice with three local bots.
 Desktop: WASD move, E slot 1, R slot 2, F interact, Escape pause.
 Mobile: left joystick, two small tool buttons, one large Interact button.
-Interact is a placeholder; object stealing and money rewards are not implemented.
-Phone: virtual stick and Jump, Dash and tool buttons. The match camera has a fixed
+Hold Interact (F) near a cache to steal, or near an unlocked captured teammate to rescue.
+Phone: virtual stick, two tool buttons, and the large Interact button. The match camera has a fixed
 orthographic top-down view; movement follows the screen directions.
 
 The Tools page follows the Unreal layout: two equipped slots at the top, a catalog
 below left, and selected-tool details with Equip Slot 1/2 buttons below right.
 Selecting a catalog tool does not change equipment until a slot is chosen. Equipping
 an already-equipped tool into the other slot swaps the slots, preventing duplicates.
-Hammer stuns nearby opponents, banana leaves a spin trap, and rocket gives a jet boost.
-Each slot has its own eight-second cooldown. Old one-tool saves migrate automatically.
+Five tools are available: Hammer (10s), Banana Skin (5s), Jetpack (15s), Smoke Bomb (30s),
+and Rewind Box (10s after returning). Rewind first places a marker, then returns to it.
+Each slot has its own cooldown. Old one-tool saves migrate automatically.
 Costumes use one shared portrait grid. Police, Thief and every other costume can be
 worn in either role; gameplay role determines the running animation, not the outfit.
 Costumes load on selection and remain cached. The costume and two-slot kit persist.
@@ -44,9 +45,8 @@ these controls validate input and report that limitation without creating fake r
 
 Host opens a local practice lobby. Add three bots to fill the four podiums, browse
 the map cards, change role preference, or edit tools/costumes and return to the same
-room. Start Match requires four players and the playable Mall stage, then runs a
-cancelable three-second countdown and loads the chase. Sunken and Iceberg are artwork
-previews, with launching disabled until their web stages exist. The lobby's bot
+room. Start Match requires four players and runs a cancelable three-second countdown.
+Mall, Sunken and Iceberg load their own arena geometry, spawns and money caches. The lobby's bot
 costumes, your kit and costume, and your role preference carry into the match.
 Room settings explain that this room is on this device; no joinable code is fabricated.
 
@@ -63,10 +63,11 @@ No environment variables or backend service are required for this prototype.
 
 ## Current limits
 
-Online multiplayer, Steam, full PSX capture/escape/rescue rules,
-the complete original tool systems, full stages and gameplay audio are not ported yet.
-Bots use simple steering and ground sampling; collision/navigation needs further work.
-Touch layouts have browser checks, but actual iOS/Android performance is unmeasured.
+Online multiplayer, Steam, native dynamic map physics and gameplay audio are not ported.
+The browser uses local bots, sampled geometry and grid routes. Original Unreal map art,
+cache placements, skill-table cooldowns and five-minute timer are reused. Core money,
+capture and teammate-rescue rules are implemented; see `docs/GAMEPLAY_PORT.md` for
+source evidence and explicit tuning choices. Actual iPhone performance still needs testing.
 This project does not change the original Unreal multiplayer implementation.
 
 ## Assets and attribution

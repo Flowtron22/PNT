@@ -1,0 +1,116 @@
+{
+  "id": "sunken",
+  "origin": [
+    -6.325,
+    159.88870208343505,
+    0.675
+  ],
+  "spawns": [
+    [
+      4.775,
+      0.89,
+      -6.525
+    ],
+    [
+      6.075,
+      0.89,
+      5.125
+    ],
+    [
+      -6.075,
+      0.89,
+      -7.475
+    ],
+    [
+      -4.775,
+      0.89,
+      8.875
+    ]
+  ],
+  "caches": [
+    {
+      "id": "sunken-0",
+      "position": [
+        8.6547,
+        -2.0232,
+        -14.8419
+      ],
+      "amount": 2000
+    },
+    {
+      "id": "sunken-1",
+      "position": [
+        -6.8431,
+        -2.6684,
+        10.6857
+      ],
+      "amount": 2000
+    },
+    {
+      "id": "sunken-2",
+      "position": [
+        -6.7789,
+        -2.5757,
+        -10.2498
+      ],
+      "amount": 2000
+    },
+    {
+      "id": "sunken-3",
+      "position": [
+        7.8555,
+        -2.6285,
+        16.6297
+      ],
+      "amount": 2000
+    }
+  ],
+  "source": "/Game/_MyGame/Maps/Level_02_Sunken",
+  "selected": [
+    "BP_Cannon",
+    "BP_Cannon2",
+    "BP_Cannon3",
+    "BP_Barrel8",
+    "BP_Barrel",
+    "BP_Barrel11",
+    "BP_Barrel12",
+    "BP_Barrel13",
+    "BP_Barrel14",
+    "BP_Barrel15",
+    "BP_Barrel16",
+    "BP_Barrel17",
+    "BP_Barrel18",
+    "BP_Barrel19",
+    "BP_Barrel20",
+    "BP_Barrel9",
+    "BP_Barrel21",
+    "BP_Barrel2",
+    "BP_Barrel3",
+    "BP_Barrel4",
+    "BP_Barrel5",
+    "BP_Barrel6",
+    "BP_Barrel7",
+    "BP_Barrel10",
+    "BP_Cannonball",
+    "BP_Cannonball10",
+    "BP_Cannonball11",
+    "BP_Cannonball12",
+    "BP_Cannonball13",
+    "BP_Cannonball14",
+    "BP_Cannonball15",
+    "BP_Cannonball16",
+    "BP_Cannonball2",
+    "BP_Cannonball3",
+    "BP_Cannonball4",
+    "BP_Cannonball5",
+    "BP_Cannonball6",
+    "BP_Cannonball7",
+    "BP_Cannonball8",
+    "BP_Cannonball9",
+    "SunkenShip",
+    "BP_Money_Ship0",
+    "BP_Money_Ship0",
+    "BP_Money_Ship0",
+    "BP_Money_Ship0"
+  ]
+}

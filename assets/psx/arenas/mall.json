@@ -1,0 +1,129 @@
+{
+  "id": "mall",
+  "origin": [
+    -6.325,
+    38.42393275,
+    0.675
+  ],
+  "spawns": [
+    [
+      4.775,
+      0.6275,
+      -6.525
+    ],
+    [
+      6.075,
+      1.8275,
+      5.125
+    ],
+    [
+      -6.075,
+      0.5275,
+      -7.475
+    ],
+    [
+      -4.775,
+      0.5775,
+      8.875
+    ]
+  ],
+  "caches": [
+    {
+      "id": "mall-0",
+      "position": [
+        -8.725,
+        -0.8925,
+        -7.125
+      ],
+      "amount": 2000
+    },
+    {
+      "id": "mall-1",
+      "position": [
+        6.875,
+        -0.3925,
+        -8.525
+      ],
+      "amount": 2000
+    },
+    {
+      "id": "mall-2",
+      "position": [
+        -6.525,
+        -0.6925,
+        10.075
+      ],
+      "amount": 2000
+    },
+    {
+      "id": "mall-3",
+      "position": [
+        6.875,
+        0.1075,
+        11.975
+      ],
+      "amount": 2000
+    }
+  ],
+  "source": "/Game/_MyGame/Maps/Level_01_Mall",
+  "selected": [
+    "sm_doorpartition",
+    "SM_Flowerbox_02",
+    "SM_Bench",
+    "SM_Bush_L",
+    "SM_Bush_XL3",
+    "SM_Flowerbox_3",
+    "SM_Flowerbox_4",
+    "SM_Bush_XL4",
+    "SM_Flowerbox_5",
+    "SM_Bush_XL5",
+    "SM_Kiosk_3",
+    "sm_blackinning",
+    "sm_boutiqeuA2",
+    "sm_boutiqeuA_floor",
+    "sm_cafeA",
+    "sm_cafeA_floor",
+    "sm_cafeB2",
+    "sm_cafeB_floor",
+    "sm_canopies",
+    "sm_clothshop",
+    "sm_coffeeshop",
+    "sm_foodcourt2",
+    "sm_mainfloor",
+    "sm_topwindow",
+    "sm_wallbeam",
+    "sm_fountainghose",
+    "SM_fountainBox",
+    "SM_plants_01",
+    "SM_bridge2",
+    "SM_water2",
+    "SM_fountaindirt",
+    "SM_Pond",
+    "sm_flowerbox_small",
+    "sm_tree_a",
+    "sm_kioskcanopies",
+    "sm_flowerbox_small2",
+    "sm_tree_a2",
+    "BP_CoffeeTable",
+    "BP_CoffeeTable2",
+    "BP_CoffeeChair",
+    "BP_CoffeeChair2",
+    "BP_CoffeeChair3",
+    "BP_CoffeeChair4",
+    "BP_CoffeeChair5",
+    "BP_CoffeeChair6",
+    "BP_CoffeeChair7",
+    "BP_CoffeeChair8",
+    "BP_CoffeeSignboard",
+    "BP_FoodCourtSignboard",
+    "BP_CoffeeTable3",
+    "BP_CoffeeChair9",
+    "BP_CoffeeChair10",
+    "BP_CoffeeChair11",
+    "BP_CoffeeChair12",
+    "BP_Money2",
+    "BP_Money",
+    "BP_Money3",
+    "BP_Money4"
+  ]
+}
