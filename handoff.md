@@ -38,6 +38,10 @@ at original dimensions; the preview URL is versioned to avoid stale asset caches
 
 ## Continue here
 
+Costume selection cards keep their normal dark background when equipped; only
+the orange border, star and equipped badge indicate selection. The wardrobe-only
+selected gradient was removed; tool selection styling is unchanged.
+
 0.9.16 capture/smoke/start rules: capture still needs 1.6 seconds of valid contact,
 but loss of range/sight/height or a disabled police now decays the independent
 thief meter at 0.4 seconds/second instead of resetting it. Rescue immunity and
