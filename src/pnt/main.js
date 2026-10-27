@@ -10,6 +10,7 @@ import {renderLobby} from './lobby-ui.js';
 import {createWonderUI} from './menu-effects.js';
 import {createGameplayAudio} from './game-audio.js';
 import {createRoundStart} from './round-start.js';
+import {createMoneyTrail} from './money-trail.js';
 import {PROFILE_KEY,readProfile,saveProfile,profileName,recordMatch} from './profile.js';
 import {renderHomeWidgets} from './home-widgets.js';
 import {bindGameControls} from './touch-controls.js';
@@ -71,6 +72,7 @@ let reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const uiEffects=createWonderUI({blocked:()=>busy||!$('#loading').hidden||!ui.hud.hidden,reduced:()=>reduced});
 const gameAudio=createGameplayAudio(()=>uiEffects.sounds.engine);
 const roundStart=createRoundStart(ui.hud,n=>gameAudio.play(n>0?'Match_Countdown':'Match_Start',.6,.8));
+const moneyTrail=createMoneyTrail(ui.hud,$('#money-status'),{reduced:()=>reduced});
 document.addEventListener('pointerdown',()=>gameAudio.unlock(),{capture:true});
 document.body.classList.toggle('reduced-motion',reduced);
 function resize(){const aspect=innerWidth/innerHeight;menuCamera.aspect=aspect;menuCamera.updateProjectionMatrix();matchCamera.aspect=aspect;matchCamera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,quality==='battery'?1:1.5));renderer.setSize(innerWidth,innerHeight,false);}
@@ -415,6 +417,7 @@ async function boot(){beginLoading('GETTING READY');try{let done=0;const names=[
 function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed=Math.max(0,(now-lastFrame)/1000),dt=Math.min(elapsed,.05);lastFrame=now;uiEffects.tick(dt);tickStageVerdict(elapsed);haptics.update(round?.actors[0]?.effect,Math.min(elapsed,.1),!!round&&round.phase==='playing'&&!paused&&!busy&&!document.hidden&&round.actors[0].effectTime>0);if(resultPortrait&&!ui.results.hidden)resultPortrait.update(dt);
  if(ready){if(room&&!online&&!ui.lobby.hidden&&!busy&&!document.hidden){if(stepLobby(room,elapsed))start();else if(room.phase==='countdown'){$('#lobby-counter').textContent=Math.ceil(room.countdown);}}if(round){if(online&&!busy){updateOnlineMatch(Math.min(elapsed,.1));}else if(round.phase==='playing'&&!paused&&!busy&&!phoneLandscape.blocked){const steps=simulationSteps(elapsed);for(let i=0;i<steps.count&&round.phase==='playing';i++){updateGame(steps.dt);gameFX.update(steps.dt);}updateHud();}cameraShake=Math.max(0,cameraShake-elapsed*.35);shakeTime+=elapsed;positionMatchCamera();}
  else if(preview){const homePreview=['home','tools','costume'].includes(activePage);preview.group.scale.setScalar(homePreview?1.5:1);preview.group.rotation.y=homePreview?-Math.PI/6:0;preview.anim.update(dt);if(previewTime>0){previewTime-=dt;if(previewTime<=0)preview.anim.play('idle');}const p=preview.group.position,narrow=innerWidth<760,pagePreview=narrow&&activePage!=='home';const distance=pagePreview?9:4.6,offset=distance*Math.tan(THREE.MathUtils.degToRad(menuCamera.fov/2))*menuCamera.aspect*(activePage==='home'?(narrow?.28:.16):.43);menuCamera.position.set(p.x,p.y+(homePreview?1.85:1.45),p.z+distance);menuCamera.lookAt(p.x-offset,p.y+(pagePreview?3:homePreview?1.2:.8),p.z);}}
+ moneyTrail.update(round,position=>{matchRoot.updateMatrixWorld();const p=matchRoot.localToWorld(new THREE.Vector3(...position).addScaledVector(up,2.4)).project(matchCamera);return p.z>=-1&&p.z<=1&&Math.abs(p.x)<=1&&Math.abs(p.y)<=1?{x:(p.x*.5+.5)*innerWidth,y:(-p.y*.5+.5)*innerHeight}:null;},elapsed,!!round&&!ui.hud.hidden&&!paused&&!busy&&!document.hidden&&!phoneLandscape.blocked);
  roundStart.update(round,elapsed);gameAudio.update(round,avatars,!!round&&round.phase==='playing'&&!(round.startRemaining>0)&&!paused&&!busy&&!document.hidden&&!phoneLandscape.blocked);
  if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('#toast').textContent='';}updateMarkers();if(!ui.lobby.hidden&&!busy)renderLobbyCharacters(dt);else renderer.render(scene,round?matchCamera:menuCamera);
 }

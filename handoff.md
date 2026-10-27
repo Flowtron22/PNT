@@ -38,6 +38,12 @@ at original dimensions; the preview URL is versioned to avoid stale asset caches
 
 ## Continue here
 
+Stealing now emits gold coins from the projected cache marker into the money
+total beneath the timer. `src/pnt/money-trail.js` observes cache balance deltas
+for both practice and online snapshots, skips initial/reconnect balances, caps
+particles at 48, clears on pause/menu/new match and uses only a glow for reduced
+motion. This is presentation only; authoritative money totals are unchanged.
+
 Costume selection cards keep their normal dark background when equipped; only
 the orange border, star and equipped badge indicate selection. The wardrobe-only
 selected gradient was removed; tool selection styling is unchanged.
