@@ -1,6 +1,6 @@
 // Adapted from the menu foundation menus.js (_fx, _setFocus, _spatial, _updateCursor).
 // Spring, cursor tuning, tilt strengths and feedback timing retain their source values.
-import {Spring,splatSVG,restartAnim} from '../ui/ui-util.js';
+import {Spring,starSVG,restartAnim} from '../ui/ui-util.js';
 import {createUISounds} from './ui-sounds.js';
 export function createWonderUI({blocked=()=>false,reduced=()=>false}={}){
  const sounds=createUISounds(),cursor=document.createElement('div');cursor.className='iw-cursor';cursor.setAttribute('aria-hidden','true');cursor.innerHTML='<i class="iw-cursor__ring"></i><i class="iw-cursor__glow"></i>';document.body.append(cursor);
@@ -26,7 +26,7 @@ export function createWonderUI({blocked=()=>false,reduced=()=>false}={}){
    if(el.matches('.nav-button')){el.classList.add('iw-btn');const ink=document.createElement('span');ink.className='iw-btn__blob';ink.setAttribute('aria-hidden','true');el.prepend(ink);}
    if(own(el)){
     el.classList.add('iw-ltile');el.dataset.cur='own';el.dataset.wwTilt=el.closest('.wardrobe-grid')?'12':'14';
-    const blob=document.createElement('span');blob.className='iw-ltile__blob';blob.setAttribute('aria-hidden','true');blob.innerHTML=splatSVG({seed:90+Array.from(el.parentElement.children).indexOf(el)*7,cls:'iw-fa',r:58,arms:8,drops:0});
+    const blob=document.createElement('span');blob.className='iw-ltile__blob';blob.setAttribute('aria-hidden','true');blob.innerHTML=starSVG({seed:90+Array.from(el.parentElement.children).indexOf(el)*7,cls:'iw-fa',r:58,arms:8,drops:0});
     const check=document.createElement('span');check.className='iw-ltile__eq';check.setAttribute('aria-hidden','true');check.textContent='✓';el.prepend(blob);el.append(check);
    }
    el.addEventListener('animationend',event=>{if(event.target===el&&event.animationName==='iw-press')el.classList.remove('is-press');});

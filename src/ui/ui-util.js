@@ -190,14 +190,18 @@ export function splatShape(cx, cy, r, { arms = 9, seed = 7, armLen = 0.42, drops
   }
   return { core: closedCurve(pts, 1), drops: ds };
 }
-/** SVG markup for a splat filled with `cls` (css class) or explicit fill. */
-export function splatSVG({ seed = 7, cls = 'iw-fa', fill = null, viewBox = 200, r = 58, arms = 9, drops = 7, extra = '' } = {}) {
-  const c = viewBox / 2;
-  const s = splatShape(c, c, r, { seed, arms, drops });
+/** Five-point selection star, retaining the caller's existing colour and size. */
+export function starSVG({ cls = 'iw-fa', fill = null, viewBox = 200, r = 58, extra = '' } = {}) {
+  const c = viewBox / 2, outer = r * 1.4, inner = outer * .46;
+  const points = Array.from({ length: 10 }, (_, i) => {
+    const angle = -Math.PI / 2 + i * Math.PI / 5, radius = i % 2 ? inner : outer;
+    return [f1(c + Math.cos(angle) * radius), f1(c + Math.sin(angle) * radius)];
+  });
   const fa = fill ? `fill="${fill}"` : `class="${cls}"`;
-  return `<svg viewBox="0 0 ${viewBox} ${viewBox}" aria-hidden="true" ${extra}><path ${fa} d="${s.core}"/>${s.drops
-    .map((d) => `<circle ${fa} cx="${d.x}" cy="${d.y}" r="${d.r}"/>`).join('')}</svg>`;
+  return `<svg viewBox="0 0 ${viewBox} ${viewBox}" aria-hidden="true" ${extra}><path ${fa} d="M${points.map(p => p.join(' ')).join(' L')} Z"/></svg>`;
 }
+// Keep older foundation consumers consistent with the new shared decoration.
+export const splatSVG = starSVG;
 
 // ---------------------------------------------------------------- text
 export function fmtTime(s) {

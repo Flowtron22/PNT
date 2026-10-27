@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 27 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.11**, online multiplayer test release.
+Current app version: **0.9.12**, online multiplayer test release.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -26,6 +26,11 @@ See `src/pnt/netcode.js` and `docs/MULTIPLAYER.md`. Tests cover 200 ms RTT + jit
 30/60/144 FPS, bounded queues/extrapolation, teleports and reconnect sequence reset.
 See `docs/MULTIPLAYER.md`. Colyseus server and LAN launcher are implemented;
 use `npm run dev:online`, with website port 8491 and game-server port 2567.
+
+0.9.12 replaces shared UI splat decorations with five-point stars, preserving
+colors and selection animations. Tools, costumes, profile portrait decoration
+and results title use the shared `starSVG` helper. Multiplayer tuning is deferred
+per the latest user instruction; server stays on 0.9.11.
 
 ## Continue here
 
