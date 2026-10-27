@@ -118,7 +118,7 @@ button[data-ww-bound]:focus-visible{outline:none}
 #menu[data-page=credits] .character-label{display:none}
 .studio-credits-view{position:absolute;left:50%;top:150px;bottom:0;width:min(620px,86vw);transform:translateX(-50%);overflow-y:auto;display:grid;align-content:center}
 .studio-credits-roll{text-align:center;padding:24px 20px}
-.studio-credit{margin:0}.studio-credit h3{font:900 14px/1.4 Rubik;letter-spacing:.28em;text-transform:uppercase;color:var(--orange);margin:0 0 32px}.studio-credit p{font:clamp(26px,3.2vw,42px)/1.25 Titan;margin:24px 0 0}
+.studio-credit{margin:0}.studio-credit h3{font:900 14px/1.4 Rubik;letter-spacing:.28em;text-transform:uppercase;color:var(--orange);margin:0 0 32px}.studio-credit p{font:500 clamp(24px,3vw,36px)/1.2 Rubik,sans-serif;letter-spacing:.38em;padding-left:.38em;margin:8px 0 0}
 .todak-credit-logo{display:block;width:min(430px,90%);height:auto;margin:0 auto}.ureka-credit-logo{display:block;width:min(235px,65%);height:auto;margin:0 auto;border-radius:20px}
 @media(max-height:500px){.studio-credits-view{top:100px}.studio-credits-roll{padding-top:35px}.studio-credit{margin-bottom:55px}.todak-credit-logo{width:260px}.ureka-credit-logo{width:150px}}
 @media(prefers-reduced-motion:reduce){.studio-credits-view{overflow-y:auto}.studio-credits-roll{will-change:auto}}

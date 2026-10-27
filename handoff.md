@@ -37,7 +37,8 @@ Local Windows paths will need updating on the other workstation.
   other phones and desktop. Do not shrink all devices indiscriminately.
 - Match the reference UI's button hover animation, wiggle, sound and visual language.
 - Credits should be **static**, with the white Todak logo and
-  **Developed by Todak Studios**. No Ureka logo or upward credits animation.
+  **Developed by**, then the TODAK logo and **STUDIOS** beneath it in spaced
+  geometric Rubik lettering. No Ureka logo or upward credits animation.
 - third-party/GitHub references were removed from the in-game credits presentation.
   Third-party licence files/notices remain in the repository and distribution.
 - Only three mobile action buttons: two small tool buttons and one large Interact
