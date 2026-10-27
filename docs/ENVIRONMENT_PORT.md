@@ -128,9 +128,11 @@ https://rapier.rs/docs/user_guides/javascript/rigid_body_sleeping/
 
 ## Implemented in browser 0.9.8
 
-Follow-up tuning: Iceberg steering response time and stopping distance are reduced
-by about 40% from the initial release. Steering rate is now 1.4/0.6 (2.333/s) and
-braking is 2.2/0.6 (3.667 units/s²). Running speed and acceleration stay unchanged.
+Current follow-up tuning: the 40% slipperiness reduction was reverted. Original
+steering 1.4/s and braking 2.2 units/s² are restored; acceleration remains 9.
+Iceberg movement speed is 1.5x the previous speed, on top of the shared 1.15x
+multiplier. Other maps retain their speed. Iceberg police/thief running animation
+plays at 2x the shared 1.3x rate.
 
 - `src/pnt/environment.js`: independent ice steering, acceleration and stopping;
   authored 0/3/5/10-second ship tilt with alternating sign; bounded grounded

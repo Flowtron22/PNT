@@ -1,6 +1,5 @@
 // Pure simulation settings, shared by local play and a future authoritative server.
-// Keep 60% of the original steering response time and stopping distance.
-export const ICE={acceleration:9,steering:1.4/.6,braking:2.2/.6};
+export const ICE={acceleration:9,steering:1.4,braking:2.2};
 export const SHIP={peak:5*Math.PI/180,push:3.8,maxSlide:1.8,drag:2.4};
 export function shipTilt(seconds){
  const cycle=Math.floor(Math.max(0,seconds)/10),t=Math.max(0,seconds)%10;

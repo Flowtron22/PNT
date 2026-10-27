@@ -184,8 +184,10 @@ desktop-layout. Runtime loading fetches GLB and prepared animation JSON, not raw
 
 ## Verification and remaining concerns
 
-- Iceberg follow-up: slippery steering response time and stopping distance toned
-  down about 40%; `ICE.steering=1.4/.6`, `ICE.braking=2.2/.6`. Speed is unchanged.
+- Iceberg follow-up: the 40% slipperiness reduction was reverted. Original
+  `ICE.steering=1.4` and `ICE.braking=2.2` are restored. Police and thief movement
+  on Iceberg is now 1.5x the previous speed (on top of the shared 1.15 multiplier).
+  Other maps retain their previous movement speed.
 - Iceberg police/thief running clips now play twice as fast as the shared 1.3x
   rate (2.6x authored playback). Other clips, maps and movement speeds are unchanged.
 
