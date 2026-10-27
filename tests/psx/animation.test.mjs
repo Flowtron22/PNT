@@ -12,6 +12,15 @@ function rig(file){
  const nodes=j.nodes.map(n=>{const o=new THREE.Bone();o.name=n.name||'';if(n.translation)o.position.fromArray(n.translation);if(n.rotation)o.quaternion.fromArray(n.rotation);return o;});
  j.nodes.forEach((n,i)=>n.children?.forEach(child=>nodes[i].add(nodes[child])));const root=new THREE.Group();nodes.filter(n=>!n.parent).forEach(n=>root.add(n));return root;
 }
+test('idle B retains its root height and keeps both feet planted through a full loop on every costume',()=>{
+ assert.match(data.source,/sk_chr_idleB/);assert.ok(clips.idle.tracks.some(t=>t.name==='Bip001.position'));
+ for(const file of ['thief.glb','police.glb',...readdirSync(new URL('../../assets/psx/costumes/',import.meta.url)).map(n=>'costumes/'+n)]){
+  const model=rig(file);model.updateMatrixWorld(true);const feet=['Bip001-L-Foot','Bip001-R-Foot'].map(name=>model.getObjectByName(name));
+  const standingHeight=feet.map(foot=>foot.getWorldPosition(new THREE.Vector3()).y),heights=[[],[]],anim=makeAnimator(model,clips,'runner');
+  for(let i=0;i<Math.ceil(clips.idle.duration*30);i++){anim.update(1/30);model.updateMatrixWorld(true);feet.forEach((foot,k)=>heights[k].push(foot.getWorldPosition(new THREE.Vector3()).y));}
+  heights.forEach((values,k)=>{assert.ok(Math.max(...values)-Math.min(...values)<.001,file+': idle foot must not lift vertically');assert.ok(Math.abs(values[0]-standingHeight[k])<.02,file+': idle must retain standing ground contact');});anim.dispose();
+ }
+});
 for(const [file,role,clip]of [['thief.glb','runner','thiefRun'],['police.glb','chaser','policeRun']]){
  test(`${file}: actual run keys move leg bones and survive repeated transitions`,()=>{
   const model=rig(file),anim=makeAnimator(model,clips,role),leg=model.getObjectByName('Bip001-L-Thigh');anim.play(clip,{fade:0});anim.update(.11);const pose=leg.quaternion.clone();anim.update(.23);assert.ok(pose.angleTo(leg.quaternion)>.05,'run must visibly change the thigh rotation');

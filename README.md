@@ -30,6 +30,9 @@ Costumes use one shared portrait grid. Police, Thief and every other costume can
 worn in either role; gameplay role determines the running animation, not the outfit.
 Costumes load on selection and remain cached. The costume and two-slot kit persist.
 Boot and match-start loading screens wait for assets and shader preparation.
+Standing characters use `sk_chr_idleB.fbx` in the menu, lobby and match. Its authored
+root height is retained so the bent-leg pose stays grounded; movement and attack
+clips continue to leave actor movement to the gameplay controller.
 
 ## PLAY and lobby flow
 
