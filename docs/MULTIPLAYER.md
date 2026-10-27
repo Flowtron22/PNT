@@ -1,6 +1,6 @@
 # Multiplayer prototype — local and online testing
 
-Version 0.9.14. Colyseus 0.18 server, JavaScript browser SDK. The user authorized
+Version 0.9.15. Colyseus 0.18 server, JavaScript browser SDK. The user authorized
 a free online test on Render after the local test. No paid upgrade is authorized.
 
 ## Online hosting
@@ -57,8 +57,12 @@ starts that website alone with vendored browser dependencies.
   poses and replays pending inputs. Visual corrections decay separately from the
   simulation, avoiding packet-by-packet pulls toward an old server position.
 - Inputs are batched at approximately 20 Hz (up to 12 frames per message). The
-  server consumes at most one frame per tick and acknowledges only consumed
-  frames; clients cannot increase movement speed by supplying more commands.
+  server consumes at most one frame per tick and acknowledges the retired input
+  sequence; clients cannot increase movement speed by supplying more commands.
+  At most eight recent frames remain queued. Superseded older inputs are retired
+  after a stall rather than building up seconds of input lag. The client sends
+  its newest unsent batch after a gap. Medium correction offsets blend; explicit
+  rewind/respawn revisions still snap, as do extreme (>12-unit) divergences.
   Legacy intent messages remain supported for older browser tabs. Snapshots
   advertise `inputFrames` so a new browser can fall back against an older server.
 - Remote players and furniture render from a 100 ms server-time snapshot buffer,
@@ -112,7 +116,7 @@ npm run test:multiplayer
 npm run build
 ```
 
-The root suite has 97 tests; the server suite has nine tests, including four real
+The root suite has 100 tests; the server suite has 11 tests, including four real
 SDK clients joining over HTTP/WebSocket, capacity, host permissions, readiness,
 shared state, cooldown enforcement, reconnect, end/rematch/map switch, public/private
 isolation, timed capture, input validation, stealing, rescue and Mall furniture.
@@ -127,6 +131,11 @@ practice and prediction. Landing masks flood-fill the original floor from spawns
 excluding blocked cells and disconnected rooftops. These changes need the server
 deployment as well as the static site update; other visual/audio changes are local
 presentation only.
+0.9.15 corrects landing-mask seeds to use sampled X/Z floor positions, without
+the misleading saved Unreal spawn Y. It also guides the final half-second of
+flight toward safe ground and prevents Mall contacts from undoing that move.
+Server health and snapshots expose movementVersion=3. Full-flight regression
+tests check Sunken and Iceberg return to the main floor without a fall/reset.
 
 On 27 October 2026, four real SDK clients also passed a hosted Render smoke test:
 private room joining, shared Mall match, all 15 furniture poses, acknowledged

@@ -10,7 +10,7 @@ export function safeLandingCell(grid,x,z){
 }
 export function landingMask(grid,spawns){
  const mask=new Uint8Array(grid.heights.length),queue=[];
- for(const spawn of spawns){let best=-1,distance=Infinity;for(let i=0;i<mask.length;i++){if(grid.blocked?.[i]||!Number.isFinite(grid.heights[i]))continue;const x=grid.minX+i%grid.nx*grid.step,z=grid.minZ+Math.floor(i/grid.nx)*grid.step,d=(x-spawn[0])**2+(z-spawn[2])**2+4*(grid.heights[i]-spawn[1])**2;if(d<distance){distance=d;best=i;}}if(best>=0&&!mask[best]){mask[best]=1;queue.push(best);}}
+ for(const spawn of spawns){let best=-1,distance=Infinity;for(let i=0;i<mask.length;i++){if(grid.blocked?.[i]||!Number.isFinite(grid.heights[i]))continue;const x=grid.minX+i%grid.nx*grid.step,z=grid.minZ+Math.floor(i/grid.nx)*grid.step,d=(x-spawn[0])**2+(z-spawn[2])**2;if(d<distance){distance=d;best=i;}}if(best>=0&&!mask[best]){mask[best]=1;queue.push(best);}}
  for(let n=0;n<queue.length;n++){const i=queue[n],x=i%grid.nx,z=Math.floor(i/grid.nx);for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,zz=z+dz;if(xx<0||zz<0||xx>=grid.nx||zz>=grid.nz)continue;const j=zz*grid.nx+xx;if(mask[j]||!Number.isFinite(grid.heights[j])||Math.abs(grid.heights[j]-grid.heights[i])>=.6||!canCross(grid,i,j))continue;mask[j]=1;queue.push(j);}}
  return mask;
 }

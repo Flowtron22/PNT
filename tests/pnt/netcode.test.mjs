@@ -21,9 +21,12 @@ test('prediction travels the same distance at 30, 60 and 144 render frames per s
 });
 test('prediction corrects a changed server position visually and bounds retained input during a stall',()=>{
  const p=new LocalPrediction(actor(),pose(),state,0,{grid,map:'mall'});for(let i=0;i<30;i++)p.advance(NETWORK_STEP,{x:1,z:0});const before=p.render().position.clone();p.reconcile(pose(.1,20),state,20/60);assert.ok(p.render().position.distanceTo(before)<1e-8);
- for(let i=0;i<500;i++)p.advance(NETWORK_STEP,{x:1,z:0});assert.equal(p.pending.length,180);assert.equal(p.outgoing().length,12);assert.equal(p.outgoing()[0].seq,33);
+ for(let i=0;i<500;i++)p.advance(NETWORK_STEP,{x:1,z:0});assert.equal(p.pending.length,180);const latest=p.outgoing();assert.equal(latest.length,12);assert.equal(latest.at(-1).seq,p.seq);assert.equal(p.outgoing().length,0);
  p.reconcile(pose(-20,600),state,10);assert.equal(p.offset.length(),0);
  const resumed=new LocalPrediction(actor(),{...pose(0,40),received:50},state,1,{grid,map:'mall'});resumed.advance(NETWORK_STEP,{x:0,z:0});assert.equal(resumed.outgoing()[0].seq,51);
+});
+test('medium authoritative corrections smooth continuously while explicit rewinds snap once',()=>{
+ const p=new LocalPrediction(actor(),pose(5),state,0,{grid,map:'mall'});const before=p.render().position.x;p.reconcile(pose(1),state,0);assert.equal(p.render().position.x,before);p.advance(NETWORK_STEP,{x:0,z:0});assert.ok(p.render().position.x<before);assert.ok(p.render().position.x>1);p.reconcile({...pose(-5),warp:1},state,1);assert.equal(p.offset.length(),0);assert.ok(p.render().position.x<0);
 });
 const snapshot=(time,tick)=>({time,tick,poses:[{...pose(time*4),vx:4}]});
 test('remote interpolation remains monotonic and smooth with jittery 20Hz arrivals',()=>{

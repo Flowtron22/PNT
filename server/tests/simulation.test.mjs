@@ -15,6 +15,9 @@ test('batched input acknowledges simulated frames only and cannot accelerate the
   assert.equal(sim.input(0,{seq:8,x:1,z:0}),false);assert.equal(sim.snapshot().inputFrames,true);
  }finally{sim.dispose();}
 });
+test('network stalls cannot leave seconds of obsolete movement queued on the server',async()=>{
+ const sim=await MatchSimulation.create('iceberg',players());try{for(let batch=0;batch<10;batch++)assert.equal(sim.input(0,{frames:Array.from({length:12},(_,i)=>({seq:batch*12+i+1,x:batch<9?1:-1,z:0}))}),true);assert.equal(sim.actors[0].inputQueue.length,8);sim.step();assert.equal(sim.snapshot().poses[0].ack,113);assert.equal(sim.actors[0].inputQueue[0].x,-1);assert.equal(sim.tick,1);}finally{sim.dispose();}
+});
 test('prediction and authoritative movement stay smooth with 200ms round trips and packet jitter',()=>{
  const grid={minX:-50,minZ:-50,nx:101,nz:101,step:1,heights:Array(10201).fill(0),blocked:new Uint8Array(10201)},sim=new MatchSimulation('iceberg',players(),{grid,metadata:{spawns:[[30,0,30],[0,0,0],[-30,0,30],[-30,0,-30]],caches:[{id:'cash',position:[35,0,-35],amount:8000}]}});
  const initial=sim.snapshot(),prediction=new LocalPrediction(sim.actors[1],initial.poses[1],initial.round.actors[1],0,{grid,map:'iceberg'}),inputs=[],snapshots=[];let previous=0,maxReverse=0,maxJump=0;
@@ -34,6 +37,9 @@ test('server capture requires continuous 1.6-second detection, and escape resets
 });
 test('authoritative jetpack landing rejects blocked spots on all three authored maps',async()=>{
  for(const map of ['mall','sunken','iceberg']){const sim=await MatchSimulation.create(map,players());try{assert.ok(sim.grid.landingMask.some(Boolean));const actor=sim.actors[1],state=sim.round.actors[1],blocked=sim.grid.blocked.findIndex(Boolean);actor.group.position.set(sim.grid.minX+blocked%sim.grid.nx*sim.grid.step,2,sim.grid.minZ+Math.floor(blocked/sim.grid.nx)*sim.grid.step);actor.wasFlying=true;state.effectTime=0;state.effect=null;sim.step();assert.ok(safeLandingCell(sim.grid,actor.group.position.x,actor.group.position.z),map+' safe landing');assert.ok(actor.group.position.toArray().every(Number.isFinite));}finally{sim.dispose();}}
+});
+test('a complete jetpack flight descends to the main floor on Sunken and Iceberg without a fall/reset',async()=>{
+ for(const map of ['sunken','iceberg']){const sim=await MatchSimulation.create(map,players());try{const a=sim.actors[0],state=sim.round.actors[0],spawn=a.group.position.clone();assert.ok(sim.grid.landingMask.reduce((sum,n)=>sum+n,0)>1000);state.effect='rocket';state.effectTime=5;let largestStep=0,lowest=Infinity;for(let i=0;i<390;i++){sim.input(0,{seq:i+1,x:0,z:1});const before=a.group.position.clone();sim.step();largestStep=Math.max(largestStep,a.group.position.distanceTo(before));lowest=Math.min(lowest,a.group.position.y);}assert.ok(safeLandingCell(sim.grid,a.group.position.x,a.group.position.z));assert.equal(a.grounded,true);assert.ok(a.group.position.y<-.9,map+' returned to floor');assert.ok(lowest>-5);assert.ok(largestStep<1.5,map+' no teleport: '+largestStep);assert.equal(a.warp||0,0);assert.ok(a.group.position.distanceTo(spawn)>.5);}finally{sim.dispose();}}
 });
 test('server validates input sequence and tool actions, and exports all Mall furniture',async()=>{
  const sim=await MatchSimulation.create('mall',players());try{assert.equal(sim.snapshot().furniture.length,15);assert.equal(sim.input(0,{seq:1,x:NaN,z:0}),false);assert.equal(sim.input(0,{seq:1,x:100,z:0}),true);assert.equal(sim.actors[0].input.x,1);assert.equal(sim.input(0,{seq:1,x:-1,z:0}),false);assert.equal(sim.tool(0,3),false);assert.equal(sim.tool(0,0),true);assert.equal(sim.tool(0,0),false);for(let i=0;i<60;i++)sim.step();assert.equal(sim.round.actors[0].effectTime,0);assert.ok(sim.round.actors[0].toolCooldowns[0]>8);assert.ok(sim.snapshot().furniture.every(f=>f.position.every(Number.isFinite)));}finally{sim.dispose();}

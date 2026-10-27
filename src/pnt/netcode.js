@@ -2,7 +2,7 @@ import {advanceActor,movementSpeed} from './player-motion.js';
 import {shipTilt} from './environment.js';
 export const NETWORK_STEP=1/60;
 const angleDelta=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
-export function applyPose(actor,pose){actor.group.position.fromArray(pose.position);actor.group.rotation.y=pose.angle;for(const key of ['vx','vz','slideX','velocity','grounded','speed','flightFloor','wasFlying'])actor[key]=pose[key]??0;}
+export function applyPose(actor,pose){actor.group.position.fromArray(pose.position);actor.group.rotation.y=pose.angle;for(const key of ['vx','vz','slideX','velocity','grounded','speed','flightFloor','wasFlying'])actor[key]=pose[key]??0;actor.flightLanding=pose.flightLanding?{...pose.flightLanding}:null;}
 export function predictInput(actor,state,input,time,options){
  let {x,z}=input;const flying=state.effect==='rocket'&&state.effectTime>0;
  if(state.effect==='banana'&&state.effectTime>0){x=state.spinDirection?.x||0;z=state.spinDirection?.z||0;}
@@ -13,12 +13,12 @@ export function predictInput(actor,state,input,time,options){
 // acknowledged server tick, then replay only commands it has not processed.
 export class LocalPrediction {
  constructor(actor,pose,state,time,options){this.actor={group:{position:actor.group.position.clone(),rotation:{y:0}}};this.options=options;this.pending=[];this.seq=Math.max(pose.ack||0,pose.received||0);this.sent=this.seq;this.accumulator=0;this.offset=actor.group.position.clone().set(0,0,0);this.angleOffset=0;this.reset(pose,state,time);}
- reset(pose,state,time){applyPose(this.actor,pose);this.state={...state};this.time=time;this.previous=this.actor.group.position.clone();this.previousAngle=pose.angle;}
+ reset(pose,state,time){applyPose(this.actor,pose);this.state={...state};this.warp=pose.warp||0;this.time=time;this.previous=this.actor.group.position.clone();this.previousAngle=pose.angle;}
  simulate(input){this.previous.copy(this.actor.group.position);this.previousAngle=this.actor.group.rotation.y;this.time+=NETWORK_STEP;this.state.effectTime=Math.max(0,(this.state.effectTime||0)-NETWORK_STEP);predictInput(this.actor,this.state,input,this.time,this.options);}
  advance(elapsed,input){this.accumulator+=Math.min(.1,Math.max(0,elapsed));while(this.accumulator+1e-9>=NETWORK_STEP){this.accumulator-=NETWORK_STEP;if(this.pending.length>=180)continue;const frame={seq:++this.seq,x:input.x,z:input.z,interact:input.interact===true};this.pending.push(frame);this.simulate(frame);}const decay=Math.exp(-14*elapsed);this.offset.multiplyScalar(decay);this.angleOffset*=decay;}
- outgoing(){const frames=this.pending.filter(frame=>frame.seq>this.sent).slice(0,12);if(frames.length)this.sent=frames.at(-1).seq;return frames;}
+ outgoing(){const frames=this.pending.filter(frame=>frame.seq>this.sent).slice(-12);if(frames.length)this.sent=frames.at(-1).seq;return frames;}
  render(){const alpha=Math.max(0,Math.min(1,this.accumulator/NETWORK_STEP));return {position:this.previous.clone().lerp(this.actor.group.position,alpha).add(this.offset),angle:this.previousAngle+angleDelta(this.previousAngle,this.actor.group.rotation.y)*alpha+this.angleOffset};}
- reconcile(pose,state,time){const before=this.render();this.pending=this.pending.filter(frame=>frame.seq>pose.ack);this.reset(pose,state,time);for(const frame of this.pending)this.simulate(frame);const after=this.render();this.offset.add(before.position.sub(after.position));this.angleOffset+=angleDelta(after.angle,before.angle);if(this.offset.length()>2.5){this.offset.set(0,0,0);this.angleOffset=0;}}
+ reconcile(pose,state,time){const before=this.render(),warped=(pose.warp||0)!==this.warp;this.pending=this.pending.filter(frame=>frame.seq>pose.ack);this.reset(pose,state,time);for(const frame of this.pending)this.simulate(frame);const after=this.render();this.offset.add(before.position.sub(after.position));this.angleOffset+=angleDelta(after.angle,before.angle);if(warped||this.offset.length()>12){this.offset.set(0,0,0);this.angleOffset=0;}}
 }
 // Render remote actors/props between two known server states, rather than
 // repeatedly easing toward whichever packet happened to arrive last.

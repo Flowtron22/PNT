@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 27 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.14**, online multiplayer test release.
+Current app version: **0.9.15**, online multiplayer test release.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,22 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.15 fixes the landing-mask seed error introduced in 0.9.14: saved Unreal spawn
+Y is not the sampled walkable floor. Seed by nearest free X/Z instead. Sunken now
+has 3,587 eligible floor cells (was 967 elevated cells), Iceberg 4,361 (was 57).
+Flight stays inside sampled arena bounds and blends toward a safe landing in its
+last half-second. A relocated landing resets the previous position before Mall
+furniture collision so it cannot be rolled back into an invalid/out-of-map spot.
+Landing targets are included in poses for prediction replay.
+
+Input queues retain the newest eight commands, discarding superseded backlog
+after stalls. The client sends the newest unsent batch after a gap. Ordinary
+medium corrections blend instead of triggering the old 2.5-unit hard snap;
+explicit rewind/respawn revisions still snap. `/health` reports app version and
+movementVersion=3 to verify the matching server release. Tests: 100 root and 11
+server tests, including complete Sunken/Iceberg flights, floating spawn heights,
+landing rollback, queued-input stalls and medium visual corrections.
 
 0.9.14: phone landscape request on first touch where supported, with a rotate-phone
 overlay in unsupported portrait browsers and `orientation: landscape` in the app

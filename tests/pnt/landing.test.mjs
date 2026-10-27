@@ -19,3 +19,11 @@ test('landing excludes isolated rooftops and finds real floor from voids or outs
 test('walking still collides with walls and all-blocked grids cannot invent a landing',()=>{
  const grid=makeGrid(),a=actor();for(let z=0;z<9;z++)grid.blocked[z*12+4]=1;for(let i=0;i<120;i++)advanceActor(a,{effect:null,effectTime:0},1,0,1/60,{grid,map:'mall',speed:4});assert.ok(a.group.position.x<3.6);grid.blocked.fill(1);assert.equal(nearestLanding(grid,5,4),null);
 });
+test('floating Unreal spawn heights cannot seed a disconnected roof instead of the floor',()=>{
+ const grid=makeGrid();for(let z=3;z<=5;z++)for(let x=5;x<=7;x++)grid.heights[z*12+x]=4;
+ grid.landingMask=landingMask(grid,[[2,4.8,4]]);assert.equal(safeLandingCell(grid,2,4),true);assert.equal(safeLandingCell(grid,6,4),false);assert.equal(nearestLanding(grid,6,4).y,0);
+});
+test('furniture collision checks cannot undo the landing relocation from an invalid position',()=>{
+ const grid=makeGrid(),a=actor();grid.landingMask=landingMask(grid,[[2,0,4]]);a.group.position.set(12,2,4);a.wasFlying=true;let checks=0;
+ advanceActor(a,{effect:'rocket',effectTime:0},1,0,1/60,{grid,map:'mall',speed:4,furniture:{move(actor,from){checks++;assert.ok(safeLandingCell(grid,from.x,from.z));}}});assert.equal(checks,1);assert.ok(safeLandingCell(grid,a.group.position.x,a.group.position.z));
+});
