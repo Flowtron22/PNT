@@ -91,3 +91,14 @@ body.menu-view #lobby-backdrop{z-index:0}body.menu-view #world{z-index:1}body.me
 
 /* Removed menu helper copy leaves no empty labels or status spacing. */
 .choice small:empty,#binding-status:empty,#join-status:empty{display:none}
+
+/* Compact heads replace the wide FREE / LOCKED crew badges. */
+#hud .crew-status{gap:7px;align-items:center}
+#hud .crew-chip.crew-head{position:relative;display:block;flex:none;width:34px;height:34px;min-width:0;padding:0;overflow:hidden;border:2px solid #ffffffcc;border-radius:50%;background:#20263c;box-shadow:0 2px 4px #0005}
+#hud .crew-head.is-self{border-color:#ffb04d}
+#hud .crew-head>img{position:absolute;width:220%;max-width:none;height:auto;left:-60%;top:-8%;pointer-events:none}
+#hud .crew-head.caught>img{filter:grayscale(1);opacity:.45}
+#hud .crew-head .crew-cross{position:absolute;inset:0;display:grid;place-items:center;color:#ff6b72;font:900 32px/1 Rubik;text-shadow:0 1px 3px #080817}
+#hud .crew-head.is-capturing .crew-cross{color:#ffc56b}
+#hud .crew-head .crew-release{position:absolute;right:0;bottom:0;min-width:13px;padding:1px 2px;border-radius:4px;background:#1c1836;color:white;font:800 8px/1 Rubik;text-align:center}
+@media(max-height:500px) and (orientation:landscape){#hud .crew-chip.crew-head{width:28px;height:28px}#hud .crew-status{gap:5px}#hud .crew-head .crew-cross{font-size:27px}}
