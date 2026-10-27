@@ -108,7 +108,7 @@ function buildLobbyDisplays(){
   const stage=new THREE.Scene();stage.add(new THREE.HemisphereLight(0xf4f8ff,0x7280a0,2.8));const light=new THREE.DirectionalLight(0xffffff,3.2);light.position.set(-2,4,4);stage.add(light);
   const base=new THREE.Mesh(new THREE.CylinderGeometry(.82,.85,.14,40),new THREE.MeshStandardMaterial({color:room.players[i]?colors[i]:0xadb8ca,roughness:.5}));stage.add(base);
   const player=room.players[i];let actor=null;
-  if(player){actor=avatar(templates[player.costume],i,'runner');actor.group.position.set(0,.08,0);actor.group.rotation.y=0;actor.ring.visible=false;actor.anim.update(i*.6);stage.add(actor.group);}
+  if(player&&templates[player.costume]){actor=avatar(templates[player.costume],i,'runner');actor.group.position.set(0,.08,0);actor.group.rotation.y=0;actor.ring.visible=false;actor.anim.update(i*.6);stage.add(actor.group);}
   lobbyDisplays.push({scene:stage,base,actor});
  }
 }
@@ -133,7 +133,7 @@ function renderLobbyCharacters(dt){
  const windows=ui.lobby.querySelectorAll('.avatar-window');
  for(let i=0;i<windows.length;i++){
   const rect=windows[i].getBoundingClientRect(),left=Math.max(0,rect.left),right=Math.min(innerWidth,rect.right),top=Math.max(0,rect.top),bottom=Math.min(innerHeight,rect.bottom);
-  if(right<=left||bottom<=top)continue;
+  if(right<=left||bottom<=top||!lobbyDisplays[i])continue;
   lobbyDisplays[i]?.actor?.anim.update(dt);lobbyCamera.aspect=rect.width/rect.height;lobbyCamera.updateProjectionMatrix();renderer.setViewport(rect.left,innerHeight-rect.bottom,rect.width,rect.height);renderer.setScissor(left,innerHeight-bottom,right-left,bottom-top);renderer.setScissorTest(true);renderer.render(lobbyDisplays[i].scene,lobbyCamera);
  }
  renderer.setScissorTest(false);renderer.setViewport(0,0,innerWidth,innerHeight);
@@ -155,7 +155,7 @@ async function receiveOnlineLobby(data){
  if(['playing','finished'].includes(data.phase)){if(round&&!onlineLoading&&busy){endLoading();show('hud');}return;}
  if(data.phase==='waiting'&&(round||onlineLoading)){onlineRevision++;onlineLoading=false;clearStageVerdict();resultPortrait?.dispose();resultPortrait=null;clearHazards();for(const a of avatars)destroy(a);avatars=[];round=null;restoreMenuArena();}
  const revision=onlineRevision,signature=data.players.map(p=>[p.sessionId,p.costume,p.bot].join(':')).join('|');
- try{await ensureRoster();if(!online||revision!==onlineRevision||!['waiting','countdown'].includes(room.phase))return;if(signature!==onlineRoster){buildLobbyDisplays();onlineRoster=signature;}refreshOnlineLobby();if(!returnToLobby){show('lobby');endLoading();}}
+ try{await ensureRoster();if(!online||room!==data||revision!==onlineRevision||!['waiting','countdown'].includes(room.phase))return;if(signature!==onlineRoster){buildLobbyDisplays();onlineRoster=signature;}refreshOnlineLobby();if(!returnToLobby){show('lobby');endLoading();}}
  catch(error){onlineNotice(error.message);endLoading();}
 }
 async function beginOnlineMatch(snapshot){
