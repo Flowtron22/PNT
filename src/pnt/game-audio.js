@@ -12,7 +12,7 @@ export function createGameplayAudio(getEngine){
  function stop(){for(const item of voices)item.stop();loops.clear();musicVoice=null;previous=[];match=null;}
  function update(round,actors,active){
   if(!round){if(match)stop();return;}
-  if(match!==round.profileId){stop();match=round.profileId;money=round.collected;previous=round.actors.map(a=>({...a}));void prepare().then(()=>{if(match===round.profileId)play('Match_Start',.6);});}
+  if(match!==round.profileId){stop();match=round.profileId;money=round.collected;previous=round.actors.map(a=>({...a}));void prepare();}
   if(active&&musicEnabled&&!musicVoice)musicVoice=voice('gameplay-bgm',{bus:music,loop:true});
   if(!active&&musicVoice){musicVoice.stop();musicVoice=null;}
   round.actors.forEach((state,id)=>{const before=previous[id]||state,volume=distanceVolume(id,actors),flying=state.effect==='rocket'&&state.effectTime>0;

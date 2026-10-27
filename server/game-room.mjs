@@ -1,6 +1,7 @@
 import {Room,ServerError} from '@colyseus/core';
 import {randomBytes} from 'node:crypto';
 import {normalizeLoadout,normalizeCostume} from '../src/pnt/loadout.js';
+import {startCountdown} from '../src/pnt/rules.js';
 import {MatchSimulation} from './simulation.mjs';
 const MAPS=['mall','sunken','iceberg'],BOT_COSTUMES=['pumpkin','raptor','racer'];
 const name=value=>typeof value==='string'?value.trim().replace(/[\u0000-\u001f]/g,'').slice(0,20)||'Player':'Player';
@@ -48,7 +49,7 @@ export class GameRoom extends Room {
   if(this.phase!=='countdown')return;this.phase='loading';await this.lock();for(const p of this.players)p.ready=p.bot;this.sendLobby();
   try{this.sim?.dispose();this.sim=await MatchSimulation.create(MAPS[this.map],this.players);if(this.phase!=='loading'){this.sim.dispose();this.sim=null;return;}this.loadDeadline=Date.now()+60000;this.sendLobby();this.tryPlay();}catch(error){console.error('Match preparation failed:',error);this.abortLoading('The server could not prepare this map. Please try again.');}
  }
- tryPlay(){if(this.phase==='loading'&&this.sim&&this.players.every(p=>p.ready)){this.phase='playing';this.accumulator=0;this.sendLobby();this.broadcast('snapshot',this.sim.snapshot());}}
+ tryPlay(){if(this.phase==='loading'&&this.sim&&this.players.every(p=>p.ready)){startCountdown(this.sim.round);this.phase='playing';this.accumulator=0;this.sendLobby();this.broadcast('snapshot',this.sim.snapshot());}}
  abortLoading(message){this.phase='waiting';this.loadDeadline=0;this.sim?.dispose();this.sim=null;this.unlock();this.broadcast('notice',{message});this.sendLobby();}
  update(dt){
   if(this.phase==='countdown'){this.countdown=Math.max(0,this.countdown-dt);if(this.countdown<=0){void this.loadMatch();return;}this.publishTime+=dt;if(this.publishTime>.2){this.publishTime=0;this.sendLobby();}return;}

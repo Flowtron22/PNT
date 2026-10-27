@@ -2,7 +2,7 @@ import {environmentVelocity} from './environment.js';
 import {sampleGround} from './motion.js';
 import {canTraverse} from './collision.js';
 import {safeLandingCell,nearestLanding} from './landing.js';
-export const MOVEMENT_VERSION=3;
+export const MOVEMENT_VERSION=4;
 export function movementSpeed(role,map,human=true,flying=false){return (role==='chaser'?3.65:3.4)*1.15*(map==='iceberg'?1.5:1)*(human?1.08:1)*(flying?1.8:1);}
 // Map-local movement shared by authoritative server, practice and client prediction.
 export function advanceActor(actor,state,dx,dz,dt,{grid,map,tilt=0,speed,furniture=null,respawn=null}){

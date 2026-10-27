@@ -1,6 +1,6 @@
 # Multiplayer prototype — local and online testing
 
-Version 0.9.15. Colyseus 0.18 server, JavaScript browser SDK. The user authorized
+Version 0.9.16. Colyseus 0.18 server, JavaScript browser SDK. The user authorized
 a free online test on Render after the local test. No paid upgrade is authorized.
 
 ## Online hosting
@@ -116,7 +116,7 @@ npm run test:multiplayer
 npm run build
 ```
 
-The root suite has 100 tests; the server suite has 11 tests, including four real
+The root suite has 103 tests; the server suite has 13 tests, including four real
 SDK clients joining over HTTP/WebSocket, capacity, host permissions, readiness,
 shared state, cooldown enforcement, reconnect, end/rematch/map switch, public/private
 isolation, timed capture, input validation, stealing, rescue and Mall furniture.
@@ -136,6 +136,14 @@ the misleading saved Unreal spawn Y. It also guides the final half-second of
 flight toward safe ground and prevents Mall contacts from undoing that move.
 Server health and snapshots expose movementVersion=3. Full-flight regression
 tests check Sunken and Iceberg return to the main floor without a fall/reset.
+
+0.9.16 keeps capture progress per thief and decays lost contact at 0.4/s. Captured
+actors cannot alter the remaining thief's meter. Smoke occupancy blocks capture,
+stun/slip, tools and cash collection for both roles; rescue remains permitted.
+After loading, the authoritative three-second start countdown holds poses, bot AI,
+tools, interactions and the match clock. Inputs received early are retired rather
+than replayed at GO. Snapshots carry `worldTime` separately from network time so
+ship motion and client prediction do not jump ahead by the intro duration.
 
 On 27 October 2026, four real SDK clients also passed a hosted Render smoke test:
 private room joining, shared Mall match, all 15 furniture poses, acknowledged

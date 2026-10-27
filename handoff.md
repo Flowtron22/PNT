@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 27 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.15**, online multiplayer test release.
+Current app version: **0.9.16**, online multiplayer test release.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,26 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.16 capture/smoke/start rules: capture still needs 1.6 seconds of valid contact,
+but loss of range/sight/height or a disabled police now decays the independent
+thief meter at 0.4 seconds/second instead of resetting it. Rescue immunity and
+caught states clear that thief's meter. The much thicker progress arc smooths at
+render rate and remains visible through police tool/stun downtime (except smoke).
+Smoke occupancy (radius 2.6, vertical tolerance 2.2) makes either role immune to
+capture, hammer stun and banana slip; it clears existing stun/spin, blocks stealing
+and all tool activation. Movement and eligible teammate rescue remain allowed.
+
+After all clients load, the server freezes movement, bots, tools, interactions and
+the five-minute clock for a synchronized three-second 3/2/1/GO sticker over the
+arena. Early inputs are retired. Local practice uses the same shared countdown.
+Widget styling adapts wonder-wave's iw-lcd launch rays and spring beat, using PNT
+stars/colors. Reference project was read only. Phone main timer is scaled 50%,
+other readouts compacted, touch targets retained. All Mall lights are 20% lower.
+Gameplay cues/music start at GO. Snapshot worldTime keeps ship tilt/prediction on
+gameplay time while the network clock includes the intro. movementVersion=4.
+Validation: 103 root + 13 server tests, including smoke immunity, hovering last
+thief, gradual progress loss, countdown input/money/tool freeze and real clients.
 
 0.9.15 fixes the landing-mask seed error introduced in 0.9.14: saved Unreal spawn
 Y is not the sampled walkable floor. Seed by nearest free X/Z instead. Sunken now
@@ -163,9 +183,10 @@ Assets have a one-hour cache header, so refresh/reopen when checking updates.
 - Thieves win by stealing all money from all caches. Police win by catching all
   three thieves or when time expires with money remaining.
 - Hold Interact near a cache to steal or near an eligible teammate to rescue.
-- Police capture requires 1.6 continuous seconds within a 2-unit circular detection
-  radius, on the same floor with clear line of sight. Escape, blocked sight,
-  police tool/stun effects and rescue immunity reset that thief's progress.
+- Police capture requires 1.6 accumulated seconds within a 2-unit circular detection
+  radius, on the same floor with clear line of sight. Escape, blocked sight and
+  police tool/stun effects decay that thief's meter at 0.4 seconds/second;
+  rescue immunity clears it. Smoke prevents accumulation and capture.
   Thieves remain mobile during detection. At completion caught state applies
   immediately with a one-second cosmetic smoke effect. The police ground circle
   shows an orange progress arc for the most advanced target; timers are independent.

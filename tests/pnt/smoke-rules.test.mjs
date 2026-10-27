@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {createRound,detectThief,activateTool,harvest,updateSmokeCoverage,startCountdown,stepRound,canAct} from '../../src/pnt/rules.js';
+test('smoke protects every role, clears stun, blocks tools/stealing and releases protection on exit',()=>{
+ const round=createRound('chaser',[{id:'cash',amount:8000}]),positions=[[0,0,0],[0,0,0],[10,0,0],[20,0,0]],clouds=[{position:[0,0,0],time:20}];round.actors[1].effect='stunned';round.actors[1].effectTime=2;updateSmokeCoverage(round,positions,clouds);assert.equal(round.actors[1].effectTime,0);assert.equal(round.actors[1].inSmoke,true);assert.equal(round.actors[0].inSmoke,true);for(let i=0;i<100;i++)assert.equal(detectThief(round,0,1,.1,0),false);assert.equal(activateTool(round,1,0,'hammer'),false);assert.equal(activateTool(round,0,0,'smoke'),false);assert.equal(harvest(round,1,'cash',.1,0),0);positions[0]=[5,0,0];positions[1]=[5,0,0];updateSmokeCoverage(round,positions,clouds);assert.equal(round.actors[1].inSmoke,false);assert.equal(activateTool(round,1,0,'hammer'),true);assert.ok(harvest(round,1,'cash',.1,0)>0);
+});
+test('two caught thieves cannot interfere with the last hovering thief meter or make it reset instantly',()=>{
+ const round=createRound('chaser');round.actors[1].caught=round.actors[2].caught=true;const last=round.actors[3];for(let i=0;i<12;i++)detectThief(round,0,3,.1,1,true);const before=last.detectionProgress;for(let i=0;i<5;i++){detectThief(round,0,1,.1,0);detectThief(round,0,2,.1,0);detectThief(round,0,3,.1,1,false);}assert.ok(last.detectionProgress>before-.21);assert.equal(last.caught,false);for(let i=0;i<6;i++)detectThief(round,0,3,.1,1,true);assert.equal(last.caught,true);assert.equal(round.winner,'chaser');
+});
+test('start countdown freezes clock and actions, then opens gameplay exactly at GO',()=>{
+ const round=createRound('chaser',[{id:'cash',amount:8000}]);startCountdown(round);for(let i=0;i<180;i++){assert.equal(canAct(round,0),false);assert.equal(activateTool(round,0,0),false);assert.equal(harvest(round,1,'cash',1/60,0),0);stepRound(round,1/60);assert.equal(round.remaining,300);}assert.equal(round.startRemaining,0);assert.equal(canAct(round,0),true);stepRound(round,1/60);assert.ok(round.remaining<300);
+});

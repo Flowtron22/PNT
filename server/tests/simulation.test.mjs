@@ -4,6 +4,7 @@ const {MatchSimulation}=await import('../simulation.mjs');
 const {groundSpot}=await import('../arena.mjs');
 const {LocalPrediction}=await import('../../src/pnt/netcode.js');
 const {safeLandingCell}=await import('../../src/pnt/landing.js');
+const {startCountdown}=await import('../../src/pnt/rules.js');
 const players=()=>Array.from({length:4},(_,i)=>({sessionId:`player${i}`,name:`Player ${i}`,costume:'thief',preference:i===0?'chaser':'runner',loadout:['hammer','rocket'],bot:false}));
 
 test('batched input acknowledges simulated frames only and cannot accelerate the authoritative clock',async()=>{
@@ -32,8 +33,8 @@ test('prediction and authoritative movement stay smooth with 200ms round trips a
  assert.ok(maxReverse<.005,`backward correction ${maxReverse}`);assert.ok(maxJump<.08,`frame jump ${maxJump}`);assert.ok(Math.abs(prediction.actor.group.position.x-sim.actors[1].group.position.x)<.05);assert.ok(prediction.pending.length<30);
  }finally{sim.dispose();}
 });
-test('server capture requires continuous 1.6-second detection, and escape resets it',async()=>{
- const sim=await MatchSimulation.create('iceberg',players());try{sim.time=2;sim.actors[1].group.position.copy(sim.actors[0].group.position);for(let i=0;i<60;i++)sim.step();assert.equal(sim.round.actors[1].caught,false);assert.ok(sim.round.actors[1].detectionProgress>.9);sim.actors[1].group.position.copy(sim.actors[2].group.position);sim.step();assert.equal(sim.round.actors[1].detectionProgress,0);sim.actors[1].group.position.copy(sim.actors[0].group.position);for(let i=0;i<96;i++)sim.step();assert.equal(sim.round.actors[1].caught,true);assert.ok(sim.events.some(e=>e.type==='capture'&&e.actor===1));}finally{sim.dispose();}
+test('server capture accumulates 1.6 seconds and escape decays rather than resets it',async()=>{
+ const sim=await MatchSimulation.create('iceberg',players());try{sim.time=2;sim.actors[1].group.position.copy(sim.actors[0].group.position);for(let i=0;i<60;i++)sim.step();assert.equal(sim.round.actors[1].caught,false);assert.ok(sim.round.actors[1].detectionProgress>.9);sim.actors[1].group.position.copy(sim.actors[2].group.position);sim.step();assert.ok(sim.round.actors[1].detectionProgress>.98);sim.actors[1].group.position.copy(sim.actors[0].group.position);for(let i=0;i<96;i++)sim.step();assert.equal(sim.round.actors[1].caught,true);assert.ok(sim.events.some(e=>e.type==='capture'&&e.actor===1));}finally{sim.dispose();}
 });
 test('authoritative jetpack landing rejects blocked spots on all three authored maps',async()=>{
  for(const map of ['mall','sunken','iceberg']){const sim=await MatchSimulation.create(map,players());try{assert.ok(sim.grid.landingMask.some(Boolean));const actor=sim.actors[1],state=sim.round.actors[1],blocked=sim.grid.blocked.findIndex(Boolean);actor.group.position.set(sim.grid.minX+blocked%sim.grid.nx*sim.grid.step,2,sim.grid.minZ+Math.floor(blocked/sim.grid.nx)*sim.grid.step);actor.wasFlying=true;state.effectTime=0;state.effect=null;sim.step();assert.ok(safeLandingCell(sim.grid,actor.group.position.x,actor.group.position.z),map+' safe landing');assert.ok(actor.group.position.toArray().every(Number.isFinite));}finally{sim.dispose();}}
@@ -48,4 +49,11 @@ test('server stealing and rescue use actual positions, ownership and held intera
  const sim=await MatchSimulation.create('sunken',players());try{const cache=sim.round.caches[0];sim.actors[1].group.position.copy(groundSpot(sim.grid,cache.position[0],cache.position[2]));sim.input(1,{seq:1,x:0,z:0,interact:true});for(let i=0;i<10;i++)sim.step();assert.ok(sim.round.collected>10);const collected=sim.round.collected;sim.input(1,{seq:2,x:0,z:0,interact:false});sim.step();assert.equal(sim.round.actors[1].interacting,false);assert.equal(sim.round.collected,collected);
   sim.round.actors[2].caught=true;sim.round.actors[2].releaseCooldown=0;sim.actors[2].group.position.copy(sim.actors[1].group.position);for(let i=0;i<100;i++){sim.input(1,{seq:3+i,x:0,z:0,interact:true});sim.step();}assert.equal(sim.round.actors[2].caught,false);assert.ok(sim.round.actors[2].immune>0);
  }finally{sim.dispose();}
+});
+test('server smoke immunity blocks an outside hammer, capture, stealing and tool requests',()=>{
+ const grid={minX:-50,minZ:-50,nx:101,nz:101,step:1,heights:Array(10201).fill(0),blocked:new Uint8Array(10201)},sim=new MatchSimulation('iceberg',players(),{grid,metadata:{spawns:[[3.2,0,4],[2,0,4],[30,0,30],[-30,0,-30]],caches:[{id:'cash',position:[2,0,4],amount:8000}]}});
+ try{sim.addHazard('smoke',sim.actors[1],20,sim.actors[1].group.position.clone().set(0,0,4));assert.equal(sim.tool(0,0),true);assert.equal(sim.round.actors[1].effectTime,0);assert.equal(sim.round.actors[1].inSmoke,true);assert.equal(sim.tool(1,0),false);sim.input(1,{seq:1,x:0,z:0,interact:true});for(let i=0;i<120;i++)sim.step();assert.equal(sim.round.actors[1].caught,false);assert.equal(sim.round.collected,0);}finally{sim.dispose();}
+});
+test('server countdown holds every actor and retires early inputs until GO',async()=>{
+ const sim=await MatchSimulation.create('sunken',players());try{startCountdown(sim.round);const positions=sim.actors.map(a=>a.group.position.clone());sim.input(0,{frames:Array.from({length:6},(_,i)=>({seq:i+1,x:1,z:0}))});assert.equal(sim.tool(0,0),false);for(let i=0;i<180;i++)sim.step();assert.equal(sim.round.remaining,300);assert.equal(sim.round.startRemaining,0);sim.actors.forEach((a,i)=>assert.ok(a.group.position.distanceTo(positions[i])<1e-8));assert.equal(sim.actors[0].inputQueue.length,0);assert.equal(sim.snapshot().worldTime,0);sim.input(0,{frames:[{seq:7,x:1,z:0}]});sim.step();assert.ok(sim.actors[0].group.position.distanceTo(positions[0])>0);}finally{sim.dispose();}
 });
