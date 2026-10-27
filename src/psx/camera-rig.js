@@ -1,1 +1,1 @@
-export function matchView(aspect){const width=(aspect<1?10.5:Math.max(15,Math.min(25,15*aspect)))*1.3*1.1,height=width/aspect,distance=height/(2*Math.tan(Math.PI/12));return {fov:30,width,height,distance,offset:[-distance*.509,distance*.861,0]};}
+export function matchView(aspect){const width=(aspect<1?10.5:Math.max(15,Math.min(25,15*aspect)))*1.3*1.1*1.1,height=width/aspect,distance=height/(2*Math.tan(Math.PI/12));return {fov:30,width,height,distance,offset:[-distance*.509,distance*.861,0]};}

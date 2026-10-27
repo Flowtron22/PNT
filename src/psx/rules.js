@@ -26,7 +26,7 @@ export function harvest(round,id,cacheId,dt,distance,clear=true){
 }
 export function rescue(round,helperId,targetId,dt,distance,clear=true){
  const h=round.actors[helperId],t=round.actors[targetId];if(!canAct(round,helperId)||h.role!=='runner'||!t?.caught||helperId===targetId||t.releaseCooldown>0||!clear||!Number.isFinite(distance)||distance<0||distance>INTERACT_RADIUS||!Number.isFinite(dt)||dt<=0)return false;
- if(t.rescuer!==helperId){t.rescuer=helperId;t.rescueProgress=0;}t.rescueProgress+=Math.min(dt,.1);h.interacting=true;
+ if(t.rescuer!==helperId){if(t.rescuer!==null&&canAct(round,t.rescuer))return false;t.rescuer=helperId;t.rescueProgress=0;}t.rescueProgress+=Math.min(dt,.1);h.interacting=true;
  if(t.rescueProgress>=RESCUE_SECONDS-.00001){t.caught=false;t.caughtTime=0;t.rescuer=null;t.rescueProgress=0;t.immune=2;return true;}return false;
 }
 export function cancelInteraction(round,id){const a=round.actors[id];if(a)a.interacting=false;for(const c of round.caches)if(c.harvester===id)c.harvester=null;for(const t of round.actors)if(t.rescuer===id){t.rescuer=null;t.rescueProgress=0;}}

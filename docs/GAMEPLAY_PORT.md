@@ -127,3 +127,20 @@ A local desktop CPU benchmark of 320 queries measured mesh scans / grid checks:
 Mall 49.41 / 1.01 ms, Sunken 395.49 / 0.43 ms, Iceberg 258.37 / 1.48 ms. These are
 query timings only, not complete frame times or actual iPhone FPS. Browser visual
 verification remains unavailable while local browser use is disabled.
+
+## Version 0.8.2 rescue contention and iPhone layout
+
+Rescue ownership stays with the active helper until completion or cancellation. A
+second helper neither resets nor accelerates progress; ownership can transfer if
+the original helper stops or cannot act. Bot target selection skips owned rescues.
+Regression tests exercise simultaneous helpers and ownership handoff.
+
+`styles/mobile-pages.css` defines dynamic viewport/safe-area bounds for mobile
+Play/Join, Lobby and Results pages. Portrait uses stacked cards; landscape uses
+side-by-side cards and a compact two-column result summary/scoreboard, with controls
+kept inside the scrollable content. iPhone 14 Plus sizes (430×932 / 932×430 CSS
+pixels, reduced further by browser bars) were the target dimensions. Actual Safari
+visual verification is unavailable while browser use remains disabled.
+
+Mall, Sunken and Iceberg share `matchView(aspect)`, with no per-map zoom overrides.
+The common view width is multiplied by another 1.1 in this version. 61 tests pass.

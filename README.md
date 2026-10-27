@@ -149,3 +149,9 @@ dancing. Sight checks use the prepared Unreal collision grid instead of repeated
 scanning visual triangles. Loading screens still wait for assets and shader warmup.
 `node tools/benchmark-map-sight.mjs` compares query costs on the local desktop CPU;
 it is not an iPhone frame-rate measurement.
+
+Version 0.8.2 gives each release interaction a stable owner, so competing bots
+cannot reset its progress. Other bots choose another task while a rescue is owned.
+The Play, Join, Lobby and Results pages have dedicated mobile portrait/landscape
+layouts, dynamic viewport height, safe-area spacing and reachable scrolling content.
+Every map uses the same perspective framing function; it is widened another 10%.
