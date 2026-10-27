@@ -4,6 +4,7 @@
  <meta name="theme-color" content="#171329"><meta name="description" content="Police N Thief — pick your costume, grab a tool, and chase the crew.">
  <title>Police N Thief</title><link rel="preload" href="assets/fonts/TitanOne-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="styles/psx.css">
  <script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.js","three/addons/":"./vendor/three/jsm/"}}</script>
+ <link rel="stylesheet" href="styles/wonder-ui.css">
 </head><body>
  <canvas id="world" aria-label="Mall chase arena and character preview"></canvas><div class="menu-backdrop" aria-hidden="true"></div><div id="lobby-backdrop" class="lobby-backdrop" hidden aria-hidden="true"></div>
  <main id="menu" class="screen">
@@ -18,8 +19,18 @@
    </nav><p class="menu-hint"><span></span> Your next great escape starts here.</p>
   </section>
   <section id="page" class="page-panel" hidden><button id="page-back" class="back-button">← BACK</button><div id="page-kicker" class="eyebrow">MAKE IT YOURS</div><h1 id="page-title">TOOLS</h1><div id="page-content"></div></section>
+  <aside id="home-widgets" class="iw-main__side" aria-label="Profile and current loadout">
+   <section class="iw-profile iw-panel" aria-label="Local player profile">
+    <div class="iw-profile__avatar"><span id="profile-splat" class="iw-profile__avblob"></span><div class="profile-crop"><img id="profile-portrait" alt=""></div></div>
+    <div class="iw-profile__info"><button id="profile-name-edit" class="profile-edit" aria-expanded="false"><strong id="profile-name" class="iw-profile__name">Player</strong><span aria-hidden="true">✎</span></button><span id="profile-rank" class="iw-profile__rank">Fresh Recruit</span><small class="profile-local">LOCAL PROFILE · PRACTICE STATS</small></div>
+    <form id="profile-name-form" hidden><label for="profile-name-input">YOUR NAME</label><input id="profile-name-input" maxlength="20" autocomplete="nickname" required><div><button type="submit" class="primary">SAVE</button><button type="button" id="cancel-profile-name" class="secondary">CANCEL</button></div><small id="profile-save-status" role="status"></small></form>
+    <div class="iw-profile__xp"><span class="iw-lvl"><small>LV</small><b id="profile-level">1</b></span><span id="profile-xp-bar" class="iw-xpbar" role="progressbar" aria-label="Level experience" aria-valuemin="0" aria-valuenow="0" aria-valuemax="1150"><i></i></span><span id="profile-xp" class="iw-profile__xpnum">0 / 1,150 XP</span></div>
+    <div class="iw-profile__stats"><div><b id="profile-wins">0</b><span>WINS</span></div><div><b id="profile-matches">0</b><span>MATCHES</span></div><div class="profile-next"><span id="profile-next-label">NEXT RANK</span><b id="profile-next">LV 5</b></div></div>
+   </section>
+   <section class="iw-kitcard iw-panel" aria-label="Current loadout"><div class="iw-kitcard__label">CURRENT LOADOUT</div><button id="home-kit-main" class="iw-kitcard__main" data-page="tools"><img id="home-tool-icon" class="iw-kitcard__icon" alt=""><span><strong id="home-tool-name" class="iw-kitcard__name">Hammer</strong><small id="home-tool-kind" class="iw-kitcard__kind">TOOL SLOT 1</small></span></button><div class="iw-kitcard__chips"><button id="home-kit-second" data-page="tools"><img id="home-second-icon" alt=""><span id="home-second-name"></span><small>2</small></button><button id="home-kit-costume" data-page="costume"><img id="home-costume-icon" alt=""><span id="home-costume-name"></span></button></div></section>
+  </aside>
   <aside id="character-label" class="character-label"><span>READY FOR TROUBLE</span><strong id="costume-label">ORIGINAL</strong><small id="equipped-label">HAMMER EQUIPPED</small></aside>
-  <footer><span>WEB 0.4 · LOCAL PRACTICE</span><span id="footer-hint">CHOOSE YOUR NEXT MOVE</span></footer>
+  <footer><span>WEB 0.5 · LOCAL PRACTICE</span><span id="footer-hint">CHOOSE YOUR NEXT MOVE</span></footer>
  </main>
  <section id="lobby" class="lobby-screen" hidden aria-label="Matchmaking lobby"></section>
  <section id="loading" class="loading-screen" aria-label="Loading game" aria-busy="true"><img src="assets/psx/logo.png" alt="Police N Thief"><div class="loading-inner"><span class="eyebrow">PACKING A LITTLE TROUBLE</span><h2 id="loading-title">GETTING READY</h2><div class="progress-track"><div id="load-progress"></div></div><div class="loading-meta"><span id="load-status" role="status">Loading character models…</span><b id="load-percent">0%</b></div><p id="loading-tip">A clean getaway starts with a good warm-up.</p><button id="retry" class="primary" hidden>TRY AGAIN</button></div></section>

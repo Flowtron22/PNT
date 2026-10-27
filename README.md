@@ -62,7 +62,7 @@ No environment variables or backend service are required for this prototype.
 ## Current limits
 
 Online multiplayer, Steam, full PSX capture/escape/rescue rules,
-the complete original tool systems, full stages, audio and progression are not ported yet.
+the complete original tool systems, full stages and gameplay audio are not ported yet.
 Bots use simple steering and ground sampling; collision/navigation needs further work.
 Touch layouts have browser checks, but actual iOS/Android performance is unmeasured.
 This project does not change the original Unreal multiplayer implementation.
@@ -96,3 +96,16 @@ Vercel needs no FBX converter, image processor, or Unreal installation.
 `tools/prepare-lobby-assets.mjs` creates compact WebP copies of the original Unreal
 map thumbnails and copies its Host/Join icons. Pass the PSXWonderUI `Resources`
 directory and, optionally, a `sharp` module path. Prepared assets are checked in.
+
+## Wonder Wave menu feedback and local profile
+
+The original procedural UI audio engine is retained verbatim under `src/wonder-wave`,
+with its source spring tuning, pointer ink fill, tile tilt and press feedback adapted
+in `src/psx/wonder-ui.js` and `styles/wonder-ui.css`. Audio unlocks after the first
+click or key press; Settings can mute it. `tools/ui-audio-check.html` renders all
+seven UI cues offline for a browser smoke check.
+
+The editable profile and current loadout show real browser-local selections. Only
+completed practice rounds award wins, matches and XP; leaving early awards nothing.
+Ranks and XP thresholds use the reference progression. These are local practice
+stats, not an online account or an authoritative multiplayer rating.

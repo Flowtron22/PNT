@@ -2,7 +2,7 @@ import {cpSync,mkdirSync,rmSync,readFileSync,writeFileSync,existsSync} from 'nod
 import {resolve,join,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),out=resolve(root,'dist');
-const inputs=['index.html','styles/psx.css','src/psx','src/ui/ui-util.js','assets/psx','assets/fonts','vendor/three','LICENSE'];
+const inputs=['index.html','styles/psx.css','styles/wonder-ui.css','src/wonder-wave','src/psx','src/ui/ui-util.js','assets/psx','assets/fonts','vendor/three','LICENSE'];
 for(const path of inputs)if(!existsSync(join(root,path)))throw new Error(`Missing input: ${path}`);
 for(const name of ['thief.glb','police.glb','mall-slice.glb','logo.png','animations/clips.json',...['oyen','pingu','pumpkin','boney','purple','racer','raptor'].map(n=>`costumes/${n}.glb`),...['mall','sunken','iceberg'].map(n=>`maps/${n}.webp`),...['users','online','lock'].map(n=>`ui/${n}.png`)])if(!existsSync(join(root,'assets/psx',name)))throw new Error(`Export missing: ${name}`);
 if(out!==join(root,'dist'))throw new Error('Unsafe output path');
