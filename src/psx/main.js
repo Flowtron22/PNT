@@ -14,7 +14,7 @@ import {bindGameControls} from './touch-controls.js';
 import {configureFullscreen} from './fullscreen.js';
 import {sampleGround,dampVelocity,simulationSteps} from './motion.js';
 import {matchView} from './camera-rig.js';
-import {canTraverse} from './collision.js';
+import {canTraverse,gridSightClear} from './collision.js';
 import {createResultPortrait} from './result-portrait.js';
 import {createGameFX,createToonSmoke} from './game-fx.js';
 import {stageEndState,rollSpinDirection,movementGroundReference} from './action-state.js';
@@ -34,7 +34,7 @@ scene.add(new THREE.HemisphereLight(0xeaf4ff,0x6c728e,2.4));
 const sunlight=new THREE.DirectionalLight(0xfff1df,3);sunlight.position.set(8,16,7);scene.add(sunlight);
 const fill=new THREE.DirectionalLight(0xb6d8ff,1.2);fill.position.set(-8,7,-4);scene.add(fill);
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(180,180),new THREE.MeshStandardMaterial({color:0x77768c,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.3;scene.add(floor);
-const ray=new THREE.Raycaster(),up=new THREE.Vector3(0,1,0),down=new THREE.Vector3(0,-1,0);
+const up=new THREE.Vector3(0,1,0),down=new THREE.Vector3(0,-1,0);
 const loader=new GLTFLoader(),cache=new Map();
 const gameFX=createGameFX(scene);
 
@@ -150,11 +150,16 @@ function openPage(name){if(busy)return;activePage=name;if(preview)preview.group.
   content.innerHTML=`<div class="setting-row"><label for="quality">Graphics<small>Battery uses fewer pixels.</small></label><select id="quality"><option value="balanced">Balanced</option><option value="battery">Battery</option></select></div><div class="setting-row"><label for="motion">Menu motion<small>Gentler menu transitions.</small></label><select id="motion"><option value="normal">Normal</option><option value="reduced">Reduced</option></select></div><div class="setting-row"><label for="ui-sounds">UI sounds<small>Original Wonder Wave menu feedback.</small></label><select id="ui-sounds"><option value="on">On</option><option value="off">Off</option></select></div><p class="page-copy">The match camera uses a fixed 30° perspective view. Your character follows the joystick or WASD directly. No camera drag is needed.</p><button id="fullscreen" class="secondary">FULLSCREEN</button><p id="fullscreen-status" class="page-copy fullscreen-help" role="status"></p>`;
   $('#ui-sounds').value=uiEffects.sounds.enabled?'on':'off';$('#ui-sounds').onchange=e=>uiEffects.sounds.setEnabled(e.target.value==='on');$('#quality').value=quality;$('#quality').onchange=e=>{quality=e.target.value;localStorage.setItem('psx-web-quality',quality);resize();};$('#motion').value=reduced?'reduced':'normal';$('#motion').onchange=e=>{reduced=e.target.value==='reduced';document.body.classList.toggle('reduced-motion',reduced);};configureFullscreen($('#fullscreen'),$('#fullscreen-status'));
  }else{
-  content.innerHTML=`<div class="credits-copy"><p><b>POLICE N THIEF</b><br>Characters, costumes and animations from the original PSX project.</p><p><b>UI FOUNDATION & INSPIRATION</b><br>Wonder Wave / PURRITORY — Jayden Davis.</p><p><b>BUILT WITH</b><br>Three.js · Titan One · Rubik</p><p><a href="credits.html" target="_blank" rel="noopener">Full credits & licence notices ↗</a></p><p>Web 0.8.0 · local practice. Online multiplayer is still in development.</p></div>`;
+  content.innerHTML=`<div class="credits-copy"><p><b>POLICE N THIEF</b><br>Characters, costumes and animations from the original PSX project.</p><p><b>UI FOUNDATION & INSPIRATION</b><br>Wonder Wave / PURRITORY — Jayden Davis.</p><p><b>BUILT WITH</b><br>Three.js · Titan One · Rubik</p><p><a href="credits.html" target="_blank" rel="noopener">Full credits & licence notices ↗</a></p><p>Web 0.8.1 · local practice. Online multiplayer is still in development.</p></div>`;
  }
  $('#page-back').focus({preventScroll:true});
 }
-async function selectCostume(id){const previous=costume;costume=id;beginLoading('DRESSING FOR TROUBLE');try{await ensureCostume();progress(90,'Preparing your character…');previewModel();await renderer.compileAsync(scene,menuCamera);localStorage.setItem('pnt-costume',costume);endLoading();openPage('costume');}catch(error){costume=previous;loadError(error,()=>selectCostume(id));}}
+function refreshCostumeSelection(){
+ const panel=$('#page'),scrollTop=panel.scrollTop;
+ for(const button of panel.querySelectorAll('.wardrobe-grid [data-choice]')){const equipped=button.dataset.choice===costume;button.classList.toggle('selected',equipped);button.classList.toggle('is-on',equipped);button.setAttribute('aria-pressed',String(equipped));button.querySelector('small').textContent=equipped?'EQUIPPED':'';}
+ panel.scrollTop=scrollTop;
+}
+async function selectCostume(id){if(id===costume)return;const previous=costume;costume=id;beginLoading('DRESSING FOR TROUBLE');try{await ensureCostume();progress(90,'Preparing your character…');previewModel();await renderer.compileAsync(scene,menuCamera);localStorage.setItem('pnt-costume',costume);endLoading();refreshCostumeSelection();}catch(error){costume=previous;loadError(error,()=>selectCostume(id));}}
 for(const b of document.querySelectorAll('[data-page]'))b.onclick=()=>openPage(b.dataset.page);
 $('#profile-name-edit').onclick=()=>{$('#profile-name-form').hidden=false;$('#profile-name-edit').setAttribute('aria-expanded','true');$('#profile-name-input').value=profile.name;$('#profile-name-input').focus();$('#profile-name-input').select();};
 function closeNameForm(){$('#profile-name-form').hidden=true;$('#profile-name-edit').setAttribute('aria-expanded','false');$('#profile-name-edit').focus();}
@@ -182,10 +187,9 @@ function restoreMenuArena(){renderer.toneMappingExposure=1.15;if(gameArena)gameA
 function prop(key,size=1){const source=templates[key];if(!source)return null;const object=clone(source.scene);const box=new THREE.Box3().setFromObject(object),scale=size/Math.max(.01,...box.getSize(new THREE.Vector3()).toArray());object.scale.multiplyScalar(scale);object.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(object),center=b.getCenter(new THREE.Vector3());object.position.add(new THREE.Vector3(-center.x,-b.min.y,-center.z));const root=new THREE.Group();root.add(object);return root;}
 function disposeHazard(h){h.mesh.removeFromParent();if(h.owned)h.mesh.traverse(o=>{if(o.isMesh){o.geometry.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});}
 function withinSight(p,q,smoke=true,stop=.35){
- if(smoke&&grid?.edges&&!canTraverse(grid,p.x,p.z,q.x,q.z)&&p.distanceTo(q)<1.5)return false;
  const from=p.clone().addScaledVector(up,.65),to=q.clone().addScaledVector(up,.65),delta=to.sub(from),distance=delta.length();if(distance<.1)return true;
  if(smoke)for(const h of hazards.filter(h=>h.type==='smoke'&&h.time>0)){const t=THREE.MathUtils.clamp(h.mesh.position.clone().sub(from).dot(delta)/delta.lengthSq(),0,1),closest=from.clone().addScaledVector(delta,t);if(closest.distanceTo(h.mesh.position.clone().addScaledVector(up,.65))<2.6)return false;}
- ray.set(from,delta.normalize());ray.far=Math.max(0,distance-stop);return !ray.intersectObjects(ground,true).length;
+ return gridSightClear(grid,p.x,p.z,q.x,q.z,stop);
 }
 function steerBot(a,target,dt){
  a.routeTime=(a.routeTime||0)-dt;const p=a.group.position;

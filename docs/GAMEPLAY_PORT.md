@@ -110,3 +110,20 @@ is unavailable while local browser use is disabled in Work settings.
 
 58 automated tests pass. Visual browser verification remains unavailable because
 local browser access is disabled in Work settings.
+
+## Version 0.8.1 scroll, defeat pose and CPU sight queries
+
+Costume equip updates selection flags in the existing page rather than rebuilding
+it and focusing Back. Scroll position and the user's browsing context are retained.
+The defeat portrait uses `busted` once, then `bustedIdle`; the winning dance is unchanged.
+
+All maps already load assets and compile shaders before the HUD appears. Loading
+can hide download/decode/compile time, but cannot remove recurring match-frame cost.
+The prepared GLBs contain approximately 23,918 triangles for Mall, 45,253 for Sunken,
+and 38,185 for Iceberg. Original sight checks scanned render triangles repeatedly.
+They now traverse the prepared native collision grid, retaining smoke occlusion.
+
+A local desktop CPU benchmark of 320 queries measured mesh scans / grid checks:
+Mall 49.41 / 1.01 ms, Sunken 395.49 / 0.43 ms, Iceberg 258.37 / 1.48 ms. These are
+query timings only, not complete frame times or actual iPhone FPS. Browser visual
+verification remains unavailable while local browser use is disabled.

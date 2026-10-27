@@ -1,0 +1,13 @@
+// CPU-only comparison of visual-mesh sight queries against prepared native-collision grid queries.
+import {readFileSync,writeFileSync} from 'node:fs';import {registerHooks} from 'node:module';import {performance} from 'node:perf_hooks';import * as THREE from '../vendor/three/build/three.module.js';
+registerHooks({resolve(s,c,next){return s==='three'?{url:new URL('../vendor/three/build/three.module.js',import.meta.url).href,shortCircuit:true}:next(s,c);}});
+const {GLTFLoader}=await import('../vendor/three/jsm/loaders/GLTFLoader.js'),{solidForGameplay}=await import('../src/psx/world-navigation.js'),{gridSightClear}=await import('../src/psx/collision.js');const report={};
+for(const id of ['mall','sunken','iceberg']){
+ const b=readFileSync(`assets/psx/arenas/${id}.glb`),oldLength=b.readUInt32LE(12),j=JSON.parse(b.subarray(20,20+oldLength));delete j.images;delete j.textures;j.materials=j.materials?.map(m=>({name:m.name}));delete j.animations;
+ const json=Buffer.from(JSON.stringify(j)),pad=Buffer.alloc((4-json.length%4)%4,32),header=Buffer.from(b.subarray(0,20)),tail=b.subarray(20+oldLength);header.writeUInt32LE(20+json.length+pad.length+tail.length,8);header.writeUInt32LE(json.length+pad.length,12);const bytes=Buffer.concat([header,json,pad,tail]),asset=await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.length),'');
+ const meta=JSON.parse(readFileSync(`assets/psx/arenas/${id}.json`)),nav=JSON.parse(readFileSync(`assets/psx/arenas/${id}.nav.json`)),collision=JSON.parse(readFileSync(`assets/psx/arenas/${id}.collision.json`));Object.assign(nav,{blocked:collision.blocked,edges:collision.edges});const root=asset.scene;root.position.fromArray(meta.origin.map(v=>-v));root.updateMatrixWorld(true);const meshes=[];root.traverse(o=>{if(o.isMesh&&solidForGameplay(o))meshes.push(o);});const ray=new THREE.Raycaster(),pairs=meta.spawns.flatMap(p=>meta.caches.map(c=>[new THREE.Vector3(...p).add(new THREE.Vector3(0,.65,0)),new THREE.Vector3(...c.position).add(new THREE.Vector3(0,.65,0))]));const count=320;
+ let started=performance.now();for(let i=0;i<count;i++){const [p,q]=pairs[i%pairs.length],d=q.clone().sub(p);ray.set(p,d.clone().normalize());ray.far=Math.max(0,d.length()-1.1);ray.intersectObjects(meshes,true);}const meshMs=performance.now()-started;
+ started=performance.now();for(let i=0;i<count;i++){const [p,q]=pairs[i%pairs.length];gridSightClear(nav,p.x,p.z,q.x,q.z,1.1);}const gridMs=performance.now()-started;
+ report[id]={queries:count,meshMs:+meshMs.toFixed(2),gridMs:+gridMs.toFixed(2),note:'Desktop CPU query benchmark, not iPhone FPS.'};console.log(id,JSON.stringify(report[id]));
+}
+writeFileSync('.local/ue-gameplay/sight-benchmark.json',JSON.stringify(report,null,2));

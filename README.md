@@ -142,3 +142,10 @@ caught state. The same varied sphere shapes form smoke bombs and spaced run trai
 (roughly one cluster per 0.85m). Every match ends with an in-stage Victory/Defeat
 stamp, then a fade into results. Menu backgrounds reuse the lobby art and gradient;
 map geometry is hidden while browsing the menu.
+
+Version 0.8.1 preserves the Costume page and scroll position when equipping an
+outfit. Defeat portraits play the capture clip then caught idle; victory keeps
+dancing. Sight checks use the prepared Unreal collision grid instead of repeatedly
+scanning visual triangles. Loading screens still wait for assets and shader warmup.
+`node tools/benchmark-map-sight.mjs` compares query costs on the local desktop CPU;
+it is not an iPhone frame-rate measurement.
