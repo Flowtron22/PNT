@@ -1,6 +1,6 @@
 # Police N Thief web prototype — handoff
 
-Updated: 27 October 2026 (Asia/Kuala_Lumpur).
+Updated: 28 October 2026 (Asia/Kuala_Lumpur).
 Current app version: **0.9.16**, online multiplayer test release.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
@@ -37,6 +37,16 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+Mall gameplay now loads `assets/pnt/arenas/mall-lit.glb` plus a 2048² baked
+lightmap. It includes soft sunlight, diffuse bounce and contact AO on fixed
+scenery. All 15 movable chairs/tables are excluded from the bake and retain
+runtime lighting/physics; originals and other maps remain unchanged. See
+`docs/MALL_LIGHTING.md` for regeneration, validation and rollback. Geometry,
+transformed bounds and per-material triangle assignments are checked against
+the original; additional Three GLTFLoader validation checks UV1/material setup.
+Browser control was disabled during this task; the preview is an offline Blender
+render, not a browser capture. Existing 103 tests passed.
 
 Stealing now emits gold coins from the projected cache marker into the money
 total beneath the timer. `src/pnt/money-trail.js` observes cache balance deltas
