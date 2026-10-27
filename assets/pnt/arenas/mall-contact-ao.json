@@ -1,0 +1,14 @@
+{
+  "radius": 0.4,
+  "strength": 0.65,
+  "upwardNormalThreshold": 0.8,
+  "receivers": [
+    "sm_boutiqeuA_floor",
+    "SM_bridge2",
+    "sm_cafeA_floor",
+    "sm_cafeB_floor",
+    "sm_mainfloor"
+  ],
+  "resolution": 2048,
+  "type": "floor contact AO only"
+}

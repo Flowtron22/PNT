@@ -1,5 +1,21 @@
 # Mall baked lighting
 
+## Current: floor contact AO only
+
+The broad full-lighting bake was rejected visually. The runtime now uses original
+MeshStandardMaterial lighting with `aoMap` only on mainfloor, boutique/cafe floors
+and the bridge. Walls, foliage, counters and props receive no AO texture.
+The 0.4-unit AO radius and upward normal threshold 0.8 keep shading near ground
+contacts. AO strength is baked at 65%; the raw non-color atlas is 2048² / ~165 KB.
+No sun or bounce lighting is included. The previous full lightmap is not loaded.
+
+Run `tools/bake-mall-contact.py` in Blender to regenerate; it uses the UVs from
+`mall-lit.glb` and excludes movable props. Offline AO-placement preview:
+`tools/preview-mall-lighting.py -- --contact`. Preview displays albedo multiplied
+by AO, not the game scene lights. The runtime preserves the original lights.
+
+## Previous full-lighting bake (reference)
+
 The web Mall has a separate `mall-lit.glb` and a shared 2048² RGB
 `mall-lightmap.png`. Original `mall.glb` and Unreal assets are untouched.
 

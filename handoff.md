@@ -38,6 +38,14 @@ at original dimensions; the preview URL is versioned to avoid stale asset caches
 
 ## Continue here
 
+Latest Mall revision replaces the full lighting bake below with **floor contact
+AO only**. Original runtime lighting/materials are restored. `mall-contact-ao.png`
+is a 2048² non-color AO atlas (~165 KB), radius 0.4, strength 65%, normal Z >0.8
+in Blender. Only mainfloor, shop floors and bridge receive it; other surfaces and
+all 15 movable props have no AO map. The UV-equipped GLB remains; the old full
+lightmap is retained for reference but is no longer loaded. Regenerate with
+`tools/bake-mall-contact.py`; preview with `tools/preview-mall-lighting.py -- --contact`.
+
 Mall gameplay now loads `assets/pnt/arenas/mall-lit.glb` plus a 2048² baked
 lightmap. It includes soft sunlight, diffuse bounce and contact AO on fixed
 scenery. All 15 movable chairs/tables are excluded from the bake and retain
