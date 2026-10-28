@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.24**, online multiplayer test release. Server: **0.9.18**.
+Current app version: **0.9.25**, online multiplayer test release. Server: **0.9.18**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,13 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.25 replaces the in-match BGM with an original procedural retro-arcade chase
+theme: 32 bars at 152 BPM with synthesized pulse/triangle voices, noise drums,
+arpeggios, bass and escalating call-and-response phrases. The deterministic PCM
+renderer is `tools/render-chase-bgm.mjs`; its 50.53-second AAC export is
+`assets/pnt/audio/gameplay-bgm.m4a`. Hull Alarm remains the menu/matchmaking BGM.
+This is a client-only release.
 
 0.9.24 adds Wonder Wave's procedural `Hull Alarm` as the looping main-menu and
 matchmaking-lobby theme. Entering active gameplay cleanly stops that voice and
