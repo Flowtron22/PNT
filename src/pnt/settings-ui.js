@@ -3,8 +3,8 @@ export const SETTINGS_TABS=[
  {id:'controls',label:'Controls',icon:'✥',rows:[
   {key:'joystickSize',label:'Joystick size',min:.8,max:1.5,step:.05,format:percent,help:'Resize the thumb control. Touch anywhere on the left half to start moving.'},
   {key:'joystickSensitivity',label:'Joystick sensitivity',min:.5,max:1.5,step:.05,format:v=>v.toFixed(2)+'×',help:'Higher reaches full movement with a shorter thumb drag. Maximum running speed stays the same.'},
-  {key:'haptics',label:'Vibration',toggle:true,help:'Feedback for rocket and banana effects, when supported by your browser.'},
-  {key:'bindings',label:'Key mapping',action:true,help:'Choose the keyboard controls that feel comfortable for you.'}
+  {key:'haptics',label:'Vibration',toggle:true,help:'Phone or controller vibration for rocket and banana effects, when supported.'},
+  {key:'bindings',label:'Key & mouse mapping',action:true,help:'Map keyboard keys or left, right and middle mouse buttons. Controller: left stick moves, A / Cross interacts, X / Square and Y / Triangle use tools. Start pauses; B / Circle goes back; LB / RB switches settings tabs.'}
  ]},
  {id:'video',label:'Video',icon:'▣',rows:[
   {key:'quality',label:'Graphics quality',options:[['battery','Battery'],['balanced','Balanced']],help:'Battery lowers rendering resolution to reduce GPU work. Balanced keeps a sharper image.'},
@@ -43,7 +43,7 @@ export function mountSettings(root,{getSettings,onChange,onReset,bindingsMarkup,
    if(!r.action)control.addEventListener(r.toggle||r.options?'change':'input',()=>{const value=r.toggle?control.checked:r.options&&r.key==='quality'?control.value:+control.value;const persisted=onChange(r.key,value);saved.textContent=persisted===false?'Applied · browser storage unavailable':'Saved automatically ✓';if(host.querySelector('output'))host.querySelector('output').textContent=valueLabel(r,value);preview(r);});
    rows.append(row);
   }
-  if(t.id==='controls'){const section=doc.createElement('section');section.className='settings-bindings key-mapping';section.id='settings-bindings';section.hidden=true;section.innerHTML=bindingsMarkup;rows.append(section);onBindings();}
+  if(t.id==='controls'){const status=doc.createElement('p');status.id='controller-status';status.className='controller-status';status.setAttribute('role','status');status.textContent='Controller ready · connect a pad and press a button';rows.prepend(status);const section=doc.createElement('section');section.className='settings-bindings key-mapping';section.id='settings-bindings';section.hidden=true;section.innerHTML=bindingsMarkup;rows.append(section);onBindings();}
   if(t.id==='video'){const status=doc.createElement('p');status.id='fullscreen-status';status.className='fullscreen-help';status.setAttribute('role','status');rows.append(status);onFullscreen(rows.querySelector('#setting-fullscreen'),status);}
   preview(t.rows[0]);
  }

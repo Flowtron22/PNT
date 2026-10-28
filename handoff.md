@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
-Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.40**, online multiplayer test release. Server: **0.9.19**.
+Updated: 29 October 2026 (Asia/Kuala_Lumpur).
+Current app version: **0.9.41**, online multiplayer test release. Server: **0.9.19**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,22 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.41 adds standard-mapped browser controllers, adapted from Wonder Wave: radial
+left-stick dead zone, D-pad movement, A/Cross held interaction, X/Square tool 1,
+Y/Triangle tool 2, Start pause/resume, B/Circle back/resume and LB/RB settings
+tabs. Menus support spatial focus, native range/select adjustment and activation.
+Polling runs independently of render caps; local and online movement share the
+input. Neutral rearming after pause/reconnect prevents carried button presses.
+Controller rumble follows the vibration setting where hardware supports it;
+active-device HUD hints and Controls connection status are included. Key mapping
+now accepts Mouse0/1/2 (left/middle/right), persists and swaps conflicts like keys.
+Mapped clicks work on gameplay scenery; UI buttons remain usable. Interact holds
+are tracked independently by device so one release cannot cancel another hold.
+141 client tests pass, including injected controller samples and mouse persistence.
+Mouse capture checked in browser; no physical controller is available here.
+Client-only release, no server deployment needed. See docs/CONTROLS.md.
+
 
 0.9.40 replaces the flat settings list with Wonder Wave-style Controls, Video,
 Audio and Gameplay tabs, animated explanatory previews, immediate application,
