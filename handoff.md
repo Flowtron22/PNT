@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.33**, online multiplayer test release. Server: **0.9.18**.
+Current app version: **0.9.34**, online multiplayer test release. Server: **0.9.19**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,12 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.34 lowers every gameplay map's direct, fill and hemisphere lighting by 10%
+and raises the shared arena display-space saturation from 1.15 to 1.20. Iceberg
+retains its special glide but now turns and brakes sooner (steering 1.4 to 2.2,
+braking 2.2 to 3.2), reducing wide drifting turns. The movement version is 5;
+online parity requires server 0.9.19 on Render as well as the client release.
 
 0.9.33 restores the original left-side dark gradient and dotted texture above
 the 0.9.32 purple diagonal menu background. The loading screen no longer shows

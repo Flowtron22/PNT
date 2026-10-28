@@ -1,5 +1,7 @@
 // Pure simulation settings, shared by local play and a future authoritative server.
-export const ICE={acceleration:9,steering:1.4,braking:2.2};
+// Iceberg keeps a distinct glide, but responds and stops sooner than the original
+// high-drift tuning so direction changes remain controllable during a chase.
+export const ICE={acceleration:9,steering:2.2,braking:3.2};
 export const SHIP={peak:5*Math.PI/180,push:3.8,maxSlide:1.8,drag:2.4};
 export function shipTilt(seconds){
  const cycle=Math.floor(Math.max(0,seconds)/10),t=Math.max(0,seconds)%10;

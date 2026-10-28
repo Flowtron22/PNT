@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {environmentVelocity,shipTilt,SHIP} from '../../src/pnt/environment.js';
+import {environmentVelocity,shipTilt,SHIP,ICE} from '../../src/pnt/environment.js';
+test('iceberg uses the softened steering and braking tune',()=>{assert.deepEqual(ICE,{acceleration:9,steering:2.2,braking:3.2});});
 test('ice retains turning momentum and takes longer to stop than normal ground',()=>{
  const ice={vx:4,vz:0},normal={vx:4,vz:0};environmentVelocity(ice,0,1,4,.1,{map:'iceberg'});environmentVelocity(normal,0,1,4,.1,{map:'mall'});assert.ok(ice.vx>normal.vx);assert.ok(ice.vz<normal.vz);
  const stopping=map=>{const actor={vx:4,vz:0};let distance=0;for(let i=0;i<120;i++){environmentVelocity(actor,0,0,4,1/60,{map});distance+=actor.vx/60;}return {distance,speed:actor.vx};};assert.ok(stopping('iceberg').distance>stopping('mall').distance*5);assert.equal(stopping('iceberg').speed,0);
