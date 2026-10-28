@@ -1,4 +1,4 @@
-Wonder Wave / PURRITORY visual-effects code
+Wonder Wave / PURRITORY visual-effects and procedural-audio code
 
 MIT License
 

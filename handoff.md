@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.35**, online multiplayer test release. Server: **0.9.19**.
+Current app version: **0.9.36**, online multiplayer test release. Server: **0.9.19**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,15 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.36 adds an original Wonder Wave-style procedural pirate pursuit BGM for
+Sunken only. The 24-bar, 146 BPM track uses galloping/deck percussion, smooth
+bass, plucked strings, reed/accordion chords and fiddle/brass call-and-response
+without chiptune oscillators. Its deterministic source is
+`tools/render-pirate-chase-bgm.mjs`; the 39.45-second AAC loop is
+`assets/pnt/audio/pirate-chase-bgm.m4a` (~898 KB, -1.2 dB peak). Mall and
+Iceberg retain `gameplay-bgm.mp3`; menu/lobby retain `menu-bgm.m4a`. The Sunken
+track downloads only while that map loads. Client-only release.
 
 0.9.35 restores the Sunken ocean material motion lost during GLB export. The
 `waterplane` mesh's authored `m_ps_waterA` and `m_ps_waterB` layers now use
