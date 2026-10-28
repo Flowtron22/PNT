@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.34**, online multiplayer test release. Server: **0.9.19**.
+Current app version: **0.9.35**, online multiplayer test release. Server: **0.9.19**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,11 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.35 restores the Sunken ocean material motion lost during GLB export. The
+`waterplane` mesh's authored `m_ps_waterA` and `m_ps_waterB` layers now use
+independent repeat-wrapped UV offsets, vertically panning in opposite directions
+through countdown, gameplay and pause. No simulation/server change is required.
 
 0.9.34 lowers every gameplay map's direct, fill and hemisphere lighting by 10%
 and raises the shared arena display-space saturation from 1.15 to 1.20. Iceberg

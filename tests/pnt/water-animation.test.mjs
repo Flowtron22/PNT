@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {prepareSunkenWater,SUNKEN_WATER_SPEEDS} from '../../src/pnt/water-animation.js';
+const texture=()=>({offset:{x:0,y:0,set(x,y){this.x=x;this.y=y;}},clone(){const copy=texture();copy.offset.x=this.offset.x;copy.offset.y=this.offset.y;return copy;}});
+const material=name=>({name,map:texture(),needsUpdate:false});
+function arena(){const water={isMesh:true,material:[material('m_ps_waterA'),material('m_ps_waterB')],traverse(fn){fn(this);}};return {userData:{},getObjectByName:name=>name==='waterplane'?water:null,water};}
+test('Sunken water restores the two Unreal panner layers without sharing texture offsets',()=>{const root=arena(),controller=prepareSunkenWater(root,1000);assert.equal(controller.layers.length,2);assert.notEqual(root.water.material[0].map,root.water.material[1].map);assert.equal(root.water.material[0].map.wrapS,1000);controller.update(1);assert.ok(root.water.material[0].map.offset.y>0);assert.ok(root.water.material[1].map.offset.y>.9);assert.deepEqual(SUNKEN_WATER_SPEEDS.m_ps_watera,{x:0,y:.035});});
+test('Sunken water setup is map-specific, idempotent and bounds long frame advances',()=>{assert.equal(prepareSunkenWater({userData:{},getObjectByName:()=>null}),null);const root=arena(),controller=prepareSunkenWater(root);assert.equal(prepareSunkenWater(root),controller);controller.update(10);assert.ok(Math.abs(controller.layers[0].texture.offset.y-.0035)<1e-12);});
