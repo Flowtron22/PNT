@@ -1,5 +1,10 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createGameplayAudio} from '../../src/pnt/game-audio.js';
+test('menu music downloads before audio unlock and prepare reuses the warmed bytes',async()=>{
+ const oldStorage=globalThis.localStorage,oldFetch=globalThis.fetch,requests=[];globalThis.localStorage={getItem:()=>null,setItem(){}};globalThis.fetch=async url=>{requests.push(url);return {ok:true,arrayBuffer:async()=>new TextEncoder().encode(url).buffer};};
+ const context={state:'running',createGain:()=>({gain:{value:1},connect(){}}),decodeAudioData:async bytes=>bytes,createBufferSource(){return {connect(){},start(){},stop(){}};}},engine={ctx:context,master:{},init(){},resume(){}};
+ try{const audio=createGameplayAudio(()=>engine);await audio.preload();assert.deepEqual(requests,['assets/pnt/audio/menu-bgm.m4a']);await audio.prepare();assert.equal(requests.filter(url=>url.includes('menu-bgm')).length,1);audio.stop();}finally{globalThis.localStorage=oldStorage;globalThis.fetch=oldFetch;}
+});
 test('game audio plays exported cues, stops loops on pause/menu and respects independent sound/music controls',async()=>{
  const originalStorage=globalThis.localStorage,originalFetch=globalThis.fetch,sources=[],storage=new Map();globalThis.localStorage={getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value)};globalThis.fetch=async url=>({ok:true,arrayBuffer:async()=>new TextEncoder().encode(url).buffer});
  const context={currentTime:1,state:'running',createGain:()=>({gain:{value:1},connect(){},disconnect(){}}),decodeAudioData:async bytes=>new TextDecoder().decode(bytes),createBufferSource(){const source={connect(){},disconnect(){},start(){sources.push(this);},stop(){this.stopped=true;this.onended?.();}};return source;}},engine={ctx:context,master:{},init(){},resume(){}};

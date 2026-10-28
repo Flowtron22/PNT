@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.28**, online multiplayer test release. Server: **0.9.18**.
+Current app version: **0.9.29**, online multiplayer test release. Server: **0.9.18**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,12 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.29 removes the avoidable menu-music startup delay. `menu-bgm.m4a` now begins
+downloading as soon as the main module initializes, before Web Audio unlock, and
+is first in the decode queue after the browser's required initial click/tap.
+Prepared audio reuses the warmed bytes instead of requesting them again. The
+visible web-version label is also synchronized to 0.9.29. Client-only release.
 
 0.9.28 limits the smooth procedural chase theme to the main menu and matchmaking
 lobby (`menu-bgm.m4a`). Active gameplay switches to the original pre-0.9.25
