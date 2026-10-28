@@ -14,5 +14,5 @@ export function presentOnlineEvent(event,{actors,root,hazards,prop,fx}){
 }
 export function syncOnlineHazards(snapshot,{root,hazards,prop,dispose}){
  const ids=new Set(snapshot.map(h=>h.id));for(let i=hazards.length-1;i>=0;i--)if(hazards[i].networkId&&!ids.has(hazards[i].networkId)){dispose(hazards[i]);hazards.splice(i,1);}
- for(const h of snapshot){let existing=hazards.find(p=>p.networkId===h.id);if(!existing){const mesh=prop(h.type==='banana'?'propBanana':h.type==='smoke'?'propSmoke':'propRewind',.65);if(h.type==='smoke'){const cloud=smokeBombCloud();mesh.add(cloud);}attachHazardTelegraph(mesh,h.type);root.add(mesh);existing={mesh,type:h.type,networkId:h.id,owner:h.owner};hazards.push(existing);}existing.mesh.position.fromArray(h.position);existing.time=h.time<0?Infinity:h.time;}
+  for(const h of snapshot){let existing=hazards.find(p=>p.networkId===h.id);if(!existing){const mesh=prop(h.type==='banana'?'propBanana':h.type==='smoke'?'propSmoke':'propRewind',.65);if(h.type==='smoke'){const cloud=smokeBombCloud();mesh.add(cloud);}if(h.type!=='banana')attachHazardTelegraph(mesh,h.type);root.add(mesh);existing={mesh,type:h.type,networkId:h.id,owner:h.owner};hazards.push(existing);}existing.mesh.position.fromArray(h.position);existing.time=h.time<0?Infinity:h.time;}
 }

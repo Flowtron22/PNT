@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.19**, online multiplayer test release.
+Current app version: **0.9.20**, online multiplayer test release.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,15 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.20 removes the banana ground-radius indicator in local and online play. The
+banana prop now supplies its own warning through a bounded squash/stretch and
+small vertical bounce. Hammer impact adds a pooled upward paint-crown mesh with
+an irregular circular silhouette, green/yellow gradient, shader halftone dots
+and matching sparks. The suspicious repeating sound was not a footstep: no
+footstep system exists. `Thief_Loot_Stolen` was retriggering every 0.9 seconds
+while cash increased; it now plays once at the start of each continuous cache
+interaction. No server protocol or simulation changes are required.
 
 0.9.19 fixes two live regressions from the Wonder Wave VFX release. Graphic
 sparkles, colored toon puffs and rings now use bounded ordinary mesh pools with

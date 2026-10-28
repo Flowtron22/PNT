@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import {WonderVFX,attachHazardTelegraph,animateHazardTelegraph} from './wonder-vfx.js';
-export {attachHazardTelegraph,animateHazardTelegraph};
+import {WonderVFX,attachHazardTelegraph,animateHazardTelegraph,animateBananaHazard} from './wonder-vfx.js';
+export {attachHazardTelegraph,animateHazardTelegraph,animateBananaHazard};
 const smokeGeometry=new THREE.SphereGeometry(1,10,7),smokeMaterials=[0xe8e9ec,0xd9dce2,0xc5cbd4,0xf4f4f5].map(color=>new THREE.MeshLambertMaterial({color,flatShading:false}));
 const starShape=new THREE.Shape();
 for(let i=0;i<10;i++){const angle=Math.PI/2+i*Math.PI/5,r=i%2?.45:1;starShape[i?'lineTo':'moveTo'](Math.cos(angle)*r,Math.sin(angle)*r);}starShape.closePath();
