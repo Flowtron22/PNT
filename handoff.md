@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.31**, online multiplayer test release. Server: **0.9.18**.
+Current app version: **0.9.32**, online multiplayer test release. Server: **0.9.18**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,12 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.32 replaces the menu's Mall/environment backdrop with the loading screen's
+flat dark-purple radial and diagonal-stripe treatment. It covers Home, Play/Join,
+Tools, Costume, Settings and Credits while retaining the character preview above
+it. Online matchmaking and Training lobbies keep their existing lobby backdrop.
+Client-only release.
 
 0.9.31 moves offline practice out of the online Play/Join pages and adds a
 main-menu `TRAINING` button directly below `PLAY`, using the standard animated
