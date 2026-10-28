@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.29**, online multiplayer test release. Server: **0.9.18**.
+Current app version: **0.9.30**, online multiplayer test release. Server: **0.9.18**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,13 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.30 replaces Android's white, thief-head generated PWA launch splash with a
+branded system splash: the mandatory Android launch window now uses the game's
+`#171329` purple and a safe-zone Police N Thief logo icon. New versioned icon
+filenames and a versioned manifest URL prevent stale white icon caches. Existing
+Android installations may need uninstall/reinstall for the WebAPK icon to refresh.
+Client-only release.
 
 0.9.29 removes the avoidable menu-music startup delay. `menu-bgm.m4a` now begins
 downloading as soon as the main module initializes, before Web Audio unlock, and
