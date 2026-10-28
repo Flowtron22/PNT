@@ -73,6 +73,7 @@
 .reduced-motion .iw-cursor__ring,.reduced-motion .is-press,.reduced-motion .nav-button.iw-btn.hero:before{animation:none}.reduced-motion .iw-btn,.reduced-motion .choice.iw-ltile,.reduced-motion .iw-btn__blob{transition:none}.reduced-motion .choice.iw-ltile{transform:none}
 @media(max-width:759px){.iw-main__side{--u:7px;width:43vw;right:4vw;top:22vh;bottom:10vh}.iw-profile{padding:11px;gap:9px;grid-template-columns:32px 1fr}.iw-profile__avatar{width:32px;height:38px}.iw-profile__name{font-size:14px}.iw-profile__rank{font-size:6px;letter-spacing:.04em}.profile-local{font-size:5px;margin-top:5px}.iw-profile__xpnum{font-size:6px}.iw-profile__stats{gap:4px}.iw-profile__stats div{padding:7px 5px;flex-direction:column;gap:4px}.iw-profile__stats b{font-size:15px}.iw-profile__stats span{font-size:5px}.iw-lvl{font-size:11px}.iw-kitcard{padding:12px}.iw-kitcard__name{font-size:15px}.iw-kitcard__label{font-size:7px}.iw-kitcard__kind{font-size:6px}.iw-kitcard__icon{width:39px;height:34px}.iw-kitcard__chips{gap:5px}.iw-kitcard__chips button{font-size:8px;padding:4px 6px}.iw-kitcard__chips img{width:17px;height:17px}.iw-kitcard__main{margin:9px 0}.iw-kitcard__chips small{font-size:7px}}
 @media(max-height:500px) and (min-width:760px){.iw-main__side{--u:8px;width:27vw;top:12px;bottom:47px}.profile-local{font-size:5px}.iw-profile__rank,.iw-profile__xpnum,.iw-profile__stats span,.iw-kitcard__kind,.iw-kitcard__label{font-size:7px}.iw-kitcard__chips button{font-size:8px}}
+.nav-button.iw-btn:nth-child(6){--tilt:-.8deg}
 button[data-ww-bound]:focus-visible{outline:none}
 
 

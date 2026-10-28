@@ -49,7 +49,7 @@ export function createWonderUI({blocked=()=>false,reduced=()=>false}={}){
  document.addEventListener('focusin',event=>{if(mode==='keyboard')setFocus(event.target.closest('button'),true);});
  document.addEventListener('click',event=>{
   const el=event.target.closest('button');if(!eligible(el)||blocked())return;
-  let sound='ui_click';if(el.matches('.back-button,#quit-lobby,#leave,#result-menu,#cancel-countdown,#cancel-profile-name'))sound='ui_back';else if(el.matches('[data-page="play"],.primary,#host-lobby,#start-lobby,.wardrobe-grid .choice,[id^="equip-slot"]'))sound='ui_confirm';else if(el.matches('#role-preference,#add-bot,#remove-bot'))sound='ui_toggle';
+  let sound='ui_click';if(el.matches('.back-button,#quit-lobby,#leave,#result-menu,#cancel-countdown,#cancel-profile-name'))sound='ui_back';else if(el.matches('[data-page="play"],#training,.primary,#host-lobby,#start-lobby,.wardrobe-grid .choice,[id^="equip-slot"]'))sound='ui_confirm';else if(el.matches('#role-preference,#add-bot,#remove-bot'))sound='ui_toggle';
   sounds.play(sound);if(!reduced())restartAnim(el,'is-press');
  },true);
  document.addEventListener('keydown',event=>{

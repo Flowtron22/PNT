@@ -134,7 +134,7 @@ async function hostLobby(){
   room=createLobby(costume);room.players[0].name=profile.name;returnToLobby=false;buildLobbyDisplays();refreshLobby();progress(90,'Warming up the lobby…');for(const display of lobbyDisplays)await renderer.compileAsync(display.scene,lobbyCamera);show('lobby');endLoading();
  }catch(error){room=null;loadError(error,hostLobby);}
 }
-function quitLobby(){online?.leave();online=null;onlineLoading=false;onlineRevision++;onlineRoster='';onlineSnapshot=null;room=null;returnToLobby=false;clearLobbyDisplays();show('menu');if(!preview)previewModel();openPage('play');}
+function quitLobby(){const training=room?.mode==='practice';online?.leave();online=null;onlineLoading=false;onlineRevision++;onlineRoster='';onlineSnapshot=null;room=null;returnToLobby=false;clearLobbyDisplays();show('menu');if(!preview)previewModel();openPage(training?'home':'play');}
 function renderLobbyCharacters(dt){
  renderer.setScissorTest(false);renderer.setViewport(0,0,innerWidth,innerHeight);renderer.setClearColor(0,0);renderer.clear();
  const windows=ui.lobby.querySelectorAll('.avatar-window');
@@ -149,7 +149,7 @@ function onlineProfile(){return {name:profile.name,costume,loadout,preference:ro
 async function ensureRoster(){await Promise.all(room.players.map(async p=>{const outfit=COSTUMES.find(c=>c.id===p.costume);if(!templates[p.costume])templates[p.costume]=await getGLB(p.costume,`assets/pnt/costumes/${outfit.file}.glb`);}));}
 function onlineNotice(message){const status=$('#join-status')||$('#play-status');if(status)status.textContent=message;if(round)say(message,4);else if(!ui.lobby.hidden){const help=$('#room-help');help.querySelector('h2').textContent='Room update';help.querySelector('p').textContent=message;help.hidden=false;}}
 async function connectOnline(mode,code){
- if(!ready||busy)return;if(!multiplayerEndpoint()){onlineNotice('The online server has not been deployed yet. Choose Local Practice to play with bots.');return;}
+ if(!ready||busy)return;if(!multiplayerEndpoint()){onlineNotice('The online server has not been deployed yet. Choose Training from the main menu to play with bots.');return;}
  beginLoading('CONNECTING TO THE CREW');online=new MultiplayerConnection({onLobby:receiveOnlineLobby,onSnapshot:receiveOnlineSnapshot,onNotice:onlineNotice,onProgress:progress,onConnection:status=>{if(status==='reconnecting'){clearInput();if(round)say('RECONNECTING…',4);else{const line=$('#lobby-status-line');if(line)line.textContent='RECONNECTING…';}}else if(status==='connected'){if(avatars[0])avatars[0].prediction=null;onlineFrames=new SnapshotBuffer();const help=$('#room-help');if(help)help.hidden=true;if(round)say('RECONNECTED',1.5);}else{const code=room?.code;endLoading();menu();openPage('join');if(code)$('#join-code').value=code;onlineNotice(status==='expired'?'Your seat expired while the game was away. Join again if the room is still waiting, or host a new lobby.':'The connection ended. Join the room again to continue.');}}});
  try{await online.connect(mode,onlineProfile(),code);}catch(error){online?.leave();online=null;endLoading();onlineNotice(error.message||'Could not connect to the game server.');}
 }
@@ -224,11 +224,11 @@ function openPage(name){if(busy)return;bindingCapture=null;activePage=name;if(pr
  const content=$('#page-content');
  if(name==='play'){
   content.innerHTML=`<div class="flow-options"><button id="host-lobby" class="flow-option host-option"><img src="assets/pnt/ui/users.png" alt=""><small>HOST A LOBBY</small><b>HOST LOBBY →</b></button><button id="join-lobby" class="flow-option join-option"><img src="assets/pnt/ui/online.png" alt=""><small>FIND YOUR CREW</small><b>JOIN LOBBY →</b></button></div>`;
-  content.insertAdjacentHTML('beforeend','<p id=play-status class=flow-network-note role=status></p><button id=play-practice class="secondary flow-practice">LOCAL PRACTICE</button>');$('#host-lobby').onclick=()=>connectOnline('host');$('#join-lobby').onclick=()=>openPage('join');$('#play-practice').onclick=hostLobby;
+  content.insertAdjacentHTML('beforeend','<p id=play-status class=flow-network-note role=status></p>');$('#host-lobby').onclick=()=>connectOnline('host');$('#join-lobby').onclick=()=>openPage('join');
  }else if(name==='join'){
-  content.innerHTML=`<div class="flow-options"><section class="flow-option join-option"><img src="assets/pnt/ui/online.png" alt=""><small>PUBLIC MATCHMAKING</small><strong>FIND A<br>CHASE.</strong><button id="public-match" class="primary">FIND PUBLIC MATCH</button></section><form id="join-code-form" class="flow-option code-option"><img src="assets/pnt/ui/lock.png" alt=""><strong>GOT AN<br>INVITE?</strong><label for="join-code">ROOM CODE</label><input id="join-code" name="roomCode" inputmode="text" autocomplete="off" autocapitalize="characters" maxlength="6" placeholder="ABC123" aria-describedby="join-status"><button type="submit" class="primary">JOIN ROOM →</button></form></div><p id="join-status" class="flow-network-note" role="status"></p><button id="join-practice" class="secondary flow-practice">HOST LOCAL PRACTICE</button>`;
+  content.innerHTML=`<div class="flow-options"><section class="flow-option join-option"><img src="assets/pnt/ui/online.png" alt=""><small>PUBLIC MATCHMAKING</small><strong>FIND A<br>CHASE.</strong><button id="public-match" class="primary">FIND PUBLIC MATCH</button></section><form id="join-code-form" class="flow-option code-option"><img src="assets/pnt/ui/lock.png" alt=""><strong>GOT AN<br>INVITE?</strong><label for="join-code">ROOM CODE</label><input id="join-code" name="roomCode" inputmode="text" autocomplete="off" autocapitalize="characters" maxlength="6" placeholder="ABC123" aria-describedby="join-status"><button type="submit" class="primary">JOIN ROOM →</button></form></div><p id="join-status" class="flow-network-note" role="status"></p>`;
   $('#public-match').onclick=()=>connectOnline('public');
-  $('#join-code-form').onsubmit=e=>{e.preventDefault();if(!validateRoomCode($('#join-code').value)){$('#join-status').textContent='Enter a six-character room code using letters and numbers.';$('#join-code').focus();return;}connectOnline('join',$('#join-code').value.trim().toUpperCase());};$('#join-code').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');};$('#join-practice').onclick=hostLobby;
+  $('#join-code-form').onsubmit=e=>{e.preventDefault();if(!validateRoomCode($('#join-code').value)){$('#join-status').textContent='Enter a six-character room code using letters and numbers.';$('#join-code').focus();return;}connectOnline('join',$('#join-code').value.trim().toUpperCase());};$('#join-code').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');};
  }else if(name==='tools'){
   renderTools();
  }else if(name==='costume'){
@@ -257,6 +257,7 @@ function refreshCostumeSelection(){
 }
 async function selectCostume(id){if(id===costume)return;const previous=costume;costume=id;beginLoading('DRESSING FOR TROUBLE');try{await ensureCostume();progress(90,'Preparing your character…');previewModel();await renderer.compileAsync(scene,menuCamera);localStorage.setItem('pnt-costume',costume);endLoading();refreshCostumeSelection();}catch(error){costume=previous;loadError(error,()=>selectCostume(id));}}
 for(const b of document.querySelectorAll('[data-page]'))b.onclick=()=>openPage(b.dataset.page);
+$('#training').onclick=hostLobby;
 $('#profile-name-edit').onclick=()=>{$('#profile-name-form').hidden=false;$('#profile-name-edit').setAttribute('aria-expanded','true');$('#profile-name-input').value=profile.name;$('#profile-name-input').focus();$('#profile-name-input').select();};
 function closeNameForm(){$('#profile-name-form').hidden=true;$('#profile-name-edit').setAttribute('aria-expanded','false');$('#profile-name-edit').focus();}
 $('#cancel-profile-name').onclick=closeNameForm;

@@ -17,4 +17,4 @@ export function stepLobby(room,dt){if(room.phase!=='countdown')return false;cons
 export function cycleMap(room,direction){if(room.phase!=='waiting')return false;room.map=(room.map+direction+MAPS.length)%MAPS.length;return true;}
 export function resolveRole(preference,random=Math.random){return preference==='none'?(random()<.25?'chaser':'runner'):preference;}
 export function validateRoomCode(value){return /^[A-Z0-9]{6}$/.test(value.trim().toUpperCase());}
-export function startHint(room){return room.players.length<4?'Add bots to fill the four-player crew.':'The crew is ready. Start a practice chase!';}
+export function startHint(room){return room.players.length<4?'Add bots to fill the four-player crew.':'The crew is ready. Start training!';}
