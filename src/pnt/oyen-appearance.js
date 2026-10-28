@@ -22,7 +22,7 @@ float oyenR=max(oyenSource.r,0.0001);
 // Warm orange fabric; neutral skin/eyes and cool gloves/shoes are excluded.
 float oyenOrangeMask=smoothstep(0.35,0.55,(oyenSource.r-oyenSource.b)/oyenR)*(1.0-smoothstep(0.50,0.62,oyenSource.g/oyenR))*(1.0-smoothstep(0.30,0.58,oyenSource.b/max(oyenSource.g,0.0001)));
 float oyenWarmFabric=smoothstep(0.02,0.12,(oyenSource.r-oyenSource.b)/oyenR);
-float oyenDarkFabric=(1.0-smoothstep(0.06,0.10,oyenR))*max(uOyenHead,smoothstep(1.03,1.15,vOyenRest.y));
+float oyenDarkFabric=(1.0-smoothstep(0.06,0.10,oyenR))*max(max(uOyenHead,smoothstep(1.03,1.15,vOyenRest.y)),1.0-smoothstep(-0.30,-0.22,vOyenRest.z));
 float oyenEarPink=smoothstep(0.55,0.82,oyenSource.b/max(oyenSource.g,0.0001))*smoothstep(0.12,0.25,oyenR);
 float oyenMask=max(oyenWarmFabric,oyenDarkFabric)*(1.0-oyenEarPink)*vOyenFabric;
 float oyenDetail=mix(0.90,clamp(oyenSource.r/0.57,0.75,1.20),smoothstep(0.10,0.30,oyenR));
