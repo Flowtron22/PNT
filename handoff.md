@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.43**, online multiplayer test release. Server: **0.9.19**.
+Current app version: **0.9.44**, online multiplayer test release. Server: **0.9.19**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,12 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.44 moves the desktop Oyen costume preview right to the user-marked area
+(offset 0.58 at widths >=1025), correcting the overly close 0.9.43 placement.
+Character scale and phone framing stay unchanged. Compared in-browser at
+1816×862 against the user screenshot. Client-only layout change.
+
 
 0.9.43 replaces the Oyen face tone text buttons with colour swatches and a
 selection check. Accessible labels use neutral numbered colours; saved appearance
