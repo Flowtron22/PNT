@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.18**, online multiplayer test release.
+Current app version: **0.9.19**, online multiplayer test release.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -38,16 +38,16 @@ at original dimensions; the preview URL is versioned to avoid stale asset caches
 
 ## Continue here
 
-0.9.18 adds an attributed, mobile-bounded world-space VFX layer adapted from
-the MIT-licensed Wonder Wave project. Fixed pools provide glossy blobs, soft
-steam, rings and hammer arcs without a post-processing pass. Hammer, jetpack,
-capture/rescue, smoke, banana and rewind now have richer effects; tool hazards
-show animated gameplay-radius telegraphs and Sunken emits ambient edge spray.
-Local and online presentation share the effects. Wonder Wave's MIT notice is
-included under `notices/`. Validation: 117 root tests, production build and a
-real headless-Chrome local match/hammer smoke check with no runtime or shader
-errors. No server simulation or protocol code changed; Render does not require
-a deploy for this client-only release.
+0.9.19 fixes two live regressions from the Wonder Wave VFX release. Graphic
+sparkles, colored toon puffs and rings now use bounded ordinary mesh pools with
+explicit materials; this avoids the `instanceColor` driver path that rendered
+the effects as black spheres/rings on the user's machine. Online connection now
+visibly advances through server wake, secure connection and lobby join, probes
+Render's health route to wake the free service, and exits with a useful retry
+message after bounded 35/20-second waits instead of remaining at 0% forever.
+Validated 118 root tests, production build, and a real SDK host connection that
+received its lobby. This remains client-only; Render stays at server 0.9.17 and
+does not require a deploy.
 
 Mobile movement now accepts touch starts anywhere on the left half of the active
 match. A floating joystick centers on that touch, starts neutral, then follows

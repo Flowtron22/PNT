@@ -3,20 +3,18 @@
 // Copyright (c) 2026 Jayden Davis. See notices/wonder-wave-mit.txt.
 import * as THREE from 'three';
 
-const UP=new THREE.Vector3(0,1,0),Q=new THREE.Quaternion(),S=new THREE.Vector3(),M=new THREE.Matrix4();
+const UP=new THREE.Vector3(0,1,0);
 const WHITE=new THREE.Color(0xffffff),GOLD=new THREE.Color(0xffbd45),MINT=new THREE.Color(0x83f9c4),CYAN=new THREE.Color(0x8cecff),PURPLE=new THREE.Color(0xb99cff);
-const blobGeo=new THREE.SphereGeometry(1,8,6),ringGeo=new THREE.RingGeometry(.76,1,48),spriteGeo=new THREE.PlaneGeometry(1,1);
+const sparkleShape=new THREE.Shape();for(let i=0;i<8;i++){const a=Math.PI/2+i*Math.PI/4,r=i%2?.32:1;sparkleShape[i?'lineTo':'moveTo'](Math.cos(a)*r,Math.sin(a)*r);}sparkleShape.closePath();
+const blobGeo=new THREE.ShapeGeometry(sparkleShape),ringGeo=new THREE.RingGeometry(.76,1,48),spriteGeo=new THREE.SphereGeometry(1,9,7);
 
-const steamMaterial=()=>new THREE.ShaderMaterial({transparent:true,depthWrite:false,vertexColors:true,side:THREE.DoubleSide,uniforms:{uOpacity:{value:.72}},vertexShader:`varying vec2 vUv;varying vec3 vColor;void main(){vUv=uv;vColor=instanceColor;gl_Position=projectionMatrix*modelViewMatrix*instanceMatrix*vec4(position,1.);}`,fragmentShader:`uniform float uOpacity;varying vec2 vUv;varying vec3 vColor;void main(){vec2 p=vUv-.5;float d=length(p)*2.;float a=smoothstep(1.,.25,d)*uOpacity;if(a<.015)discard;gl_FragColor=vec4(vColor,a);
-#include <tonemapping_fragment>
-#include <colorspace_fragment>
-}`});
-
-class InstancePool{
- constructor(root,capacity,geometry,material,{billboard=false}={}){this.capacity=capacity;this.billboard=billboard;this.items=Array.from({length:capacity},()=>({life:0,total:1,p:new THREE.Vector3(),v:new THREE.Vector3(),color:new THREE.Color(),size:0,grow:0,gravity:0,drag:0,spin:0,rot:0}));this.cursor=0;this.mesh=new THREE.InstancedMesh(geometry,material,capacity);this.mesh.name='wonder-vfx-pool';this.mesh.frustumCulled=false;this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);for(let i=0;i<capacity;i++){M.makeScale(0,0,0);this.mesh.setMatrixAt(i,M);this.mesh.setColorAt(i,WHITE);}root.add(this.mesh);}
- emit(p,v,color,{life=.7,size=.12,grow=.2,gravity=0,drag=0,spin=0}={}){let i=this.items.findIndex(x=>x.life<=0);if(i<0)i=this.cursor++%this.capacity;const x=this.items[i];x.life=x.total=life;x.p.copy(p);x.v.copy(v||UP);x.color.set(color);x.size=size;x.grow=grow;x.gravity=gravity;x.drag=drag;x.spin=spin;x.rot=Math.random()*Math.PI*2;this.mesh.setColorAt(i,x.color);this.mesh.instanceColor.needsUpdate=true;return x;}
- update(dt,camera,kind){let live=0;for(let i=0;i<this.capacity;i++){const x=this.items[i];if(x.life<=0){M.makeScale(0,0,0);this.mesh.setMatrixAt(i,M);continue;}x.life=Math.max(0,x.life-dt);if(x.life<=0){M.makeScale(0,0,0);this.mesh.setMatrixAt(i,M);continue;}live++;const age=1-x.life/x.total,fade=Math.min(1,x.life/.18),size=Math.max(.001,(x.size+x.grow*age)*fade);x.v.y-=x.gravity*dt;if(x.drag)x.v.multiplyScalar(Math.exp(-x.drag*dt));x.p.addScaledVector(x.v,dt);x.rot+=x.spin*dt;if(this.billboard&&camera)Q.copy(camera.quaternion);else Q.setFromAxisAngle(UP,x.rot);if(kind==='ring')Q.setFromEuler(new THREE.Euler(-Math.PI/2,0,x.rot));S.set(kind==='ring'?size:size,kind==='steam'?size*.75:size,kind==='ring'?size:size);M.compose(x.p,Q,S);this.mesh.setMatrixAt(i,M);}this.mesh.visible=live>0;this.mesh.instanceMatrix.needsUpdate=true;return live;}
- clear(){for(const x of this.items)x.life=0;this.mesh.visible=false;}
+// Individual materials cost a few more draw calls while particles are alive, but
+// avoid the broken instanceColor path seen on some mobile/Windows WebGL drivers.
+class ParticlePool{
+ constructor(root,capacity,geometry,{billboard=false,lit=false,kind='spark'}={}){this.capacity=capacity;this.billboard=billboard;this.kind=kind;this.group=new THREE.Group();this.group.name=`wonder-vfx-${kind}-pool`;root.add(this.group);this.items=Array.from({length:capacity},()=>{const material=lit?new THREE.MeshLambertMaterial({color:WHITE,transparent:true,opacity:1,depthWrite:false}):new THREE.MeshBasicMaterial({color:WHITE,transparent:true,opacity:1,depthWrite:false,side:THREE.DoubleSide});const mesh=new THREE.Mesh(geometry,material);mesh.visible=false;mesh.renderOrder=5;this.group.add(mesh);return{mesh,life:0,total:1,p:new THREE.Vector3(),v:new THREE.Vector3(),size:0,grow:0,gravity:0,drag:0,spin:0,rot:0};});this.cursor=0;}
+ emit(p,v,color,{life=.7,size=.12,grow=.2,gravity=0,drag=0,spin=0}={}){let x=this.items.find(item=>item.life<=0);if(!x)x=this.items[this.cursor++%this.capacity];x.life=x.total=life;x.p.copy(p);x.v.copy(v||UP);x.size=size;x.grow=grow;x.gravity=gravity;x.drag=drag;x.spin=spin;x.rot=Math.random()*Math.PI*2;x.mesh.material.color.set(color);x.mesh.material.opacity=1;x.mesh.visible=true;return x;}
+ update(dt,camera,kind=this.kind){let live=0;for(const x of this.items){if(x.life<=0)continue;x.life=Math.max(0,x.life-dt);if(x.life<=0){x.mesh.visible=false;continue;}live++;const age=1-x.life/x.total,fade=Math.min(1,x.life/.18),size=Math.max(.001,(x.size+x.grow*age)*fade);x.v.y-=x.gravity*dt;if(x.drag)x.v.multiplyScalar(Math.exp(-x.drag*dt));x.p.addScaledVector(x.v,dt);x.rot+=x.spin*dt;x.mesh.position.copy(x.p);if(kind==='ring')x.mesh.rotation.set(-Math.PI/2,0,x.rot);else if(this.billboard&&camera){x.mesh.quaternion.copy(camera.quaternion);x.mesh.rotateZ(x.rot);}else x.mesh.rotation.set(x.rot,x.rot*.6,x.rot*.3);x.mesh.scale.set(size,kind==='steam'?size*.75:size,size);x.mesh.material.opacity=fade*(kind==='steam'?.72:.95);}this.group.visible=live>0;return live;}
+ clear(){for(const x of this.items){x.life=0;x.mesh.visible=false;}this.group.visible=false;}
 }
 
 function arcGeometry(){const pos=[],uv=[],idx=[],nu=30,nv=5,a0=-1.35,a1=1.35;for(let i=0;i<=nu;i++){const u=i/nu,a=a0+(a1-a0)*u;for(let j=0;j<=nv;j++){const v=j/nv,r=.35+1.18*v;pos.push(Math.sin(a)*r,0,Math.cos(a)*r);uv.push(u,v);if(i<nu&&j<nv){const q=i*(nv+1)+j,b=q+nv+1;idx.push(q,b,q+1,q+1,b,b+1);}}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);return g;}
@@ -34,7 +32,7 @@ class ArcPool{
 }
 
 export class WonderVFX{
- constructor(root,{quality=.72}={}){this.root=root;this.group=new THREE.Group();this.group.name='wonder-wave-vfx';root.add(this.group);this.blobs=new InstancePool(this.group,Math.round(72*quality),blobGeo,new THREE.MeshLambertMaterial({vertexColors:true,transparent:true,opacity:.9,depthWrite:false}));this.steam=new InstancePool(this.group,Math.round(56*quality),spriteGeo,steamMaterial(),{billboard:true});this.rings=new InstancePool(this.group,Math.round(40*quality),ringGeo,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.8,depthWrite:false,side:THREE.DoubleSide}));this.arcs=new ArcPool(this.group);this.seaT=.3;this.jetActive=new WeakSet();this.scratch=new THREE.Vector3();}
+ constructor(root,{quality=.72}={}){this.root=root;this.group=new THREE.Group();this.group.name='wonder-wave-vfx';root.add(this.group);this.blobs=new ParticlePool(this.group,Math.round(72*quality),blobGeo,{billboard:true,kind:'spark'});this.steam=new ParticlePool(this.group,Math.round(56*quality),spriteGeo,{lit:true,kind:'steam'});this.rings=new ParticlePool(this.group,Math.round(40*quality),ringGeo,{kind:'ring'});this.arcs=new ArcPool(this.group);this.seaT=.3;this.jetActive=new WeakSet();this.scratch=new THREE.Vector3();}
  blob(p,v,color,o){return this.blobs.emit(p,v,color,o);}
  puff(p,v,color,o){return this.steam.emit(p,v,color,o);}
  ring(p,color,r=.5,life=.5,grow=1.7){return this.rings.emit(p,UP,color,{life,size:r,grow});}

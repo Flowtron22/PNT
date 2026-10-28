@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {localSnapshot,multiplayerEndpoint,MultiplayerConnection} from '../../src/pnt/multiplayer.js';
+import {localSnapshot,multiplayerEndpoint,MultiplayerConnection,deadline,wakeMultiplayerServer} from '../../src/pnt/multiplayer.js';
 import {createRound} from '../../src/pnt/rules.js';
 test('each client sees its own seat first without changing server IDs or teammates',()=>{
  const round=createRound('chaser',[{id:'cash',amount:2000}]);round.actors[3].rescuer=2;round.caches[0].harvester=2;const players=Array.from({length:4},(_,i)=>({sessionId:`p${i}`})),snapshot={round,poses:players.map((_,id)=>({id,position:[id,0,0]})),hazards:[{id:7,owner:2}],events:[{id:8,actor:0}]},guest=localSnapshot(snapshot,players,'p2');
@@ -17,3 +17,4 @@ test('expired reconnect leaves the stale room once and temporary reconnect error
  assert.equal(leaves,1);assert.equal(connection.room,null);assert.equal(connection.closed,true);assert.deepEqual(events,['expired']);assert.deepEqual(notices,[]);
  const active=new MultiplayerConnection({onConnection:()=>{},onNotice:message=>notices.push(message)});active.room={reconnection:{isReconnecting:false}};active.connectionError(400,'Invalid action');assert.deepEqual(notices,['Invalid action']);
 });
+test('server wake-up probes health and connection waits have a clear deadline',async()=>{let request;await wakeMultiplayerServer('https://game.example/',{fetcher:async(url,options)=>{request={url,options};},timeout:20});assert.equal(request.url,'https://game.example/health');assert.equal(request.options.mode,'no-cors');await assert.rejects(deadline(new Promise(()=>{}),5,'too slow'),/too slow/);});
