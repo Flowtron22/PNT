@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.39**, online multiplayer test release. Server: **0.9.19**.
+Current app version: **0.9.40**, online multiplayer test release. Server: **0.9.19**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,19 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.40 replaces the flat settings list with Wonder Wave-style Controls, Video,
+Audio and Gameplay tabs, animated explanatory previews, immediate application,
+automatic local saving and a two-press reset (including key bindings). It migrates
+existing audio/graphics/haptic preferences. New real controls: joystick size and
+sensitivity, render-only 30/60/Max cap and measured match FPS, master/music/SFX
+volume, camera shake and HUD scale. Reduced motion and existing key mapping,
+menu sounds, vibration and fullscreen remain available. Presentation settings do
+not change multiplayer rules or maximum movement speed. Settings modules and
+CSS are separate from main.js. Landscape phone and desktop layouts verified
+through browser control; persistence and reset verified across reloads.
+Client-only release; server unchanged.
+
 
 0.9.39 keeps Iceberg's chill 120 BPM, 64-second arrangement while adding a
 more playful game-like groove: syncopated synthesized snow-pop percussion,

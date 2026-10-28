@@ -14,6 +14,8 @@ import {attachHeldHammer} from './held-tools.js';
 import {createMoneyTrail} from './money-trail.js';
 import {PROFILE_KEY,readProfile,saveProfile,profileName,recordMatch} from './profile.js';
 import {renderHomeWidgets} from './home-widgets.js';
+import {loadSettings,saveSettings,DEFAULT_SETTINGS,createRenderGate} from './settings.js';
+import {mountSettings} from './settings-ui.js';
 import {bindGameControls} from './touch-controls.js';
 import {configureFullscreen} from './fullscreen.js';
 import {configureLandscape} from './landscape.js';
@@ -42,6 +44,9 @@ let online=null,onlineLoading=false,onlineRoster='',onlineEventId=0,onlineSnapsh
 import {findPath,screenToWorld} from './navigation.js';
 import {buildWalkGrid,arenaBounds,solidForGameplay} from './world-navigation.js';
 let resultPortrait=null,bindings=loadBindings(localStorage),bindingCapture=null,cameraShake=0,shakeTime=0,stageFrame=null;
+let settings=loadSettings(localStorage,matchMedia('(prefers-reduced-motion: reduce)').matches),settingsPage=null;
+const renderGate=createRenderGate();let fpsSince=performance.now(),fpsFrames=0,renderElapsed=0;
+const fpsCounter=document.createElement('div');fpsCounter.id='fps-counter';fpsCounter.hidden=true;document.body.append(fpsCounter);
 const haptics=createHaptics(navigator,{enabled:localStorage.getItem('pnt-haptics')!=='off'});
 let touchControls,interactHeld=false,menuArena=null,gameArena=null,mapData=null,menuNavigation=null;
 let profile=readProfile(localStorage);
@@ -62,7 +67,7 @@ const up=new THREE.Vector3(0,1,0),down=new THREE.Vector3(0,-1,0);
 const loader=new GLTFLoader(),cache=new Map();
 const gameFX=createGameFX(matchRoot);
 
-let ready=false,role='runner',quality=localStorage.getItem('psx-web-quality')||'balanced';
+let ready=false,role='runner',quality=settings.quality;
 let costume=normalizeCostume(localStorage.getItem('pnt-costume'));
 let loadout=normalizeLoadout(localStorage.getItem('pnt-loadout'),localStorage.getItem('pnt-tool')),selectedTool=loadout[0];
 let round=null,avatars=[],preview=null,previewClip='idle',previewTime=0,templates={},clips={},ground=[],bounds=null,grid=null;
@@ -70,7 +75,7 @@ let paused=false,activePage='home',toastTime=0,lastFrame=performance.now(),busy=
 const keys=new Set(),input={x:0,z:0},cameraTarget=new THREE.Vector3(),hazards=[];
 let room=null,returnToLobby=false,lobbyDisplays=[];
 const lobbyCamera=new THREE.PerspectiveCamera(34,1,.05,30);lobbyCamera.position.set(0,1.3,3.2);lobbyCamera.lookAt(0,.8,0);
-let reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let reduced=settings.reducedMotion;
 const uiEffects=createWonderUI({blocked:()=>busy||!$('#loading').hidden||!ui.hud.hidden,reduced:()=>reduced});
 const gameAudio=createGameplayAudio(()=>uiEffects.sounds.engine);
 void gameAudio.preload();
@@ -80,7 +85,16 @@ document.addEventListener('pointerdown',()=>void gameAudio.prepare(),{capture:tr
 document.addEventListener('keydown',()=>void gameAudio.prepare(),{capture:true,once:true});
 document.body.classList.toggle('reduced-motion',reduced);
 function resize(){const aspect=innerWidth/innerHeight;menuCamera.aspect=aspect;menuCamera.updateProjectionMatrix();matchCamera.aspect=aspect;matchCamera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,quality==='battery'?1:1.5));renderer.setSize(innerWidth,innerHeight,false);}
-addEventListener('resize',resize);resize();
+function applySettings(initial=false){
+ const qualityChanged=quality!==settings.quality;quality=settings.quality;reduced=settings.reducedMotion;document.body.classList.toggle('reduced-motion',reduced);
+ document.documentElement.style.setProperty('--joystick-size',settings.joystickSize);document.documentElement.style.setProperty('--hud-scale',settings.hudScale);
+ haptics.setEnabled(settings.haptics);if(!settings.haptics)haptics.stop();
+ uiEffects.sounds.engine.setVolumes({master:.8*settings.master});uiEffects.sounds.setEnabled(settings.uiSounds);
+ gameAudio.setLevels({sfx:settings.sfx,music:settings.music});gameAudio.setEnabled(settings.sfx>0);gameAudio.setMusic(settings.music>0);
+ if(initial||qualityChanged)resize();
+}
+function changeSetting(key,value){settings={...settings,[key]:value};const saved=saveSettings(localStorage,settings);applySettings();return saved;}
+addEventListener('resize',resize);applySettings(true);
 function show(name){if(name==='menu'){scene.fog.near=38;scene.fog.far=85;}for(const [key,node]of Object.entries(ui))node.hidden=key!==name;document.body.classList.toggle('playing',name==='hud'||name==='pause'||name==='results');document.body.classList.toggle('lobby-view',name==='lobby');document.body.classList.toggle('menu-view',name==='menu');$('#lobby-backdrop').hidden=!['menu','lobby'].includes(name);scene.background=name==='menu'?null:new THREE.Color('#70688f');floor.visible=name!=='menu';if(menuArena)menuArena.visible=false;}
 function say(text,seconds=2){$('#toast').textContent=text;toastTime=seconds;}
 function clearInput(){online?.input(0,0,false,performance.now(),true);haptics.stop();interactHeld=false;keys.clear();input.x=input.z=0;touchControls?.reset();}
@@ -218,8 +232,8 @@ function renderTools(){
  for(const slot of [0,1])$('#equip-slot'+(slot+1)).onclick=()=>{loadout=equipTool(loadout,selectedTool,slot);localStorage.setItem('pnt-loadout',JSON.stringify(loadout));labels();renderTools();};
  $('#preview-tool').onclick=()=>demo(selected.clip);
 }
-function openPage(name){if(busy)return;bindingCapture=null;activePage=name;if(preview)preview.group.visible=!['play','join','credits'].includes(name);$('#page-back').textContent=returnToLobby?'← LOBBY':'← BACK';ui.menu.dataset.page=name;$('#home').hidden=name!=='home';$('#home-widgets').hidden=name!=='home';$('#page').hidden=name==='home';$('#page').scrollTop=0;if(name==='home'){labels();previewClip='idle';previewTime=0;if(preview)preview.anim.play('idle');return;}
- $('#page-title').textContent={play:'LET’S PLAY',join:'JOIN THE CHASE',tools:'TOOLS OF THE TRADE',costume:'YOUR LOOK',settings:'SETTING',credits:'CREDIT'}[name];
+function openPage(name){if(busy)return;bindingCapture=null;settingsPage=null;activePage=name;if(preview)preview.group.visible=!['play','join','credits','settings'].includes(name);$('#page-back').textContent=returnToLobby?'← LOBBY':'← BACK';ui.menu.dataset.page=name;$('#home').hidden=name!=='home';$('#home-widgets').hidden=name!=='home';$('#page').hidden=name==='home';$('#page').scrollTop=0;if(name==='home'){labels();previewClip='idle';previewTime=0;if(preview)preview.anim.play('idle');return;}
+ $('#page-title').textContent={play:'LET’S PLAY',join:'JOIN THE CHASE',tools:'TOOLS OF THE TRADE',costume:'YOUR LOOK',settings:'SETTINGS',credits:'CREDIT'}[name];
  $('#page-kicker').hidden=true;
  $('#page-kicker').textContent={play:'GATHER THE CREW',join:'FIND YOUR CREW',tools:'A LITTLE HELP FOR YOUR GETAWAY',costume:'LOOK GOOD. RUN FAST.',settings:'MAKE YOURSELF COMFORTABLE',credits:'MADE FOR A LITTLE TROUBLE'}[name];
  const content=$('#page-content');
@@ -236,8 +250,13 @@ function openPage(name){if(busy)return;bindingCapture=null;activePage=name;if(pr
   content.innerHTML=`<div class="wardrobe-grid">${COSTUMES.map(c=>choice(c.id,c.name,c.id===costume?'EQUIPPED':'',c.id===costume,'<img src="assets/pnt/portraits/'+c.id+'.png" alt="">')).join('')}</div><button id="costume-dance" class="secondary">SHOW YOUR MOVES</button>`;
   for(const b of content.querySelectorAll('[data-choice]'))b.onclick=()=>selectCostume(b.dataset.choice);$('#costume-dance').onclick=()=>demo('dance');
  }else if(name==='settings'){
-  content.innerHTML=`<div class="setting-row"><label for="quality">Graphics</label><select id="quality"><option value="balanced">Balanced</option><option value="battery">Battery</option></select></div><div class="setting-row"><label for="motion">Menu motion</label><select id="motion"><option value="normal">Normal</option><option value="reduced">Reduced</option></select></div><div class="setting-row"><label for="ui-sounds">UI sounds</label><select id="ui-sounds"><option value="on">On</option><option value="off">Off</option></select></div><div class="setting-row"><label for="haptics-setting">Vibration<small>${haptics.supported?'Rocket and banana effects.':'Not supported by this browser.'}</small></label><select id="haptics-setting"><option value="on">On</option><option value="off">Off</option></select></div><div class="setting-row"><label for="game-sounds">Gameplay sounds</label><select id="game-sounds"><option value="on">On</option><option value="off">Off</option></select></div><div class="setting-row"><label for="game-music">Gameplay music</label><select id="game-music"><option value="on">On</option><option value="off">Off</option></select></div><section class="key-mapping"><h2>KEY MAPPING</h2><div id="key-binding-list"></div><button id="reset-bindings" class="secondary">RESET KEY MAPPING</button><p id="binding-status" role="status"></p></section><button id="fullscreen" class="secondary">FULLSCREEN</button><p id="fullscreen-status" class="page-copy fullscreen-help" role="status"></p>`;
-  $('#game-sounds').value=gameAudio.enabled?'on':'off';$('#game-sounds').onchange=e=>gameAudio.setEnabled(e.target.value==='on');$('#game-music').value=gameAudio.musicEnabled?'on':'off';$('#game-music').onchange=e=>gameAudio.setMusic(e.target.value==='on');$('#haptics-setting').disabled=!haptics.supported;$('#haptics-setting').value=haptics.enabled?'on':'off';$('#haptics-setting').onchange=e=>{haptics.setEnabled(e.target.value==='on');localStorage.setItem('pnt-haptics',e.target.value);};renderBindingSettings();$('#reset-bindings').onclick=()=>{bindings={...DEFAULT_BINDINGS};bindingCapture=null;saveBindings(localStorage,bindings);renderBindingSettings();refreshControlHints();};$('#ui-sounds').value=uiEffects.sounds.enabled?'on':'off';$('#ui-sounds').onchange=e=>uiEffects.sounds.setEnabled(e.target.value==='on');$('#quality').value=quality;$('#quality').onchange=e=>{quality=e.target.value;localStorage.setItem('psx-web-quality',quality);resize();};$('#motion').value=reduced?'reduced':'normal';$('#motion').onchange=e=>{reduced=e.target.value==='reduced';document.body.classList.toggle('reduced-motion',reduced);};configureFullscreen($('#fullscreen'),$('#fullscreen-status'));
+  settingsPage=mountSettings(content,{getSettings:()=>settings,onChange:changeSetting,hapticsSupported:haptics.supported,
+   bindingsMarkup:'<div id="key-binding-list"></div><button id="reset-bindings" class="secondary">RESET KEY MAPPING</button><p id="binding-status" role="status"></p>',
+   onBindings:()=>{renderBindingSettings();$('#reset-bindings').onclick=()=>{bindings={...DEFAULT_BINDINGS};bindingCapture=null;saveBindings(localStorage,bindings);renderBindingSettings();refreshControlHints();};},
+   onCloseBindings:()=>{bindingCapture=null;},
+   onFullscreen:(button,status)=>configureFullscreen(button,status),
+   onReset:()=>{settings={...DEFAULT_SETTINGS,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches};bindings={...DEFAULT_BINDINGS};bindingCapture=null;saveBindings(localStorage,bindings);refreshControlHints();const saved=saveSettings(localStorage,settings);applySettings();return saved;}
+  });
  }else{
   content.innerHTML=creditsMarkup();
  }
@@ -270,9 +289,9 @@ $('#page-back').onclick=goBack;$('#pause-button').onclick=pauseGame;$('#resume')
 addEventListener('keydown',e=>{if(!bindingCapture)return;e.preventDefault();e.stopImmediatePropagation();if(e.code==='Escape'){bindingCapture=null;renderBindingSettings();return;}const next=rebind(bindings,bindingCapture,e.code);if(!next){$('#binding-status').textContent='Choose a letter, number, arrow, Space, Shift, Ctrl or Enter.';return;}bindings=next;bindingCapture=null;clearInput();saveBindings(localStorage,bindings);renderBindingSettings();refreshControlHints();},true);
 addEventListener('keydown',e=>{if(e.target.matches('select,input,textarea')||busy)return;if(e.code==='Escape'){if(paused)resume();else if(round)pauseGame();else goBack();return;}if(round&&Object.values(bindings).includes(e.code)){e.preventDefault();keys.add(e.code);}if(round&&!paused&&!e.repeat){if(e.code===bindings.interact)interact();if(e.code===bindings.tool1)useTool(0);if(e.code===bindings.tool2)useTool(1);}});
 addEventListener('keyup',e=>{keys.delete(e.code);if(e.code===bindings.interact)stopInteract();});addEventListener('blur',()=>{clearInput();pauseGame();});document.addEventListener('visibilitychange',()=>{lastFrame=performance.now();if(document.hidden){pauseGame();gameAudio.stop();}});
-touchControls=bindGameControls({root:document,joystick:$('#joystick'),knob:$('#stick'),isActive:()=>!ui.hud.hidden&&!busy&&!paused&&!phoneLandscape.blocked&&round?.phase==='playing'&&!(round.startRemaining>0),onMove:(x,z)=>{input.x=x;input.z=z;},actions:[[$('#interact'),interact,stopInteract],[$('#tool-action1'),()=>useTool(0)],[$('#tool-action2'),()=>useTool(1)],[$('#pause-button'),pauseGame]]});
+touchControls=bindGameControls({root:document,sensitivity:()=>settings.joystickSensitivity,joystick:$('#joystick'),knob:$('#stick'),isActive:()=>!ui.hud.hidden&&!busy&&!paused&&!phoneLandscape.blocked&&round?.phase==='playing'&&!(round.startRemaining>0),onMove:(x,z)=>{input.x=x;input.z=z;},actions:[[$('#interact'),interact,stopInteract],[$('#tool-action1'),()=>useTool(0)],[$('#tool-action2'),()=>useTool(1)],[$('#pause-button'),pauseGame]]});
 $('#pause-button').onclick=null;
-for(const name of ['fullscreenchange','webkitfullscreenchange'])document.addEventListener(name,()=>{if(activePage==='settings'&&$('#fullscreen'))configureFullscreen($('#fullscreen'),$('#fullscreen-status'));});
+for(const name of ['fullscreenchange','webkitfullscreenchange'])document.addEventListener(name,()=>{if(activePage==='settings')settingsPage?.refreshFullscreen();});
 
 function restoreRemoteFurniture(){for(const f of remoteFurniture){f.parent.add(f.mesh);f.mesh.position.copy(f.position);f.mesh.quaternion.copy(f.quaternion);f.mesh.scale.copy(f.scale);}remoteFurniture=[];}
 function prepareRemoteFurniture(){const meshes=[];gameArena.traverse(o=>{if(o.isMesh&&/^BP_Coffee(Chair|Table)/.test(o.name))meshes.push(o);});remoteFurniture=meshes.map(mesh=>{const item={mesh,parent:mesh.parent,position:mesh.position.clone(),quaternion:mesh.quaternion.clone(),scale:mesh.scale.clone()};matchRoot.attach(mesh);return item;});}
@@ -413,7 +432,7 @@ function updateHud(){
  const target=interactionTarget(0);$('#interact').disabled=round.startRemaining>0||state.inSmoke&&target?.type!=='rescue'||state.caught||state.effectTime>0||state.role==='chaser'||state.captureRemaining>0;const hint=$('#interaction-hint');hint.textContent=round.startRemaining>0?'GET READY!':state.inSmoke&&!state.caught?'SMOKE COVER · NO TOOLS OR STEALING':state.captureRemaining>0?'CAPTURING…':state.caught?(state.releaseCooldown>0?'RELEASE UNLOCKS IN '+Math.ceil(state.releaseCooldown)+'s':'WAIT FOR A TEAMMATE TO RELEASE YOU'):state.role==='chaser'?'CATCH ALL THIEVES · PROTECT THE CACHES':target?.type==='rescue'?(target.target.releaseCooldown>0?'TEAMMATE LOCKED '+Math.ceil(target.target.releaseCooldown)+'s':'HOLD INTERACT · RELEASE TEAMMATE'):target?.type==='money'?(state.interacting?'STEALING · YOU $'+Math.floor(state.money).toLocaleString():interactHeld&&target.target.harvester!==null?'A TEAMMATE IS USING THIS CACHE':'HOLD INTERACT · STEAL MONEY'):'FIND A MONEY CACHE';
 }
 
-function positionMatchCamera(){const view=matchView(menuCamera.aspect,stageFrame);scene.fog.near=view.distance+20;scene.fog.far=view.distance+85;const far=view.distance+180;if(matchCamera.far!==far){matchCamera.far=far;matchCamera.updateProjectionMatrix();}matchCamera.position.copy(cameraTarget).add(new THREE.Vector3(...view.offset));const shake=reduced?{x:0,z:0}:shakeOffset(shakeTime,cameraShake);matchCamera.position.x+=shake.x;matchCamera.position.z+=shake.z;matchCamera.lookAt(cameraTarget);}
+function positionMatchCamera(){const view=matchView(menuCamera.aspect,stageFrame);scene.fog.near=view.distance+20;scene.fog.far=view.distance+85;const far=view.distance+180;if(matchCamera.far!==far){matchCamera.far=far;matchCamera.updateProjectionMatrix();}matchCamera.position.copy(cameraTarget).add(new THREE.Vector3(...view.offset));const shake=reduced?{x:0,z:0}:shakeOffset(shakeTime,cameraShake*settings.cameraShake);matchCamera.position.x+=shake.x;matchCamera.position.z+=shake.z;matchCamera.lookAt(cameraTarget);}
 
 async function boot(){beginLoading('GETTING READY');try{let done=0;const names=['thief','police','mall-slice'];const items=await Promise.all(names.map(async name=>{const value=await getGLB(name,`assets/pnt/${name}.glb`);progress(++done/4*70,`Loading ${name==='mall-slice'?'Mall promenade':name}…`);return value;}));templates={thief:items[0],police:items[1]};const response=await fetch('assets/pnt/animations/clips.json?v=idle-b1');if(!response.ok)throw new Error('Animation download failed');const data=await response.json();clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));progress(75,'Preparing the walkable arena…');const arena=items[2].scene;menuArena=arena;arena.updateMatrixWorld(true);const initial=new THREE.Box3().setFromObject(arena),center=initial.getCenter(new THREE.Vector3());arena.position.add(new THREE.Vector3(-center.x,-initial.min.y,-center.z));scene.add(arena);arena.updateMatrixWorld(true);matteMall(arena);arena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){m.roughness=Math.max(.7,m.roughness||0);if(m.map)m.map.anisotropy=2;}}});bounds=new THREE.Box3().setFromObject(arena);buildGround();menuNavigation={ground,bounds,grid};await ensureCostume();progress(90,'Warming up characters and fonts…');previewModel();await document.fonts.ready;await renderer.compileAsync(scene,menuCamera);progress(100,'All set. Let’s play.');ready=true;document.body.dataset.assets='ready';show('menu');endLoading();openPage('home');}catch(e){document.body.dataset.assets='error';loadError(e,()=>location.reload());}}
 function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed=Math.max(0,(now-lastFrame)/1000),dt=Math.min(elapsed,.05);lastFrame=now;uiEffects.tick(dt);waterAnimation?.update(dt);tickStageVerdict(elapsed);haptics.update(round?.actors[0]?.effect,Math.min(elapsed,.1),!!round&&round.phase==='playing'&&!paused&&!busy&&!document.hidden&&round.actors[0].effectTime>0);if(resultPortrait&&!ui.results.hidden)resultPortrait.update(dt);
@@ -421,7 +440,10 @@ function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed
  else if(preview){const homePreview=['home','tools','costume'].includes(activePage);preview.group.scale.setScalar(homePreview?1.5:1);preview.group.rotation.y=homePreview?-Math.PI/6:0;preview.anim.update(dt);if(previewTime>0){previewTime-=dt;if(previewTime<=0)preview.anim.play('idle');}const p=preview.group.position,narrow=innerWidth<760,pagePreview=narrow&&activePage!=='home';const distance=pagePreview?9:4.6,offset=distance*Math.tan(THREE.MathUtils.degToRad(menuCamera.fov/2))*menuCamera.aspect*(activePage==='home'?(narrow?.28:.16):.43);menuCamera.position.set(p.x,p.y+(homePreview?1.85:1.45),p.z+distance);menuCamera.lookAt(p.x-offset,p.y+(pagePreview?3:homePreview?1.2:.8),p.z);}}
  moneyTrail.update(round,position=>{matchRoot.updateMatrixWorld();const p=matchRoot.localToWorld(new THREE.Vector3(...position).addScaledVector(up,2.4)).project(matchCamera);return p.z>=-1&&p.z<=1&&Math.abs(p.x)<=1&&Math.abs(p.y)<=1?{x:(p.x*.5+.5)*innerWidth,y:(-p.y*.5+.5)*innerHeight}:null;},elapsed,!!round&&!ui.hud.hidden&&!paused&&!busy&&!document.hidden&&!phoneLandscape.blocked);
  const audioActive=!!round&&round.phase==='playing'&&!(round.startRemaining>0)&&!paused&&!busy&&!document.hidden&&!phoneLandscape.blocked;gameAudio.update(round,avatars,audioActive,!document.hidden&&!phoneLandscape.blocked&&!paused&&(!ui.menu.hidden||!ui.lobby.hidden||audioActive),mapData?.id);roundStart.update(round,elapsed);
- if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('#toast').textContent='';}updateMarkers();if(!ui.lobby.hidden&&!busy)renderLobbyCharacters(dt);else renderer.render(scene,round?matchCamera:menuCamera);
+ if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('#toast').textContent='';}updateMarkers();fpsCounter.hidden=!settings.showFps||ui.hud.hidden||busy;
+ renderElapsed+=elapsed;
+ if(renderGate(now,settings.fpsCap)){if(!ui.lobby.hidden&&!busy)renderLobbyCharacters(Math.min(renderElapsed,.1));else renderer.render(scene,round?matchCamera:menuCamera);fpsFrames++;renderElapsed=0;}
+ if(now-fpsSince>=1000){fpsCounter.textContent=Math.round(fpsFrames*1000/(now-fpsSince))+' FPS';fpsSince=now;fpsFrames=0;}
 }
 const phoneLandscape=configureLandscape({onChange:()=>{clearInput();resize();}});
 frame();boot();

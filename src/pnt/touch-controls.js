@@ -1,10 +1,10 @@
 // Each finger owns its pointer independently. Gameplay never waits for a synthetic click.
-export function bindGameControls({root,joystick,knob,actions,isActive,onMove,viewport=()=>({width:root.defaultView?.innerWidth||globalThis.innerWidth||0})}){
+export function bindGameControls({root,joystick,knob,actions,isActive,onMove,sensitivity=()=>1,viewport=()=>({width:root.defaultView?.innerWidth||globalThis.innerWidth||0})}){
  let movementId=null,anchor=null;const pressed=new Map(),gameTouches=new Set(),cleanups=[];
  const restStyle=Object.fromEntries(['position','left','top','bottom'].map(key=>[key,joystick.style[key]||'']));
  const on=(node,type,fn,options)=>{node.addEventListener(type,fn,options);cleanups.push(()=>node.removeEventListener(type,fn,options));};
  const prevent=e=>{if(e.cancelable)e.preventDefault();};
- function move(e){const r=joystick.getBoundingClientRect(),radius=(r.width||106)*.34;let x=(e.clientX-(anchor?.x??r.left+r.width/2))/radius,z=-(e.clientY-(anchor?.y??r.top+r.height/2))/radius;const length=Math.max(1,Math.hypot(x,z));x/=length;z/=length;onMove(x||0,z||0);knob.style.transform=`translate(${x*radius}px,${-z*radius}px)`;}
+ function move(e){const r=joystick.getBoundingClientRect(),radius=(r.width||106)*.34/Math.max(.5,Math.min(1.5,sensitivity()));let x=(e.clientX-(anchor?.x??r.left+r.width/2))/radius,z=-(e.clientY-(anchor?.y??r.top+r.height/2))/radius;const length=Math.max(1,Math.hypot(x,z));x/=length;z/=length;onMove(x||0,z||0);knob.style.transform=`translate(${x*radius}px,${-z*radius}px)`;}
  function stopMovement(){const id=movementId;movementId=null;anchor=null;onMove(0,0);knob.style.transform='';Object.assign(joystick.style,restStyle);joystick.classList.remove('is-floating');try{if(id!==null&&joystick.hasPointerCapture?.(id))joystick.releasePointerCapture(id);}catch{}}
  function reset(){stopMovement();for(const item of pressed.values()){item.button.classList.remove('is-touch-down');item.release?.();}pressed.clear();}
  // Capture before HUD children: only a touch on the left half owns movement.
