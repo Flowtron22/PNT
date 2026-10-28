@@ -112,3 +112,5 @@ body.menu-view #lobby-backdrop{z-index:0}body.menu-view .menu-backdrop{z-index:1
 @media(max-width:759px) and (orientation:portrait){#menu[data-page=costume].oyen-customizing .page-panel{width:90vw}.oyen-coats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 #menu.oyen-customizing .character-label{display:none}
+
+.oyen-faces .face-swatch{position:relative;display:grid;place-items:center;width:44px;height:40px;padding:5px}.face-swatch i{display:block;width:26px;height:26px;border-radius:50%;background:var(--face-color);border:1px solid #ffffff55}.face-swatch[aria-pressed=true]:after{content:'✓';position:absolute;color:white;font:900 16px Rubik;text-shadow:0 1px 3px #000,0 -1px 2px #000}

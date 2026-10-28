@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 export const OYEN_COATS=[{id:'original',name:'Original orange'},{id:'black',name:'Midnight black'},{id:'spots',name:'White & yellow spots'},{id:'stripes',name:'Tiger stripes'}];
-export const OYEN_SKINS=[{id:'original',name:'Original face'},{id:'dark',name:'Dark skin'}];
+export const OYEN_SKINS=[{id:'original',name:'Face colour 1',color:'#dfb49d'},{id:'dark',name:'Face colour 2',color:'#74452f'}];
 export function normalizeOyenAppearance(value){return {coat:OYEN_COATS.some(c=>c.id===value?.coat)?value.coat:'original',skin:OYEN_SKINS.some(s=>s.id===value?.skin)?value.skin:'original'};}
 export function loadOyenAppearance(storage){try{return normalizeOyenAppearance(JSON.parse(storage.getItem('pnt-oyen-appearance')));}catch{return normalizeOyenAppearance();}}
 export function saveOyenAppearance(storage,value){try{storage.setItem('pnt-oyen-appearance',JSON.stringify(normalizeOyenAppearance(value)));}catch{}}
