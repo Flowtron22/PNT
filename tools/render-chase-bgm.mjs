@@ -1,4 +1,4 @@
-// Deterministic, original retro-arcade chase music renderer.
+// Deterministic, original animated-heist chase music renderer.
 // Usage: node tools/render-chase-bgm.mjs [output.wav]
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,25 +15,27 @@ function mix(index,value,pan=0){
  if(index<0||index>=length)return;
  left[index]+=value*Math.sqrt((1-pan)*.5);right[index]+=value*Math.sqrt((1+pan)*.5);
 }
-function wave(type,phase){
+function wave(type,phase,progress=0){
  const turn=phase-Math.floor(phase);
- if(type==='pulse')return turn<.25?1:-1;
- if(type==='square')return turn<.5?1:-1;
  if(type==='triangle')return 1-4*Math.abs(turn-.5);
+ const one=Math.sin(phase*Math.PI*2),two=Math.sin(phase*Math.PI*4),three=Math.sin(phase*Math.PI*6),four=Math.sin(phase*Math.PI*8);
+ if(type==='pluck')return one*.72+two*.2*(1-progress)**1.5+three*.08*(1-progress)**2.5;
+ if(type==='brass')return one*.7+two*.19+three*.08+four*.03;
+ if(type==='warm')return one*.82+two*.13+three*.05;
  return Math.sin(phase*Math.PI*2);
 }
-function tone(start,dur,note,{type='square',amp=.1,pan=0,attack=.006,release=.06,vibrato=0,slide=0}={}){
+function tone(start,dur,note,{type='warm',amp=.1,pan=0,attack=.006,release=.06,vibrato=0,slide=0,echo=0}={}){
  const begin=Math.floor(start*rate),count=Math.floor(dur*rate),base=midi(note);let phase=0;
  for(let i=0;i<count;i++){
   const t=i/rate,p=i/Math.max(1,count-1),freq=base*2**((slide*p)/12)*(1+Math.sin(t*Math.PI*11)*vibrato);
   phase+=freq/rate;
   const env=Math.min(1,t/attack,Math.max(0,(dur-t)/release));
-  mix(begin+i,wave(type,phase)*amp*env,pan);
+  const value=wave(type,phase,p)*amp*env;mix(begin+i,value,pan);if(echo)mix(begin+i+Math.floor(beat*.375*rate),value*echo,-pan*.65);
  }
 }
 function kick(start,amp=.42){
  const begin=Math.floor(start*rate),dur=.18,count=Math.floor(dur*rate);let phase=0;
- for(let i=0;i<count;i++){const t=i/rate,p=t/dur,freq=145*(1-p)**3+48;phase+=freq/rate;mix(begin+i,Math.sin(phase*Math.PI*2)*amp*(1-p)**2.4);}
+ for(let i=0;i<count;i++){const t=i/rate,p=t/dur,freq=145*(1-p)**3+48;phase+=freq/rate;const body=Math.sin(phase*Math.PI*2)*amp*(1-p)**2.4,click=random()*.045*(1-p)**14;mix(begin+i,body+click);}
 }
 function snare(start,amp=.2){
  const begin=Math.floor(start*rate),dur=.15,count=Math.floor(dur*rate);let last=0;
@@ -43,7 +45,7 @@ function hat(start,open=false,amp=.075,pan=0){
  const begin=Math.floor(start*rate),dur=open?.16:.045,count=Math.floor(dur*rate);let last=0;
  for(let i=0;i<count;i++){const p=i/count,n=random(),high=n-last;last=n;mix(begin+i,high*amp*(1-p)**(open?2:5),pan);}
 }
-function chord(start,notes,amp=.035){for(let i=0;i<notes.length;i++)tone(start,.16,notes[i],{type:'pulse',amp,pan:(i-1)*.22,attack:.003,release:.08});}
+function chord(start,notes,amp=.035){for(let i=0;i<notes.length;i++)tone(start,.22,notes[i],{type:'warm',amp,pan:(i-1)*.22,attack:.012,release:.12});}
 
 const roots=[40,36,43,38]; // E minor: Em, C, G, D
 const chordNotes=[[52,55,59],[48,52,55],[50,55,59],[50,54,57]];
@@ -64,18 +66,18 @@ for(let bar=0;bar<bars;bar++){
   else if(bar>=8)hat(time,false,.032,-.28);
  }
  if(bar%8===7){snare(barTime+3.5*beat,.15);snare(barTime+3.75*beat,.17);}
- // Springy triangle bass and bright off-beat chord shots.
- for(let eighth=0;eighth<8;eighth++)tone(barTime+eighth*beat/2,.32*beat,root+bassPattern[eighth],{type:'triangle',amp:.13,pan:-.06,attack:.004,release:.055,slide:eighth===7?-2:0});
+ // Springy warm bass and soft off-beat chord shots.
+  for(let eighth=0;eighth<8;eighth++)tone(barTime+eighth*beat/2,.38*beat,root+bassPattern[eighth],{type:'warm',amp:.12,pan:-.06,attack:.008,release:.075,slide:eighth===7?-2:0});
  for(const offbeat of [.5,1.5,2.5,3.5])chord(barTime+offbeat*beat,chordNotes[chordIndex],bar>=24?.042:.034);
  // Continuous low-level arpeggio supplies the procedural clockwork feel.
- for(let step=0;step<16;step++)tone(barTime+step*beat/4,.16*beat,root+12+arpOffsets[(step+bar*3)%16],{type:'pulse',amp:.022+(progress*.012),pan:step%2?.45:-.45,attack:.002,release:.035});
+  for(let step=0;step<16;step++)tone(barTime+step*beat/4,.22*beat,root+12+arpOffsets[(step+bar*3)%16],{type:'pluck',amp:.025+(progress*.01),pan:step%2?.45:-.45,attack:.004,release:.055,echo:.16});
  // Two-bar call-and-response lead; later sections climb for more urgency.
  if(bar>=2){
   const phrase=bar<16?(bar%4<2?leadA:leadB):leadC;
-  for(let step=0;step<16;step++){const interval=phrase[(step+(bar%2)*8)%16];if(interval!==null)tone(barTime+step*beat/4,.2*beat,root+interval+12,{type:bar>=16?'square':'pulse',amp:bar>=24?.066:.052,pan:.12,attack:.004,release:.045,vibrato:.0015});}
+  for(let step=0;step<16;step++){const interval=phrase[(step+(bar%2)*8)%16];if(interval!==null)tone(barTime+step*beat/4,.28*beat,root+interval+12,{type:bar>=16?'brass':'pluck',amp:bar>=24?.061:.05,pan:.12,attack:bar>=16?.018:.006,release:.075,vibrato:.0025,echo:.12});}
  }
  // Short rising alarm response without using any existing melody.
- if(bar%4===3)for(let i=0;i<4;i++)tone(barTime+(3+i*.25)*beat,.18*beat,72+i*2,{type:'square',amp:.045,pan:-.18+i*.12,attack:.003,release:.04});
+ if(bar%4===3)for(let i=0;i<4;i++)tone(barTime+(3+i*.25)*beat,.24*beat,72+i*2,{type:'brass',amp:.04,pan:-.18+i*.12,attack:.014,release:.07,echo:.1});
 }
 
 // Gentle saturation, DC-safe high-pass, and peak normalization.
