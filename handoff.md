@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.41**, online multiplayer test release. Server: **0.9.19**.
+Current app version: **0.9.42**, online multiplayer test release. Server: **0.9.19**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,21 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.42 is an Oyen-only, code-based appearance experiment. Selecting Oyen in
+Costume exposes Original orange, Midnight black, White & yellow spots and Tiger
+stripes, plus independent Original face / Dark skin choices. Preferences persist
+in pnt-oyen-appearance. Per-avatar material and cloth geometry clones preserve
+the source GLB, textures and skeleton; rest-position shader patterns follow
+skinning without swimming. Head bone weights exclude the chest bell. Face and
+eye materials remain separate; black gloves/shoes and gold bell are preserved.
+Original can be restored immediately. Menu framing leaves space for the model.
+Applies to the local player model in menu, local/online lobby, match and results;
+not network-replicated yet, so other players see original Oyen. Portrait PNGs
+remain original. This is intentional pending user approval of the visual test;
+no Blender changes and no server update. 144 client tests pass, with actual
+Oyen geometry/resource isolation and browser shader previews checked.
+
 
 0.9.41 adds standard-mapped browser controllers, adapted from Wonder Wave: radial
 left-stick dead zone, D-pad movement, A/Cross held interaction, X/Square tool 1,

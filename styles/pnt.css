@@ -103,3 +103,12 @@ body.menu-view #lobby-backdrop{z-index:0}body.menu-view .menu-backdrop{z-index:1
 #hud .crew-head.is-capturing .crew-cross{color:#ffc56b}
 #hud .crew-head .crew-release{position:absolute;right:0;bottom:0;min-width:13px;padding:1px 2px;border-radius:4px;background:#1c1836;color:white;font:800 8px/1 Rubik;text-align:center}
 @media(max-height:500px) and (orientation:landscape){#hud .crew-chip.crew-head{width:28px;height:28px}#hud .crew-status{gap:5px}#hud .crew-head .crew-cross{font-size:27px}}
+
+/* Oyen-only appearance experiment: materials change; the source asset stays intact. */
+.oyen-variants{background:#211b32ed;border:2px solid #635374;border-radius:16px;padding:14px;margin-bottom:16px}.oyen-variants h2{font:16px Titan;margin:0 0 12px}.oyen-coats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.oyen-swatch{min-width:0;display:flex;flex-direction:column;align-items:center;gap:7px;border:2px solid #625570;border-radius:10px;padding:9px 4px;background:#30273e;font:700 9px/1.3 Rubik;color:white}.oyen-swatch i{width:30px;height:30px;border-radius:50%;border:2px solid #ffffff44;background:#e88b1d}.oyen-swatch.coat-black i{background:#252a32}.oyen-swatch.coat-spots i{background:radial-gradient(ellipse at 25% 30%,#ffcf35 0 22%,transparent 24%),radial-gradient(ellipse at 80% 80%,#ffcf35 0 30%,transparent 32%),#f6f1e7}.oyen-swatch.coat-stripes i{background:repeating-linear-gradient(145deg,#e8aa48 0 6px,#252a32 7px 10px)}.oyen-variants button[aria-pressed=true]{border-color:#ff941c;box-shadow:0 2px 0 #9c4c0b}.oyen-faces{display:flex;gap:8px;align-items:center;margin-top:12px}.oyen-faces>span{font:800 9px Rubik;color:#bcb0ce;margin-right:5px}.oyen-faces button{border:2px solid #625570;background:#30273e;border-radius:8px;color:white;font:700 10px Rubik;padding:8px 12px}.oyen-variants button:focus-visible{outline:3px solid #91d9ff;outline-offset:3px}
+@media(max-height:500px) and (orientation:landscape){.oyen-variants{padding:9px}.oyen-variants h2{font-size:13px;margin-bottom:7px}.oyen-swatch{flex-direction:row;font-size:8px;padding:6px}.oyen-swatch i{width:22px;height:22px;flex:none}.oyen-faces{margin-top:8px}}
+
+#menu[data-page=costume].oyen-customizing .page-panel{width:min(51vw,740px)}
+@media(max-width:759px) and (orientation:portrait){#menu[data-page=costume].oyen-customizing .page-panel{width:90vw}.oyen-coats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+#menu.oyen-customizing .character-label{display:none}
