@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.32**, online multiplayer test release. Server: **0.9.18**.
+Current app version: **0.9.33**, online multiplayer test release. Server: **0.9.18**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,11 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.33 restores the original left-side dark gradient and dotted texture above
+the 0.9.32 purple diagonal menu background. The loading screen no longer shows
+the eyebrow (`PACKING A LITTLE TROUBLE`) or bottom warm-up tip; its logo, loading
+title, progress bar, live status and percentage remain. Client-only release.
 
 0.9.32 replaces the menu's Mall/environment backdrop with the loading screen's
 flat dark-purple radial and diagonal-stripe treatment. It covers Home, Play/Join,
