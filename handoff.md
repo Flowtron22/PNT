@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.21**, online multiplayer test release. Server: **0.9.18**.
+Current app version: **0.9.22**, online multiplayer test release. Target server: **0.9.18**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,13 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.22 fixes the rapid sound heard immediately after jetpack flight. It was not
+a footstep: because the actor retains `effect='rocket'` at zero duration, the
+landing transition test replayed `Tool_Jetpack_Land` every audio update. The cue
+now additionally requires the previous `effectTime` to be positive, so it fires
+exactly once as flight crosses to finished. A regression test advances five
+post-flight updates and asserts one landing playback.
 
 0.9.21 adds the nine user-supplied 48 kHz mono WAV narration clips. Match start
 is now an authoritative four-second frozen sequence: READY, THREE, TWO, ONE, GO,
