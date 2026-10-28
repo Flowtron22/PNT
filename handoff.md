@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.20**, online multiplayer test release.
+Current app version: **0.9.21**, online multiplayer test release. Server: **0.9.18**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,15 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.21 adds the nine user-supplied 48 kHz mono WAV narration clips. Match start
+is now an authoritative four-second frozen sequence: READY, THREE, TWO, ONE, GO,
+with the visual beat and matching voice triggered from the same state transition.
+Sudden Death plays once when only one uncaught thief remains; Time Up plays once
+on a timeout finish. Way To Go and Great alternate when individual cash caches
+become empty. Narration state resets per match and works with local and online
+snapshots. This shared countdown change bumps the server to 0.9.18 and requires
+the Render `codex/multiplayer-local` branch to fast-forward to this release.
 
 0.9.20 removes the banana ground-radius indicator in local and online play. The
 banana prop now supplies its own warning through a bounded squash/stretch and

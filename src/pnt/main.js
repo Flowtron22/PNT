@@ -72,7 +72,7 @@ const lobbyCamera=new THREE.PerspectiveCamera(34,1,.05,30);lobbyCamera.position.
 let reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const uiEffects=createWonderUI({blocked:()=>busy||!$('#loading').hidden||!ui.hud.hidden,reduced:()=>reduced});
 const gameAudio=createGameplayAudio(()=>uiEffects.sounds.engine);
-const roundStart=createRoundStart(ui.hud,n=>gameAudio.play(n>0?'Match_Countdown':'Match_Start',.6,.8));
+const roundStart=createRoundStart(ui.hud,beat=>gameAudio.narrateBeat(beat));
 const moneyTrail=createMoneyTrail(ui.hud,$('#money-status'),{reduced:()=>reduced});
 document.addEventListener('pointerdown',()=>void gameAudio.prepare(),{capture:true});
 document.addEventListener('keydown',()=>void gameAudio.prepare(),{capture:true,once:true});

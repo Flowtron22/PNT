@@ -140,7 +140,7 @@ tests check Sunken and Iceberg return to the main floor without a fall/reset.
 0.9.16 keeps capture progress per thief and decays lost contact at 0.4/s. Captured
 actors cannot alter the remaining thief's meter. Smoke occupancy blocks capture,
 stun/slip, tools and cash collection for both roles; rescue remains permitted.
-After loading, the authoritative three-second start countdown holds poses, bot AI,
+After loading, the authoritative four-second READY / 3 / 2 / 1 start countdown holds poses, bot AI,
 tools, interactions and the match clock. Inputs received early are retired rather
 than replayed at GO. Snapshots carry `worldTime` separately from network time so
 ship motion and client prediction do not jump ahead by the intro duration.
