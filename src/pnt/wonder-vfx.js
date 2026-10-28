@@ -1,0 +1,60 @@
+// World-space VFX adapted from Wonder Wave/PURRITORY's MIT-licensed particle,
+// boss steam, blade-arc and hazard-telegraph systems. No post-processing.
+// Copyright (c) 2026 Jayden Davis. See notices/wonder-wave-mit.txt.
+import * as THREE from 'three';
+
+const UP=new THREE.Vector3(0,1,0),Q=new THREE.Quaternion(),S=new THREE.Vector3(),M=new THREE.Matrix4();
+const WHITE=new THREE.Color(0xffffff),GOLD=new THREE.Color(0xffbd45),MINT=new THREE.Color(0x83f9c4),CYAN=new THREE.Color(0x8cecff),PURPLE=new THREE.Color(0xb99cff);
+const blobGeo=new THREE.SphereGeometry(1,8,6),ringGeo=new THREE.RingGeometry(.76,1,48),spriteGeo=new THREE.PlaneGeometry(1,1);
+
+const steamMaterial=()=>new THREE.ShaderMaterial({transparent:true,depthWrite:false,vertexColors:true,side:THREE.DoubleSide,uniforms:{uOpacity:{value:.72}},vertexShader:`varying vec2 vUv;varying vec3 vColor;void main(){vUv=uv;vColor=instanceColor;gl_Position=projectionMatrix*modelViewMatrix*instanceMatrix*vec4(position,1.);}`,fragmentShader:`uniform float uOpacity;varying vec2 vUv;varying vec3 vColor;void main(){vec2 p=vUv-.5;float d=length(p)*2.;float a=smoothstep(1.,.25,d)*uOpacity;if(a<.015)discard;gl_FragColor=vec4(vColor,a);
+#include <tonemapping_fragment>
+#include <colorspace_fragment>
+}`});
+
+class InstancePool{
+ constructor(root,capacity,geometry,material,{billboard=false}={}){this.capacity=capacity;this.billboard=billboard;this.items=Array.from({length:capacity},()=>({life:0,total:1,p:new THREE.Vector3(),v:new THREE.Vector3(),color:new THREE.Color(),size:0,grow:0,gravity:0,drag:0,spin:0,rot:0}));this.cursor=0;this.mesh=new THREE.InstancedMesh(geometry,material,capacity);this.mesh.name='wonder-vfx-pool';this.mesh.frustumCulled=false;this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);for(let i=0;i<capacity;i++){M.makeScale(0,0,0);this.mesh.setMatrixAt(i,M);this.mesh.setColorAt(i,WHITE);}root.add(this.mesh);}
+ emit(p,v,color,{life=.7,size=.12,grow=.2,gravity=0,drag=0,spin=0}={}){let i=this.items.findIndex(x=>x.life<=0);if(i<0)i=this.cursor++%this.capacity;const x=this.items[i];x.life=x.total=life;x.p.copy(p);x.v.copy(v||UP);x.color.set(color);x.size=size;x.grow=grow;x.gravity=gravity;x.drag=drag;x.spin=spin;x.rot=Math.random()*Math.PI*2;this.mesh.setColorAt(i,x.color);this.mesh.instanceColor.needsUpdate=true;return x;}
+ update(dt,camera,kind){let live=0;for(let i=0;i<this.capacity;i++){const x=this.items[i];if(x.life<=0){M.makeScale(0,0,0);this.mesh.setMatrixAt(i,M);continue;}x.life=Math.max(0,x.life-dt);if(x.life<=0){M.makeScale(0,0,0);this.mesh.setMatrixAt(i,M);continue;}live++;const age=1-x.life/x.total,fade=Math.min(1,x.life/.18),size=Math.max(.001,(x.size+x.grow*age)*fade);x.v.y-=x.gravity*dt;if(x.drag)x.v.multiplyScalar(Math.exp(-x.drag*dt));x.p.addScaledVector(x.v,dt);x.rot+=x.spin*dt;if(this.billboard&&camera)Q.copy(camera.quaternion);else Q.setFromAxisAngle(UP,x.rot);if(kind==='ring')Q.setFromEuler(new THREE.Euler(-Math.PI/2,0,x.rot));S.set(kind==='ring'?size:size,kind==='steam'?size*.75:size,kind==='ring'?size:size);M.compose(x.p,Q,S);this.mesh.setMatrixAt(i,M);}this.mesh.visible=live>0;this.mesh.instanceMatrix.needsUpdate=true;return live;}
+ clear(){for(const x of this.items)x.life=0;this.mesh.visible=false;}
+}
+
+function arcGeometry(){const pos=[],uv=[],idx=[],nu=30,nv=5,a0=-1.35,a1=1.35;for(let i=0;i<=nu;i++){const u=i/nu,a=a0+(a1-a0)*u;for(let j=0;j<=nv;j++){const v=j/nv,r=.35+1.18*v;pos.push(Math.sin(a)*r,0,Math.cos(a)*r);uv.push(u,v);if(i<nu&&j<nv){const q=i*(nv+1)+j,b=q+nv+1;idx.push(q,b,q+1,q+1,b,b+1);}}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);return g;}
+const ARC_VERT=`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
+const ARC_FRAG=`uniform vec3 uColor;uniform float uHead,uFade;varying vec2 vUv;void main(){float d=uHead-vUv.x;if(d<-.02)discard;float tail=exp(-max(d,0.)/.32);float body=smoothstep(.2,.65,vUv.y)*(1.-smoothstep(.88,1.,vUv.y));float rim=exp(-pow((vUv.y-.88)*11.,2.));float ends=smoothstep(0.,.07,vUv.x)*(1.-smoothstep(.94,1.,vUv.x));float a=(body*.72+rim)*tail*uFade*ends;vec3 c=mix(uColor,vec3(1.),rim*.65)*1.35;gl_FragColor=vec4(c,a);
+#include <tonemapping_fragment>
+#include <colorspace_fragment>
+}`;
+class ArcPool{
+ constructor(root){this.items=Array.from({length:8},()=>{const group=new THREE.Group(),material=new THREE.ShaderMaterial({uniforms:{uColor:{value:new THREE.Color()},uHead:{value:0},uFade:{value:1}},vertexShader:ARC_VERT,fragmentShader:ARC_FRAG,transparent:true,depthWrite:false,side:THREE.DoubleSide});const mesh=new THREE.Mesh(arcGeometry(),material);mesh.renderOrder=6;group.add(mesh);group.visible=false;root.add(group);return{group,mesh,actor:null,t:0,dur:.24,life:0,side:1};});this.cursor=0;this.swingCount=0;}
+ swing(actor,color){const a=this.items.find(x=>x.life<=0)||this.items[this.cursor++%this.items.length];a.actor=actor;a.t=0;a.dur=.2;a.life=.48;a.side=this.swingCount++%2?1:-1;a.mesh.material.uniforms.uColor.value.set(color);a.mesh.material.uniforms.uHead.value=0;a.mesh.material.uniforms.uFade.value=1;a.mesh.scale.set(a.side,1,1);a.mesh.rotation.z=-a.side*.38;a.group.visible=true;this.place(a);}
+ place(a){const p=a.actor?.group?.position;if(!p)return;a.group.position.set(p.x,p.y+1,p.z);a.group.rotation.set(0,a.actor.group.rotation.y,0);}
+ update(dt){for(const a of this.items){if(a.life<=0)continue;a.life-=dt;a.t+=dt;const u=a.mesh.material.uniforms;u.uHead.value=Math.min(1.05,a.t/a.dur);u.uFade.value=Math.min(1,Math.max(0,a.life/.2));if(a.actor)this.place(a);if(a.life<=0)a.group.visible=false;}}
+ clear(){for(const a of this.items){a.life=0;a.actor=null;a.group.visible=false;}}
+}
+
+export class WonderVFX{
+ constructor(root,{quality=.72}={}){this.root=root;this.group=new THREE.Group();this.group.name='wonder-wave-vfx';root.add(this.group);this.blobs=new InstancePool(this.group,Math.round(72*quality),blobGeo,new THREE.MeshLambertMaterial({vertexColors:true,transparent:true,opacity:.9,depthWrite:false}));this.steam=new InstancePool(this.group,Math.round(56*quality),spriteGeo,steamMaterial(),{billboard:true});this.rings=new InstancePool(this.group,Math.round(40*quality),ringGeo,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.8,depthWrite:false,side:THREE.DoubleSide}));this.arcs=new ArcPool(this.group);this.seaT=.3;this.jetActive=new WeakSet();this.scratch=new THREE.Vector3();}
+ blob(p,v,color,o){return this.blobs.emit(p,v,color,o);}
+ puff(p,v,color,o){return this.steam.emit(p,v,color,o);}
+ ring(p,color,r=.5,life=.5,grow=1.7){return this.rings.emit(p,UP,color,{life,size:r,grow});}
+ burst(pos,color=GOLD,scale=1){this.ring(pos,color,.18*scale,.45,1.25*scale);for(let i=0;i<12;i++){const a=i/12*Math.PI*2,s=1.5+Math.random()*1.8;this.blob(pos,new THREE.Vector3(Math.cos(a)*s,.7+Math.random()*1.5,Math.sin(a)*s),i%3?color:WHITE,{life:.55+Math.random()*.35,size:(.07+Math.random()*.09)*scale,grow:.12*scale,gravity:4.5});}for(let i=0;i<5;i++)this.puff(pos,new THREE.Vector3((Math.random()-.5)*1.4,.5+Math.random(),(Math.random()-.5)*1.4),i%2?0xe5e8ee:color,{life:.65+Math.random()*.3,size:.25*scale,grow:.55*scale,drag:1.7});}
+ hammerSwing(actor){this.arcs.swing(actor,GOLD);}
+ hammerImpact(pos){this.burst(pos,GOLD,1.15);this.ring(pos,0xffffff,.26,.32,1.8);}
+ jetLaunch(pos){this.ring(pos,CYAN,.22,.55,1.45);this.burst(pos,CYAN,.65);}
+ jetTrail(pos,dir){const v=this.scratch.copy(dir).multiplyScalar(-1.1);v.y-=.45;this.puff(pos,v,Math.random()<.5?0xff80bc:0x8cecff,{life:.6,size:.14,grow:.42,drag:1.5});if(Math.random()<.55)this.blob(pos,new THREE.Vector3(v.x+(Math.random()-.5)*.4,v.y,v.z+(Math.random()-.5)*.4),0xffdb70,{life:.45,size:.055,grow:.08,gravity:1.5});}
+ jetLand(pos){this.ring(pos,0xffdb70,.25,.55,1.65);for(let i=0;i<8;i++){const a=i/8*Math.PI*2;this.puff(pos,new THREE.Vector3(Math.cos(a)*1.5,.2,Math.sin(a)*1.5),0xe8e9ec,{life:.55,size:.15,grow:.38,drag:2});}}
+ smokeDeploy(pos){for(let i=0;i<12;i++)this.puff(pos,new THREE.Vector3((Math.random()-.5)*1.8,.4+Math.random()*1.2,(Math.random()-.5)*1.8),i%3?0xd9dce2:0xffffff,{life:1+Math.random()*.45,size:.3,grow:.85,drag:1.3});this.ring(pos,0xe8e9ec,.35,.7,2.1);}
+ bananaDeploy(pos){this.ring(pos,0xffdb28,.18,.45,.72);for(let i=0;i<5;i++)this.blob(pos,new THREE.Vector3((Math.random()-.5)*1.2,.5+Math.random(),(Math.random()-.5)*1.2),0xffdb28,{life:.45,size:.055,grow:.08,gravity:3});}
+ rewind(pos){this.ring(pos,PURPLE,.2,.7,1.15);for(let i=0;i<9;i++){const a=i/9*Math.PI*2,p=this.scratch.set(pos.x+Math.cos(a)*.45,pos.y+.2+Math.random(),pos.z+Math.sin(a)*.45);this.puff(p,new THREE.Vector3(0,.5,0),i%2?PURPLE:WHITE,{life:.65,size:.09,grow:.12});}}
+ capture(pos){this.burst(pos,0xff8a14,.85);for(let i=0;i<8;i++){const p=new THREE.Vector3(pos.x+(Math.random()-.5)*.6,pos.y+.3+Math.random()*1.4,pos.z+(Math.random()-.5)*.6);this.puff(p,new THREE.Vector3(0,.55,0),i%2?0xff8a14:0xffffff,{life:.7,size:.12,grow:.2});}}
+ rescue(pos){this.ring(pos,MINT,.25,.7,1.5);for(let i=0;i<12;i++){const a=i/12*Math.PI*2,p=new THREE.Vector3(pos.x+Math.cos(a)*.55,pos.y+.3+Math.random()*1.5,pos.z+Math.sin(a)*.55);this.blob(p,new THREE.Vector3(Math.cos(a)*.35,.7+Math.random()*.5,Math.sin(a)*.35),i%3?MINT:WHITE,{life:.65,size:.05,grow:.07,gravity:-.15});}}
+ seaSpray(pos,out=new THREE.Vector3(0,0,1),strength=1){for(let i=0;i<10;i++){const side=(Math.random()-.5)*1.6,v=new THREE.Vector3(out.x*(1.5+Math.random()*2)+out.z*side,2+Math.random()*2.6,out.z*(1.5+Math.random()*2)-out.x*side);this.blob(pos,v,i%3?0xbfe9ff:0xffffff,{life:.7+Math.random()*.5,size:.045+Math.random()*.07,grow:.09,gravity:5});}this.puff(pos,new THREE.Vector3(out.x,.7,out.z),0xeef9ff,{life:.75,size:.35*strength,grow:.7,drag:1.2});}
+ environment(map,bounds,dt){if(map!=='sunken'||!bounds)return;this.seaT-=dt;if(this.seaT>0)return;this.seaT=.42+Math.random()*.65;const edge=(Math.random()*4)|0,x=edge<2?(edge?bounds.max.x:bounds.min.x):THREE.MathUtils.lerp(bounds.min.x,bounds.max.x,Math.random()),z=edge>=2?(edge===3?bounds.max.z:bounds.min.z):THREE.MathUtils.lerp(bounds.min.z,bounds.max.z,Math.random()),out=edge===0?new THREE.Vector3(-1,0,0):edge===1?new THREE.Vector3(1,0,0):edge===2?new THREE.Vector3(0,0,-1):new THREE.Vector3(0,0,1);this.seaSpray(new THREE.Vector3(x,bounds.min.y+.08,z),out,.8);}
+ update(dt,camera,{map=null,bounds=null}={}){dt=Math.min(Math.max(dt||0,0),.05);this.environment(map,bounds,dt);this.blobs.update(dt,camera,'blob');this.steam.update(dt,camera,'steam');this.rings.update(dt,camera,'ring');this.arcs.update(dt);}
+ clear(){this.blobs.clear();this.steam.clear();this.rings.clear();this.arcs.clear();this.jetActive=new WeakSet();}
+}
+
+const telegraphGeo=new Map(),telegraphMat=new Map();
+export function attachHazardTelegraph(root,type){if(!root||root.userData.pntTelegraph)return null;const radius=type==='smoke'?2.6:(type==='banana' ? .8 : 1.05),color=type==='smoke'?0xd7e3ff:(type==='banana'?0xffdb28:0xb99cff),key=type+':'+radius;let geo=telegraphGeo.get(key);if(!geo){geo=new THREE.RingGeometry(radius*.91,radius,64);telegraphGeo.set(key,geo);}let mat=telegraphMat.get(type);if(!mat){mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.55,depthWrite:false,side:THREE.DoubleSide});telegraphMat.set(type,mat);}const ring=new THREE.Mesh(geo,mat);ring.name='hazard-telegraph';ring.rotation.x=-Math.PI/2;ring.position.y=.045;root.add(ring);root.userData.pntTelegraph={ring,time:Math.random()*4,type};return ring;}
+export function animateHazardTelegraph(root,dt){const t=root?.userData?.pntTelegraph;if(!t)return;t.time+=dt;const pulse=.94+Math.sin(t.time*(t.type==='banana'?7:3))*.06;t.ring.scale.setScalar(pulse);t.ring.material=telegraphMat.get(t.type);t.ring.material.opacity=(t.type==='banana' ? .48 : .34)+Math.sin(t.time*4)*.09;}
