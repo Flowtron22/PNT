@@ -43,7 +43,9 @@ chill 120 BPM in a 32-bar, 64-second loop, matching the original gameplay BGM's
 approximate length. Half-time percussion, sparse crystalline mallets, softer
 bass and lead phrases, continuous airy pads and only occasional horn accents
 replace the previous urgent arrangement. The AAC peaks at -1.8 dB. Mall,
-Sunken, menu and lobby music are unchanged. Client-only release.
+Sunken, menu and lobby music are unchanged. The Iceberg request URL carries a
+0.9.38 cache key so Vercel and returning browsers cannot retain the fast 0.9.37
+render. Client-only release.
 
 0.9.37 adds an original Wonder Wave-style procedural Iceberg chase BGM. The
 24-bar, 150 BPM track combines tundra drums, frost percussion, smooth low-string
