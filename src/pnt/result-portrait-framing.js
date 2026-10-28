@@ -1,0 +1,1 @@
+export function portraitCameraDistance(size,aspect,fov=28,padding=1.28){const vertical=Math.tan(fov*Math.PI/360),safeAspect=Math.max(.1,aspect||1);return Math.max(size.y/(2*vertical),size.x/(2*vertical*safeAspect))*padding+size.z*.5;}

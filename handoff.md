@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.22**, online multiplayer test release. Target server: **0.9.18**.
+Current app version: **0.9.23**, online multiplayer test release. Server: **0.9.18**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,13 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.23 fixes desktop result portraits clipping wide costumes and defeat poses.
+The portrait camera no longer uses a fixed distance: it fits both normalized
+model height and width against the live canvas aspect ratio, with pose padding
+and depth allowance. Narrow desktop portrait slots therefore back the camera up
+while mobile and wider slots retain closer framing. A framing regression test
+checks full width and height visibility. This is a client-only release.
 
 0.9.22 fixes the rapid sound heard immediately after jetpack flight. It was not
 a footstep: because the actor retains `effect='rocket'` at zero duration, the
