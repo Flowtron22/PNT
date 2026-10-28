@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.38**, online multiplayer test release. Server: **0.9.19**.
+Current app version: **0.9.39**, online multiplayer test release. Server: **0.9.19**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,14 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.39 keeps Iceberg's chill 120 BPM, 64-second arrangement while adding a
+more playful game-like groove: syncopated synthesized snow-pop percussion,
+occasional ghost kicks, a bouncier bass phrase with rests and a short crystalline
+call-and-response every second bar. It remains smooth and non-chiptune, with no
+borrowed melody. The revised AAC averages -19.1 dB and peaks at -1.3 dB; its
+request uses a 0.9.39 cache key. Other map and menu music remain unchanged.
+Client-only release.
 
 0.9.38 retunes the Iceberg chase BGM after playtest feedback. It now runs at a
 chill 120 BPM in a 32-bar, 64-second loop, matching the original gameplay BGM's

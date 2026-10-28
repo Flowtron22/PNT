@@ -23,30 +23,35 @@ function kick(start,amp=.4){const begin=Math.floor(start*rate),dur=.19,count=Mat
 function tundraDrum(start,note=58,amp=.19,pan=0){const begin=Math.floor(start*rate),dur=.28,count=Math.floor(dur*rate);let phase=0;for(let i=0;i<count;i++){const p=i/count;phase+=(note*(1-p*.18))/rate;mix(begin+i,(Math.sin(phase*Math.PI*2)+random()*.08)*amp*(1-p)**3.2,pan);}}
 function snare(start,amp=.18){const begin=Math.floor(start*rate),dur=.14,count=Math.floor(dur*rate);let last=0;for(let i=0;i<count;i++){const p=i/count,n=random(),bright=n-last*.7;last=n;mix(begin+i,(bright*.82+Math.sin(i/rate*Math.PI*390)*.18)*amp*(1-p)**3,(i&1)?.08:-.08);}}
 function frostHat(start,open=false,pan=0){const begin=Math.floor(start*rate),dur=open?.13:.042,count=Math.floor(dur*rate);let a=0,b=0;for(let i=0;i<count;i++){const p=i/count,n=random(),high=n-a*.76-b*.12;b=a;a=n;mix(begin+i,high*(open?.048:.032)*(1-p)**(open?2.2:5),pan);}}
+function snowPop(start,note=720,amp=.055,pan=0){const begin=Math.floor(start*rate),dur=.085,count=Math.floor(dur*rate);let phase=0;for(let i=0;i<count;i++){const p=i/count;phase+=(note*(1-p*.32))/rate;const body=Math.sin(phase*Math.PI*2)*.82+Math.sin(phase*Math.PI*4)*.18;mix(begin+i,body*amp*(1-p)**4.2,pan);}}
 function swell(start,amp=.075){const begin=Math.floor(start*rate),dur=1.1,count=Math.floor(dur*rate);let last=0;for(let i=0;i<count;i++){const p=i/count,n=random(),high=n-last*.55;last=n;mix(begin+i,high*amp*Math.sin(p*Math.PI)**1.4,(i&1)?.2:-.2);}}
 function pad(start,notes,amp=.018){for(let i=0;i<notes.length;i++)tone(start,barDuration*.92,notes[i],{type:'air',amp,pan:(i-(notes.length-1)/2)*.22,attack:.32,release:.34,vibrato:.0012});}
 
 // F-sharp minor with suspended/modal turns for a cold, urgent chase colour.
 const roots=[42,38,45,40,47,42,37,40];
 const chords=[[54,57,61],[50,54,57],[57,61,64],[52,56,59],[59,62,66],[54,57,61],[49,52,56],[52,56,59]];
-const bass=[0,0,7,0,12,7,10,7];
+const bass=[0,null,7,12,0,7,10,null];
 const arp=[0,7,12,15,19,15,12,7,3,7,12,15,19,22,19,12];
+const answer=[null,null,19,null,17,15,null,null,null,null,14,null,12,14,null,null];
 const leadA=[12,null,null,15,null,null,14,null,12,null,null,10,null,12,null,null];
 const leadB=[19,null,17,null,15,null,null,14,null,12,null,null,10,null,null,null];
 const leadC=[12,null,15,null,19,null,17,null,15,null,14,null,12,null,10,null];
 
 for(let bar=0;bar<bars;bar++){const start=bar*barDuration,section=bar<16?0:bar<24?1:2,index=bar%8,root=roots[index],step=beat/4;if(index===0)swell(start,section===2?.075:.055);
- // Relaxed half-time chase pulse with broad tundra drums and sparse frost hats.
+ // Relaxed half-time chase pulse with syncopated snow pops for a playful bounce.
  for(let s=0;s<16;s+=2){const t=start+s*step;if(s===0||s===8)kick(t,s===0?.36:.28);if(s===4||s===12)snare(t,.145);frostHat(t,s===14,s%4?.24:-.22);}
+ if(bar%2===1)kick(start+1.75*beat,.13);
+ snowPop(start+1.5*beat,720,.047,-.3);snowPop(start+3.5*beat,bar%2?820:760,.052,.3);
  tundraDrum(start+2.5*beat,62,.1,-.22);
  if(index===7){tundraDrum(start+3.5*beat,72,.11,-.25);tundraDrum(start+3.75*beat,82,.12,.25);}
  // Warm low strings, a spacious crystalline pulse and continuous frozen-air pad.
- for(let e=0;e<8;e++)tone(start+e*beat/2,beat*.42,root+bass[e],{type:'warm',amp:.078,pan:-.06,attack:.012,release:.11,slide:e===7?-2:0});
+ for(let e=0;e<8;e++){const interval=bass[(e+(bar%2?2:0))%8];if(interval!==null)tone(start+e*beat/2,beat*(e%4===0?.48:.32),root+interval,{type:'warm',amp:e%4===0?.078:.064,pan:-.06,attack:.012,release:.11,slide:e===6?-2:0});}
  for(let s=0;s<16;s+=2)tone(start+s*step,step*1.45,root+12+arp[(s+bar*3)%16],{type:'ice',amp:.014+section*.0015,pan:s%4?.4:-.4,attack:.006,release:.12,echo:.13});
  pad(start,chords[index],section===2?.021:.019);
  // Sparse bowed-string phrases keep motion without turning the track into a battle cue.
  const phrase=section===0?(bar%2?leadB:leadA):section===1?(bar%2?leadA:leadB):leadC;
  for(let s=0;s<16;s++){const interval=phrase[s];if(interval===null)continue;const t=start+s*step,note=root+interval+12;tone(t,step*1.65,note,{type:'bow',amp:section===2?.035:.03,pan:.1,attack:.04,release:.14,vibrato:.0028,echo:.07});}
+ if(bar%2===1)for(let s=0;s<16;s++){const interval=answer[s];if(interval===null)continue;tone(start+s*step,step*1.15,root+interval+12,{type:'ice',amp:.019,pan:-.24,attack:.008,release:.12,echo:.09});}
  if(index===7)for(let i=0;i<2;i++)tone(start+(3.25+i*.5)*beat,beat*.38,69+i*5+(section?12:0),{type:'horn',amp:.02,pan:-.12+i*.24,attack:.06,release:.15});
 }
 
