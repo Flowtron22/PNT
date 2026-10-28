@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.23**, online multiplayer test release. Server: **0.9.18**.
+Current app version: **0.9.24**, online multiplayer test release. Server: **0.9.18**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,13 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.24 adds Wonder Wave's procedural `Hull Alarm` as the looping main-menu and
+matchmaking-lobby theme. Entering active gameplay cleanly stops that voice and
+starts the existing gameplay BGM; returning to the menu restores Hull Alarm.
+The compressed 18-bar offline render is stored as `assets/pnt/audio/Hull_Alarm.mp3`, and its
+Wonder Wave MIT attribution is recorded in `notices/wonder-wave-mit.txt`. This is
+a client-only release.
 
 0.9.23 fixes desktop result portraits clipping wide costumes and defeat poses.
 The portrait camera no longer uses a fixed distance: it fits both normalized
