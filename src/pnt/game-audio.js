@@ -2,7 +2,7 @@ const TOOL_SOUNDS={hammer:'Tool_Hammer_Activate',banana:'Tool_Banana_Throw',smok
 const NARRATION_BEATS={ready:'vc_narration_ready',3:'vc_narration_three',2:'vc_narration_two',1:'vc_narration_one',go:'vc_narration_go'};
 const NARRATION=['vc_narration_one','vc_narration_two','vc_narration_three','vc_narration_ready','vc_narration_go','vc_narration_suddendeath','vc_narration_timeup','vc_menu_narration_waytogo','vc_menu_narration_great'];
 const WAV_CLIPS=new Set(NARRATION);
-const CLIP_EXTENSIONS={'menu-bgm':'m4a','pirate-chase-bgm':'m4a'};
+const CLIP_EXTENSIONS={'menu-bgm':'m4a','pirate-chase-bgm':'m4a','iceberg-chase-bgm':'m4a'};
 const CLIPS=['menu-bgm','gameplay-bgm','Match_Countdown','Match_Start','Player_Land','Player_Launch','Player_Spin_Out','Player_Stunned','Police_Capture_Start','Police_Capture_Success','Thief_Escape','Thief_Loot_Stolen','Tool_Banana_Slip','Tool_Banana_Throw','Tool_Hammer_Activate','Tool_Hammer_Impact','Tool_Jetpack_Flight','Tool_Jetpack_Land','Tool_Jetpack_Launch','Tool_Rewind_Box_Deploy','Tool_Rewind_Teleport','Tool_Smoke_Activate','Tool_Smoke_Throw',...NARRATION];
 export function createGameplayAudio(getEngine){
  let context=null,sfx=null,music=null,musicVoice=null,musicTrack=null,match=null,previous=[],previousPhase=null,freeRunners=0,cacheRemaining=new Map(),suddenDeath=false,praise=0,enabled=localStorage.getItem('pnt-game-sfx')!=='off',musicEnabled=localStorage.getItem('pnt-game-music')!=='off';
@@ -23,7 +23,7 @@ export function createGameplayAudio(getEngine){
  function update(round,actors,active,musicActive=active,map='mall'){
   if(!round){if(match)stopEffects();}
   else if(match!==round.profileId){stopEffects();match=round.profileId;previous=round.actors.map(a=>({...a}));previousPhase=round.phase;freeRunners=round.actors.filter(a=>a.role==='runner'&&!a.caught).length;cacheRemaining=new Map(round.caches?.map(cache=>[cache.id,cache.remaining])||[]);void prepare();}
-  setMusicTrack(musicActive&&musicEnabled?(active?(map==='sunken'?'pirate-chase-bgm':'gameplay-bgm'):'menu-bgm'):null);
+  const chaseTrack=map==='sunken'?'pirate-chase-bgm':map==='iceberg'?'iceberg-chase-bgm':'gameplay-bgm';setMusicTrack(musicActive&&musicEnabled?(active?chaseTrack:'menu-bgm'):null);
   if(!round)return;
   round.actors.forEach((state,id)=>{const before=previous[id]||state,volume=distanceVolume(id,actors),flying=state.effect==='rocket'&&state.effectTime>0;
    if(active){if(state.caught&&!before.caught)play('Police_Capture_Success',volume);if(!state.caught&&before.caught)play('Thief_Escape',volume);if(state.effect!==before.effect&&state.effectTime>0){if(state.effect==='banana')play('Tool_Banana_Slip',volume);if(['stunned','airStunned'].includes(state.effect))play('Player_Stunned',volume);}if(before.effect==='rocket'&&before.effectTime>0&&!flying)play('Tool_Jetpack_Land',volume);if(state.detectionProgress>0&&!before.detectionProgress&&state.role==='runner'&&round.playerRole==='chaser')play('Police_Capture_Start',volume,.8);if(state.interacting&&!before.interacting&&round.caches?.some(cache=>cache.harvester===id))play('Thief_Loot_Stolen',volume*.45,.2);}

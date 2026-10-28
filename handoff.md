@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 28 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.36**, online multiplayer test release. Server: **0.9.19**.
+Current app version: **0.9.37**, online multiplayer test release. Server: **0.9.19**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,15 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.37 adds an original Wonder Wave-style procedural Iceberg chase BGM. The
+24-bar, 150 BPM track combines tundra drums, frost percussion, smooth low-string
+ostinatos, crystalline mallets, airy pads and bowed-string/horn responses without
+8-bit waveforms. Its deterministic source is `tools/render-iceberg-chase-bgm.mjs`;
+the 38.4-second AAC loop is `assets/pnt/audio/iceberg-chase-bgm.m4a` (~906 KB,
+-0.9 dB peak). It downloads only while Iceberg loads. Sunken keeps its pirate
+theme, Mall keeps the original gameplay theme, and menu/lobby music is unchanged.
+Client-only release.
 
 0.9.36 adds an original Wonder Wave-style procedural pirate pursuit BGM for
 Sunken only. The 24-bar, 146 BPM track uses galloping/deck percussion, smooth
