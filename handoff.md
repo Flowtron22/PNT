@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.52**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.53**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,19 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.53 removes the turning animation experiment at the user's request: removed
+turn-motion.js, its tests, model wrapper, per-frame deformation, pause toggle,
+storage reads and hammer-fitting hook. Normal movement facing remains unchanged.
+The police detection arc stays on the ground but cancels its parent officer's
+heading relative to the camera's right vector, keeping a stable camera-relative
+fill origin. Both online and local/couch update paths pass matchCamera. Parent
+world orientation handles Sunken tilt while preserving the actual detection
+area, capture progress and round caps. Two regression tests verify stationary
+arc endpoints through officer turns, and correct camera/deck alignment without
+mutating officer or map transforms. All 181 remaining tests pass. No server
+changes required. Browser control remains disabled for visual verification.
+
 
 0.9.52 strengthens the turning animation after the user found the first pass
 almost invisible. Sharp turns/reversals now target 28% vertical compression,

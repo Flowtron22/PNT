@@ -2,8 +2,6 @@ import * as THREE from 'three';
 
 export function attachHeldHammer(actor,visual){
  if(!visual)return null;
- // Fit the socket against the undeformed rig, not a transient turn squash.
- actor.turnMotion?.reset();
  let hand;actor.model.traverse(node=>{if(node.isBone&&/^(bip001rhand|righthand|handr)$/.test(node.name.replace(/[_\- ]/g,'').toLowerCase()))hand=node;});
  if(!hand)return null;
  actor.group.updateWorldMatrix(true,true);
