@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.57**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.58**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,13 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.58 pushes the green/yellow hammer splash band to the outer impact area by
+adding .5 model units to its inner and outer geometry radii. Band height,
+thickness, lifetime and the 1.5x animation multiplier remain unchanged. Clustered
+smoke still bursts from centre outward; camera shake stays 2x. No game-rule or
+server changes. This is a radial relocation, not an increase in wall height.
+
 
 0.9.57 makes hammer smoke a cloud of attached spheres rather than isolated balls.
 Each of 16 radial puffs uses a shared merged geometry with one core plus eight
