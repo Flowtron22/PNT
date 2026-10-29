@@ -37,7 +37,7 @@ import {createHaptics} from './haptics.js';
 import {creditsMarkup} from './credits-ui.js';
 import {hasSight} from './sight.js';
 import {createResultPortrait} from './result-portrait.js';
-import {createGameFX,createToonSmoke,smokeBombCloud,animateSmokeBomb,attachHazardTelegraph,animateHazardTelegraph,animateBananaHazard} from './game-fx.js';
+import {createGameFX,smokeBombCloud,animateSmokeBomb,attachHazardTelegraph,animateHazardTelegraph,animateBananaHazard} from './game-fx.js';
 import {stageEndState,rollSpinDirection} from './action-state.js';
 import {renderResults} from './results-ui.js';
 import {createDetectionZone,hasDetectedThief} from './detection-zone.js';
@@ -257,7 +257,7 @@ function updateOnlineMatch(dt){
   animate(actor,state,dt);if(actor.detectionZone)actor.detectionZone.update(hasDetectedThief(round,avatars,actor.id,(p,q)=>withinSight(p,q)),!state.caught&&!state.inSmoke);
  }
  if(buffered){const {a,b,alpha}=buffered;for(const f of remoteFurniture){const to=b.furniture.find(item=>item.name===f.mesh.name),from=a.furniture.find(item=>item.name===f.mesh.name)||to;if(to){f.mesh.position.fromArray(from.position).lerp(new THREE.Vector3(...to.position),alpha);f.mesh.quaternion.fromArray(from.rotation).slerp(new THREE.Quaternion(...to.rotation),alpha);}}}
- for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];if(h.type==='smoke')animateSmokeBomb(h.mesh,dt);if(h.type==='banana')animateBananaHazard(h.mesh,dt);animateHazardTelegraph(h.mesh,dt);animatePlayerMirage(h.mesh,dt);if(h.networkId)continue;h.time-=dt;if(h.type==='capture'){h.mesh.rotation.x+=dt*h.spin.x;h.mesh.rotation.y+=dt*h.spin.y;h.mesh.rotation.z+=dt*h.spin.z;h.mesh.scale.setScalar(Math.min(1,h.time*4));}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}gameFX.update(dt,matchCamera,{map:mapData?.id,bounds});updateHud();
+ for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];if(h.type==='smoke')animateSmokeBomb(h.mesh,dt);if(h.type==='banana')animateBananaHazard(h.mesh,dt);animateHazardTelegraph(h.mesh,dt);animatePlayerMirage(h.mesh,dt);if(h.networkId)continue;h.time-=dt;if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}gameFX.update(dt,matchCamera,{map:mapData?.id,bounds});updateHud();
 }
 
 function choice(id,name,sub,selected,icon=''){return `<button class="choice${selected?' selected':''}" data-choice="${id}" aria-pressed="${selected}">${icon}<strong>${name}</strong><small>${sub}</small></button>`;}
@@ -499,8 +499,8 @@ function updateGame(dt){
   const moved=move(a,dx,dz,dt,(state.role==='chaser'?3.65:3.4)*1.15*(mapData.id==='iceberg'?1.5:1)*(state.id===0||couchHuman(room,state.id)?1.08:1)*(state.effect==='rocket'&&state.effectTime>0?1.8:1));if(!moved&&state.effect==='banana'&&state.effectTime>0)state.spinDirection=rollSpinDirection();if(!moved&&state.id!==0&&!locked&&Math.hypot(dx,dz)>.1){a.routeTime=0;}animate(a,state,dt);wishes.push({id:state.id,wants:wants&&!locked});
  }
  furniturePhysics?.step(dt,avatars);
- for(const h of hazards)h.time-=dt;smokeCoverage();for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];if(h.type==='capture'){h.mesh.rotation.x+=dt*h.spin.x;h.mesh.rotation.y+=dt*h.spin.y;h.mesh.rotation.z+=dt*h.spin.z;h.mesh.scale.setScalar(Math.min(1,h.time*4));}else if(h.type==='smoke')animateSmokeBomb(h.mesh,dt);else if(h.type==='banana')animateBananaHazard(h.mesh,dt);animateHazardTelegraph(h.mesh,dt);animatePlayerMirage(h.mesh,dt);if(h.type==='banana'&&h.time>0)for(const state of round.actors){if(state.caught||state.inSmoke||state.role===h.ownerRole||state.effectTime>0)continue;if(avatars[state.id].group.position.distanceTo(h.mesh.position)<.8){setEffect(state,'banana',2);h.time=0;break;}}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}
- for(const r of round.actors.filter(a=>a.role==='runner')){const p=cop.group.position,q=avatars[r.id].group.position;if(detectThiefAt(round,chaser.id,r.id,dt,p,q,withinSight(p,q))){const cloud=createToonSmoke(.7,16);cloud.position.copy(q).addScaledVector(up,.8);matchRoot.add(cloud);cloud.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);hazards.push({mesh:cloud,type:'capture',owner:r.id,time:1,spin:new THREE.Vector3(12+Math.random()*16,14+Math.random()*18,10+Math.random()*16)});gameFX.capture(q);cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAPTURED!':'CATCHING THIEF!',1);}}
+ for(const h of hazards)h.time-=dt;smokeCoverage();for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];if(h.type==='smoke')animateSmokeBomb(h.mesh,dt);else if(h.type==='banana')animateBananaHazard(h.mesh,dt);animateHazardTelegraph(h.mesh,dt);animatePlayerMirage(h.mesh,dt);if(h.type==='banana'&&h.time>0)for(const state of round.actors){if(state.caught||state.inSmoke||state.role===h.ownerRole||state.effectTime>0)continue;if(avatars[state.id].group.position.distanceTo(h.mesh.position)<.8){setEffect(state,'banana',2);h.time=0;break;}}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}
+ for(const r of round.actors.filter(a=>a.role==='runner')){const p=cop.group.position,q=avatars[r.id].group.position;if(detectThiefAt(round,chaser.id,r.id,dt,p,q,withinSight(p,q))){gameFX.capture(q);cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAPTURED!':'CATCHING THIEF!',1);}}
  cop.detectionZone.update(hasDetectedThief(round,avatars,chaser.id,(p,q)=>withinSight(p,q)),round.phase==='playing'&&!chaser.inSmoke);
  for(const c of round.caches)c.harvester=null;
  for(const wish of wishes){const target=wish.wants?interactionTarget(wish.id):null,key=target?target.type+':'+target.target.id:null,actor=avatars[wish.id];if(actor.interactionKey!==key||!target)cancelInteraction(round,wish.id);actor.interactionKey=key;if(target)performInteraction(wish.id,target,dt);}

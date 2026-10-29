@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import {createToonSmoke,smokeBombCloud,attachHazardTelegraph} from './game-fx.js';
+import {smokeBombCloud,attachHazardTelegraph} from './game-fx.js';
 import {attachHeldHammer,attachHeldJetpack} from './held-tools.js';
 import {createPlayerMirage} from './player-mirage.js';
 export function presentOnlineEvent(event,{actors,root,hazards,prop,fx}){
  const actor=actors[event.actor];if(!actor)return;
- if(event.type==='capture'){const mesh=createToonSmoke(.7,16);mesh.position.fromArray(event.position).y+=.8;root.add(mesh);hazards.push({mesh,type:'capture',time:1,spin:new THREE.Vector3(16,20,12)});fx?.capture(new THREE.Vector3().fromArray(event.position));return;}
+ if(event.type==='capture'){fx?.capture(new THREE.Vector3().fromArray(event.position));return;}
  if(event.type!=='tool')return;
  const point=new THREE.Vector3().fromArray(event.position||[0,0,0]);
  if(event.tool==='hammer'){actor.hammerImpact=.18/1.3;fx?.hammerSwing(actor);const mesh=attachHeldHammer(actor,prop('propHammer',1.25));if(mesh)hazards.push({mesh,type:'visual',time:.48});}

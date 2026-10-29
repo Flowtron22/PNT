@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.63**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.64**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,22 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.64 replaces capture smoke and sequences celebrations afterward. Removed both
+old layers: the opaque spinning 16-sphere capture hazard (local + online) and
+WonderVFX's orange/white steam spheres. CaptureSmokeVFX uses ten neutral, shared
+noise-displaced cloud meshes from a fixed 32-slot pool. A dedicated shader fades
+silhouette edges; puffs expand/drift gently, fade out and vanish at .65 seconds.
+Capture confetti begins at .73 seconds (smoke duration plus .08 pause); fireworks
+follow on their existing delayed schedule. Cached capture positions are cloned;
+a bounded eight-cue queue clears with gameFX between matches. Cache-empty
+celebrations retain their immediate timing. Removed obsolete capture hazard spin
+updates and the unused WonderVFX.capture method. Existing capture rules, animation
+and online server event path are unchanged. Screenshot of both stages:
+.local/capture-smoke-sequence.png. Regression checks soft neutral pooled smoke,
+no old online sphere hazards, no smoke/celebration overlap at 30/60/144 FPS, fixed
+capture position, bounded reuse and deferred-cue cancellation. All 201 tests,
+syntax checks and static build pass. Frontend-only deployment; Render unchanged.
 
 0.9.63 adds colourful confetti and two small delayed fireworks when a thief is
 captured or a cache reaches zero money. CelebrationVFX batches tumbling rectangles,
