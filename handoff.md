@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.62**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.63**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,23 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.63 adds colourful confetti and two small delayed fireworks when a thief is
+captured or a cache reaches zero money. CelebrationVFX batches tumbling rectangles,
+launch streaks and camera-facing radial rays into one dynamic vertex-colour mesh
+(one draw call; fixed 256-particle pool / 16 pending pops). No new textures, lights,
+postprocessing or server changes. Confetti falls with gravity and fades; fireworks
+pop at .18/.35 seconds and decay quickly. The existing capture cue remains.
+CacheCompletionTracker stores numeric remaining values to detect positive-to-zero
+transitions once, including mutable local state; initial/repeated empty snapshots
+are silent. Build markers primes the tracker, HUD updates cover local/couch, and
+online snapshot handling triggers before the final round verdict so the last
+cache celebrates too. Capture uses the existing local/online capture event path.
+Clear cancels particles, delayed fireworks and cache history between rounds.
+Preview: .local/celebration-vfx-preview.png. Regression covers event triggers,
+last-cache round finish, duplicate/initial suppression, particle limits/reuse,
+delayed bursts, colour data, motion, expiry and clear. All 198 tests, syntax checks
+and static build pass. Frontend-only deployment; Render stays unchanged.
 
 0.9.62 renames the displayed Rewind Box tool to B2B. Internal rewind ID,
 description, tool icon, cooldown and all mark/return/capture rules stay the same.
