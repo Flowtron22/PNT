@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.55**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.56**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,19 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.56 reverts the sharp blue/pixel hammer experiment per user feedback. Restored
+the pre-0.9.55 green/yellow comic splash, rings, graphic sparks and 16 toon dust
+puffs, enlarged 1.5x for hammer only. Splash animation applies the multiplier
+throughout its lifetime; particle size/growth, travel and gravity scale together.
+Non-hammer events retain their old sizes, and reused legacy particle slots reset
+their scale. Removed hammer-impact.js and its experiment-specific tests.
+Hammer camera shake increases from .099 to .198; linear decay doubles from .35
+to .7 to retain the existing shake duration while doubling amplitude. User
+camera-shake setting and Reduced Motion still apply. Changes cover local,
+couch and online impact presentation; no server update. All 185 tests pass,
+including a regression comparing restored impact scale and unrelated events.
+
 
 0.9.55 revamps hammer impact visuals from the user's reference. hammer-impact.js
 owns pooled pointed triangle crown / jagged shock geometry: vivid blue/cyan
