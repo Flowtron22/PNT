@@ -3,7 +3,7 @@ export function moneyFraction(value,total){return Number.isFinite(value)&&Number
 export function updateMoneyBar(node,value,total,{cache=false}={}){
  if(!node.querySelector('.money-bar-fill')){node.innerHTML='<span class="money-bar-fill" aria-hidden="true"></span><span class="money-bar-label" aria-hidden="true"></span>';node.setAttribute('role','progressbar');node.setAttribute('aria-label',cache?'Cache money remaining':'Money stolen');node.setAttribute('aria-valuemin','0');}
  total=Number.isFinite(total)?Math.max(0,total):0;value=Number.isFinite(value)?value:0;const amount=Math.max(0,Math.min(total,Math.ceil(value))),signature=`${amount}/${total}`;if(node.dataset.balance===signature)return;node.dataset.balance=signature;
- node.setAttribute('aria-valuemax',String(total));node.setAttribute('aria-valuenow',String(amount));node.querySelector('.money-bar-fill').style.transform=`scaleX(${moneyFraction(value,total)})`;
+ node.setAttribute('aria-valuemax',String(total));node.setAttribute('aria-valuenow',String(amount));node.querySelector('.money-bar-fill').style.clipPath=`inset(0 ${(1-moneyFraction(value,total))*100}% 0 0)`;
  node.querySelector('.money-bar-label').textContent=cache?'$'+amount.toLocaleString():'$'+amount.toLocaleString()+' / $'+total.toLocaleString();node.classList.toggle('empty',amount<=0);
 }
 export function cacheCenters(arena,caches,matchRoot,ground=()=>NaN){

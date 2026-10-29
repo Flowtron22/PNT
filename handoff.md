@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.46**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.47**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,13 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.47 keeps money stripes fixed-size, clipping the full-width fill instead of scaling it.
+Thief capture/release markers now use centered round-ended circular gauges, including
+a grey cooldown clock, green ready check and release fill. Per-avatar shader tint
+desaturates the costume only while releaseCooldown>0, preserving Oyen/Sunken shaders.
+Shared UI stars use rounded quadratic corners, and police detection arcs have round caps.
+Game rules/server remain unchanged (0.9.20).
 
 0.9.46 imports the user Coin_GET3 and two footstep WAVs (~80 KB prepared total).
 Collection loops only during owned local stealing and stops immediately on input

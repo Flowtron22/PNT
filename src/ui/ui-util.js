@@ -198,7 +198,9 @@ export function starSVG({ cls = 'iw-fa', fill = null, viewBox = 200, r = 58, ext
     return [f1(c + Math.cos(angle) * radius), f1(c + Math.sin(angle) * radius)];
   });
   const fa = fill ? `fill="${fill}"` : `class="${cls}"`;
-  return `<svg viewBox="0 0 ${viewBox} ${viewBox}" aria-hidden="true" ${extra}><path ${fa} d="M${points.map(p => p.join(' ')).join(' L')} Z"/></svg>`;
+  const corners=points.map((point,i)=>{const prev=points[(i+9)%10],next=points[(i+1)%10],t=.12;return {point,start:point.map((v,k)=>f1(v+(prev[k]-v)*t)),end:point.map((v,k)=>f1(v+(next[k]-v)*t))};});
+  const path=corners.map((v,i)=>`${i?'L':'M'}${v.start.join(' ')} Q${v.point.join(' ')} ${v.end.join(' ')}`).join(' ')+' Z';
+  return `<svg viewBox="0 0 ${viewBox} ${viewBox}" aria-hidden="true" ${extra}><path ${fa} d="${path}"/></svg>`;
 }
 // Keep older foundation consumers consistent with the new shared decoration.
 export const splatSVG = starSVG;
