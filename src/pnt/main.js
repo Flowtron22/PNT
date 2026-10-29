@@ -172,11 +172,11 @@ function updateCouchControllers(now,dt){
  couchInputs.clear();if(document.hidden||busy)return;
  for(const pad of pads){
   if(!pad.connected)continue;let id=room.players.findIndex(p=>p&&!p.bot&&p.controller===pad.index);
-  if(id<0){if((!ui.lobby.hidden||paused)&&pad.pressed.size){id=joinCouch(room,pad.index);if(id>=0){void gameAudio.prepare();if(!ui.lobby.hidden)refreshLobby();}}continue;}
+  if(id<0){if((!ui.lobby.hidden||paused||!ui.results.hidden)&&pad.pressed.size){id=joinCouch(room,pad.index);if(id>=0){void gameAudio.prepare();if(!ui.lobby.hidden)refreshLobby();}}continue;}
   if(pad.pressed.size)void gameAudio.prepare();
   if(!ui.lobby.hidden){if(pad.direction)couchLobbyCommand(id,pad.direction);if(room?.mode!=='couch')return;if(pad.pressed.has(1)){couchLobbyCommand(id,'back');if(room?.mode!=='couch')return;}if(!room.players[id]||room.players[id].bot)continue;if(pad.pressed.has(0))couchLobbyCommand(id,'accept');if(pad.pressed.has(2))couchLobbyCommand(id,'ready');if(id===0){if(pad.pressed.has(4)||pad.pressed.has(5)){cycleMap(room,pad.pressed.has(5)?1:-1);refreshLobby();}if(pad.pressed.has(9))startCouchCountdown();}continue;}
   if(pad.pressed.has(9)){if(paused)resume();else if(round&&!ui.hud.hidden)pauseGame();return;}
-  if(paused||!ui.results.hidden){if(id===0){if(pad.direction)controllerMenu(document,pad.direction);if(pad.pressed.has(0))controllerMenu(document,'accept');if(pad.pressed.has(1)&&paused)resume();}continue;}
+  if(paused||!ui.results.hidden){if(id===0){if(pad.direction)controllerMenu(document,pad.direction);if(pad.pressed.has(0)){controllerMenu(document,'accept');return;}if(pad.pressed.has(1)&&paused){resume();return;}}continue;}
   const active=round?.phase==='playing'&&!(round.startRemaining>0)&&!phoneLandscape.blocked;
   couchControllers.rumble(pad.index,round?.actors[id]?.effect,dt,active&&round.actors[id].effectTime>0,settings.haptics);
   if(!active)continue;couchInputs.set(id,{x:pad.x,z:pad.z,interact:pad.held.has(0)});if(pad.pressed.has(2))useTool(0,id);if(pad.pressed.has(3))useTool(1,id);
@@ -337,7 +337,15 @@ addEventListener('storage',e=>{if(e.key===PROFILE_KEY){profile=readProfile(local
 $('#sunken-look').onclick=()=>{if(!sunkenLook)return;sunkenStylized=!sunkenStylized;try{localStorage.setItem('pnt-sunken-look',sunkenStylized?'stylized':'original');}catch{}sunkenLook.setEnabled(sunkenStylized);resume();};
 $('#page-back').onclick=goBack;$('#pause-button').onclick=pauseGame;$('#resume').onclick=resume;$('#leave').onclick=menu;$('#result-menu').onclick=menu;$('#again').onclick=start;
 addEventListener('keydown',e=>{if(!bindingCapture)return;e.preventDefault();e.stopImmediatePropagation();if(e.code==='Escape'){bindingCapture=null;renderBindingSettings();return;}const next=rebind(bindings,bindingCapture,e.code);if(!next){$('#binding-status').textContent='Choose a key, or click left, right or middle mouse button.';return;}bindings=next;bindingCapture=null;clearInput();saveBindings(localStorage,bindings);renderBindingSettings();refreshControlHints();},true);
-addEventListener('keydown',e=>{if(room?.mode!=='couch'||ui.lobby.hidden||busy||e.target.matches('input,select,textarea'))return;const command={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',Enter:'accept',Space:'ready',Escape:'back'}[e.code];if(command){if(room.players[0].controller===null)room.keyboardHost=true;e.preventDefault();e.stopImmediatePropagation();if(!e.repeat||command!=='ready')couchLobbyCommand(0,command);}},true);
+function handleCouchLobbyKey(e){
+ if(room?.mode!=='couch'||ui.lobby.hidden||busy||e.target.matches('input,select,textarea'))return;
+ // Focused buttons retain native Enter/Space activation, including Start, map
+ // arrows and pickers. The panel shortcuts apply outside those controls.
+ if(['Enter','Space'].includes(e.code)&&ui.lobby.contains(e.target)&&e.target.closest('button,a[href],[role=button]'))return;
+ const command={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',Enter:'accept',Space:'ready',Escape:'back'}[e.code];
+ if(command){if(room.players[0].controller===null)room.keyboardHost=true;e.preventDefault();e.stopImmediatePropagation();if(!e.repeat||command!=='ready')couchLobbyCommand(0,command);}
+}
+addEventListener('keydown',handleCouchLobbyKey,true);
 addEventListener('keydown',e=>{if(e.target.matches('select,input,textarea')||busy||e.metaKey)return;setControlDevice(false);if(e.code==='Escape'){if(paused)resume();else if(round)pauseGame();else goBack();return;}if(round&&Object.values(bindings).includes(e.code)){e.preventDefault();keys.add(e.code);}if(round&&!paused&&!e.repeat){if(e.code===bindings.interact)interact('keyboard');if(e.code===bindings.tool1)useTool(0);if(e.code===bindings.tool2)useTool(1);}});
 addEventListener('keyup',e=>{keys.delete(e.code);if(e.code===bindings.interact)stopInteract('keyboard');});addEventListener('blur',()=>{clearInput();pauseGame();});document.addEventListener('visibilitychange',()=>{lastFrame=performance.now();if(document.hidden){pauseGame();gameAudio.stop();}});
 let capturedMouseClickUntil=0,capturedMouseButton=null;

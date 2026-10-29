@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.49**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.50**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,18 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.50 fixes all three controller/couch review findings. Focused lobby buttons
+retain native Enter/Space; panel shortcuts continue outside those buttons.
+Unknown controller indices can reclaim disconnected seats on results as well
+as lobby/pause. Controller menu acceptance/resume ends the frame's dispatch so
+remaining pad snapshots cannot read a cleared room or affect the new screen.
+Six runtime regressions exercise the actual main.js handlers in a Node VM
+without WebGL, including menu exit with P2 connected, rematch/resume stale input,
+results recovery on a different index, and keyboard button/shortcut handling.
+All 179 client tests pass. Server remains 0.9.20 / movement 6. Physical controller
+and visual browser verification remain outstanding (browser control disabled).
+
 
 0.9.49 removes the user-marked couch lobby helper copy: the header kicker,
 one-screen caption, empty-slot tags, join instructions, bot-fill notes, map-owner
