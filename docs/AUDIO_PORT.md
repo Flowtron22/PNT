@@ -29,3 +29,19 @@ The source names are retained for gameplay MP3s to make their provenance clear:
 `Tool_Rewind_*`, `Player_*`, `Police_Capture_*`, `Thief_*`, `Match_*`.
 Some spare clips are bundled for later cue refinements. No audio synthesis or
 Unreal SoundCue execution is required at runtime.
+
+
+## Player-supplied collection and footsteps (0.9.46)
+
+The user supplied `SE_O_Coin_GET3.wav`,
+`00001 - WAV_1_GUESS_BNK_SE_FS_PC51.wav` and
+`WAV_0_GUESS_BNK_SE_FS_PC54.wav`. `tools/prepare-player-audio.ps1` prepares
+mono 44.1 kHz PCM copies (~80 KB combined). The coin clip trims its silent tail
+at 0.72 seconds with a short fade; footsteps A receives +16 dB so both footstep
+clips peak around -9 dB. The downloaded source files are unchanged.
+
+`Coin_GET3` loops only for the local thief while holding Interact, with actual
+active cache ownership. Release stops immediately even before a network update;
+smoke, capture, empty caches, pause and leaving also stop it. Footsteps alternate
+A/B after grounded movement distance, attenuate remotely, reject teleport deltas,
+and stay silent in flight, stun, capture or pause. They use the existing SFX bus.

@@ -1,12 +1,13 @@
 const TOOL_SOUNDS={hammer:'Tool_Hammer_Activate',banana:'Tool_Banana_Throw',smoke:'Tool_Smoke_Throw',rocket:'Tool_Jetpack_Launch',rewind:'Tool_Rewind_Teleport'};
 const NARRATION_BEATS={ready:'vc_narration_ready',3:'vc_narration_three',2:'vc_narration_two',1:'vc_narration_one',go:'vc_narration_go'};
 const NARRATION=['vc_narration_one','vc_narration_two','vc_narration_three','vc_narration_ready','vc_narration_go','vc_narration_suddendeath','vc_narration_timeup','vc_menu_narration_waytogo','vc_menu_narration_great'];
-const WAV_CLIPS=new Set(NARRATION);
+const WAV_CLIPS=new Set([...NARRATION,'Coin_GET3','Footstep_A','Footstep_B']);
 const CLIP_EXTENSIONS={'menu-bgm':'m4a','pirate-chase-bgm':'m4a','iceberg-chase-bgm':'m4a'};
 const CLIP_VERSIONS={'iceberg-chase-bgm':'0.9.39'};
-const CLIPS=['menu-bgm','gameplay-bgm','Match_Countdown','Match_Start','Player_Land','Player_Launch','Player_Spin_Out','Player_Stunned','Police_Capture_Start','Police_Capture_Success','Thief_Escape','Thief_Loot_Stolen','Tool_Banana_Slip','Tool_Banana_Throw','Tool_Hammer_Activate','Tool_Hammer_Impact','Tool_Jetpack_Flight','Tool_Jetpack_Land','Tool_Jetpack_Launch','Tool_Rewind_Box_Deploy','Tool_Rewind_Teleport','Tool_Smoke_Activate','Tool_Smoke_Throw',...NARRATION];
+const CLIPS=['Coin_GET3','Footstep_A','Footstep_B','menu-bgm','gameplay-bgm','Match_Countdown','Match_Start','Player_Land','Player_Launch','Player_Spin_Out','Player_Stunned','Police_Capture_Start','Police_Capture_Success','Thief_Escape','Thief_Loot_Stolen','Tool_Banana_Slip','Tool_Banana_Throw','Tool_Hammer_Activate','Tool_Hammer_Impact','Tool_Jetpack_Flight','Tool_Jetpack_Land','Tool_Jetpack_Launch','Tool_Rewind_Box_Deploy','Tool_Rewind_Teleport','Tool_Smoke_Activate','Tool_Smoke_Throw',...NARRATION];
 export function createGameplayAudio(getEngine){
  let sfxLevel=1,musicLevel=1;
+ let coinVoice=null;const footsteps=new Map();
  let context=null,sfx=null,music=null,musicVoice=null,musicTrack=null,match=null,previous=[],previousPhase=null,freeRunners=0,cacheRemaining=new Map(),suddenDeath=false,praise=0,enabled=localStorage.getItem('pnt-game-sfx')!=='off',musicEnabled=localStorage.getItem('pnt-game-music')!=='off';
  const buffers=new Map(),downloads=new Map(),decoding=new Map(),last=new Map(),loops=new Map(),voices=new Set();
  function unlock(){const engine=getEngine();engine.init();context=engine.ctx;if(!context)return;engine.resume();if(!sfx){sfx=context.createGain();sfx.gain.value=enabled?.55*sfxLevel:0;sfx.connect(engine.master);music=context.createGain();music.gain.value=musicEnabled?.2*musicLevel:0;music.connect(engine.master);}}
@@ -20,18 +21,28 @@ export function createGameplayAudio(getEngine){
  function tool(name,id,actors){const volume=distanceVolume(id,actors);if(volume<=0)return;play(TOOL_SOUNDS[name],volume);if(name==='smoke')play('Tool_Smoke_Activate',volume*.8);}
  function narrateBeat(beat){const name=NARRATION_BEATS[beat];if(name)play(name,1,.05);}
  function setMusicTrack(name){if(name===musicTrack&&musicVoice)return;if(musicVoice){const old=musicVoice;musicVoice=null;musicTrack=null;old.stop();}if(name){const next=voice(name,{bus:music,loop:true});if(next){musicVoice=next;musicTrack=name;}}}
- function stop(){for(const item of voices)item.stop();loops.clear();musicVoice=null;musicTrack=null;previous=[];match=null;}
- function stopEffects(){for(const item of voices)if(item!==musicVoice)item.stop();loops.clear();previous=[];previousPhase=null;freeRunners=0;cacheRemaining.clear();suddenDeath=false;praise=0;match=null;}
- function update(round,actors,active,musicActive=active,map='mall'){
+ function stop(){for(const item of voices)item.stop();loops.clear();coinVoice=null;footsteps.clear();musicVoice=null;musicTrack=null;previous=[];match=null;}
+ function stopEffects(){for(const item of voices)if(item!==musicVoice)item.stop();loops.clear();coinVoice=null;footsteps.clear();previous=[];previousPhase=null;freeRunners=0;cacheRemaining.clear();suddenDeath=false;praise=0;match=null;}
+ function update(round,actors,active,musicActive=active,map='mall',localInteractHeld=true){
   if(!round){if(match)stopEffects();}
   else if(match!==round.profileId){stopEffects();match=round.profileId;previous=round.actors.map(a=>({...a}));previousPhase=round.phase;freeRunners=round.actors.filter(a=>a.role==='runner'&&!a.caught).length;cacheRemaining=new Map(round.caches?.map(cache=>[cache.id,cache.remaining])||[]);void prepare();}
   const chaseTrack=map==='sunken'?'pirate-chase-bgm':map==='iceberg'?'iceberg-chase-bgm':'gameplay-bgm';setMusicTrack(musicActive&&musicEnabled?(active?chaseTrack:'menu-bgm'):null);
   if(!round)return;
+  const me=round.actors[0],collecting=active&&enabled&&localInteractHeld&&me?.role==='runner'&&!me.caught&&!me.inSmoke&&me.interacting&&round.caches?.some(c=>c.harvester===0&&c.remaining>0);
+  if(collecting){if(!coinVoice)coinVoice=voice('Coin_GET3',{loop:true,volume:.7});}else if(coinVoice){coinVoice.stop();coinVoice=null;}
+  if(!active||!enabled)footsteps.clear();
   round.actors.forEach((state,id)=>{const before=previous[id]||state,volume=distanceVolume(id,actors),flying=state.effect==='rocket'&&state.effectTime>0;
-   if(active){if(state.caught&&!before.caught)play('Police_Capture_Success',volume);if(!state.caught&&before.caught)play('Thief_Escape',volume);if(state.effect!==before.effect&&state.effectTime>0){if(state.effect==='banana')play('Tool_Banana_Slip',volume);if(['stunned','airStunned'].includes(state.effect))play('Player_Stunned',volume);}if(before.effect==='rocket'&&before.effectTime>0&&!flying)play('Tool_Jetpack_Land',volume);if(state.detectionProgress>0&&!before.detectionProgress&&state.role==='runner'&&round.playerRole==='chaser')play('Police_Capture_Start',volume,.8);if(state.interacting&&!before.interacting&&round.caches?.some(cache=>cache.harvester===id))play('Thief_Loot_Stolen',volume*.45,.2);}
+   if(active){if(state.caught&&!before.caught)play('Police_Capture_Success',volume);if(!state.caught&&before.caught)play('Thief_Escape',volume);if(state.effect!==before.effect&&state.effectTime>0){if(state.effect==='banana')play('Tool_Banana_Slip',volume);if(['stunned','airStunned'].includes(state.effect))play('Player_Stunned',volume);}if(before.effect==='rocket'&&before.effectTime>0&&!flying)play('Tool_Jetpack_Land',volume);if(state.detectionProgress>0&&!before.detectionProgress&&state.role==='runner'&&round.playerRole==='chaser')play('Police_Capture_Start',volume,.8);}
+   const position=actors[id]?.group?.position;
+   if(active&&enabled&&position&&Number.isFinite(position.x)&&Number.isFinite(position.z)){
+    const foot=footsteps.get(id),moving=actors[id].grounded!==false&&!flying&&!state.caught&&!(state.effectTime>0),distance=foot?Math.hypot(position.x-foot.x,position.z-foot.z):0;
+    const next=foot||{travel:0,beat:0,next:0};
+    if(moving&&distance<2){next.travel+=distance;if(next.travel>=1.05&&context.currentTime>=next.next&&volume>0){voice(next.beat++%2?'Footstep_B':'Footstep_A',{volume:volume*.28});next.travel%=1.05;next.next=context.currentTime+.14;}}else next.travel=0;
+    next.x=position.x;next.z=position.z;footsteps.set(id,next);
+   }
    if(active&&enabled&&flying&&volume>0){if(!loops.has(id)){const item=voice('Tool_Jetpack_Flight',{loop:true,volume:volume*.4});if(item)loops.set(id,item);}else loops.get(id).gain.gain.value=volume*.4;}else if(loops.has(id)){loops.get(id).stop();loops.delete(id);}
   });
   const alive=round.actors.filter(a=>a.role==='runner'&&!a.caught).length;if(!suddenDeath&&freeRunners>1&&alive===1){suddenDeath=true;play('vc_narration_suddendeath',1,.1);}for(const cache of round.caches||[]){const before=cacheRemaining.get(cache.id);if(before>0&&cache.remaining<=0)play(praise++%2?'vc_menu_narration_great':'vc_menu_narration_waytogo',.9,.1);cacheRemaining.set(cache.id,cache.remaining);}if(previousPhase==='playing'&&round.phase==='finished'&&round.reason==='timeout')play('vc_narration_timeup',1,.1);freeRunners=alive;previousPhase=round.phase;previous=round.actors.map(a=>({...a}));
  }
- return {setLevels({sfx:effects=sfxLevel,music:track=musicLevel}={}){sfxLevel=Math.max(0,Math.min(1,effects));musicLevel=Math.max(0,Math.min(1,track));if(sfx)sfx.gain.value=enabled?.55*sfxLevel:0;if(music)music.gain.value=musicEnabled?.2*musicLevel:0;},unlock,preload,prepare,play,tool,narrateBeat,update,stop,get enabled(){return enabled;},get musicEnabled(){return musicEnabled;},setEnabled(value){enabled=!!value;try{localStorage.setItem('pnt-game-sfx',enabled?'on':'off');}catch{}if(sfx)sfx.gain.value=enabled?.55*sfxLevel:0;},setMusic(value){musicEnabled=!!value;try{localStorage.setItem('pnt-game-music',musicEnabled?'on':'off');}catch{}if(music)music.gain.value=musicEnabled?.2*musicLevel:0;}};
+ return {setLevels({sfx:effects=sfxLevel,music:track=musicLevel}={}){sfxLevel=Math.max(0,Math.min(1,effects));musicLevel=Math.max(0,Math.min(1,track));if(sfx)sfx.gain.value=enabled?.55*sfxLevel:0;if(music)music.gain.value=musicEnabled?.2*musicLevel:0;},unlock,preload,prepare,play,tool,narrateBeat,update,stop,get enabled(){return enabled;},get musicEnabled(){return musicEnabled;},setEnabled(value){enabled=!!value;if(!enabled){coinVoice?.stop();coinVoice=null;footsteps.clear();}try{localStorage.setItem('pnt-game-sfx',enabled?'on':'off');}catch{}if(sfx)sfx.gain.value=enabled?.55*sfxLevel:0;},setMusic(value){musicEnabled=!!value;try{localStorage.setItem('pnt-game-music',musicEnabled?'on':'off');}catch{}if(music)music.gain.value=musicEnabled?.2*musicLevel:0;}};
 }

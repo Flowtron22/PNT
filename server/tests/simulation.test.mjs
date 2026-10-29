@@ -67,3 +67,8 @@ test('timeout freezes poses and hazards before any extra movement or interaction
 test('expired smoke no longer suppresses a banana collision for one extra tick',()=>{
  const sim=flatMatch();try{sim.round.remaining=298;const p=sim.actors[1].group.position;sim.addHazard('smoke',sim.actors[2],.001,p);sim.addHazard('banana',sim.actors[0],10,p);sim.step();assert.equal(sim.round.actors[1].inSmoke,false);assert.equal(sim.round.actors[1].effect,'banana');}finally{sim.dispose();}
 });
+
+
+test('authoritative Sunken movement crosses under the hanging boom while staying on deck',async()=>{
+ const sim=await MatchSimulation.create('sunken',players());try{const actor=sim.actors[0];actor.group.position.copy(groundSpot(sim.grid,3.3569,-.8419));for(let i=1;i<=45;i++){sim.input(0,{seq:i,x:1,z:0,interact:false});sim.step();}assert.ok(actor.group.position.x>5.5);assert.ok(actor.group.position.y< -2);assert.equal(actor.grounded,true);}finally{sim.dispose();}
+});

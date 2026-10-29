@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.45**, online multiplayer test release. Server: **0.9.19**.
+Current app version: **0.9.46**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,24 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.46 imports the user Coin_GET3 and two footstep WAVs (~80 KB prepared total).
+Collection loops only during owned local stealing and stops immediately on input
+release (including online), smoke, capture, depletion, pause or leaving. Footsteps
+alternate from grounded movement, attenuate remotely and suppress warps/flight.
+The HUD money counter is a filling loading-style bar; cache counters drain and
+anchor at chest centres across maps (grounded fallback for Mall). Coin trails
+start at those anchors. Removed the persistent objective and control-guide panels
+and their generating code. Mouse bindings now use left/right/wheel SVG icons in
+HUD, key mapping and tool cards; idle duplicated key text is removed.
+Sunken navigation now samples deck underneath the overhead boom, using visible
+3D capsule clearance; 44 raised samples corrected, 24 clear deck cells opened,
+with underlying obstacles and original blocked cells preserved. Repro tool:
+tools/fix-sunken-overhead.mjs. Collision query uses overhead-046; movement version
+6 and server 0.9.20 must deploy together for online consistency. Source Unreal
+assets remain unchanged. Server regression crosses beneath the boom on deck.
+User confirms Sunken stylized rendering is smooth on iPhone 14 Plus.
+
 
 0.9.45 adds a Sunken-only soft stylized rendering experiment inspired by the
 user reference worawork.vercel.app. src/pnt/sunken-look.js owns reversible
