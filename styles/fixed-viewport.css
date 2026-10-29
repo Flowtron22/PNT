@@ -1,8 +1,0 @@
-/* Input-specific controls may stay finger-sized; the menu composition uses the
-   same 1600x900 layout regardless of physical screen or input device. */
-@media(hover:none),(pointer:coarse){
- #hud{--touch-size:max(68px,calc(48px / var(--display-scale,1)));--touch-gap:max(14px,calc(10px / var(--display-scale,1)));--touch-edge:max(24px,calc(16px / var(--display-scale,1)))}
- #joystick{width:calc(max(100px,calc(90px / var(--display-scale,1))) * var(--joystick-size,1));height:calc(max(100px,calc(90px / var(--display-scale,1))) * var(--joystick-size,1))}
- #stick{--knob-size:max(46px,calc(46px / var(--display-scale,1)));width:var(--knob-size);height:var(--knob-size);left:calc(50% - var(--knob-size) / 2);top:calc(50% - var(--knob-size) / 2)}
- #pause-button{min-width:max(44px,calc(44px / var(--display-scale,1)));min-height:max(44px,calc(44px / var(--display-scale,1)))}
-}
