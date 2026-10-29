@@ -1,12 +1,9 @@
-export const DESIGN_WIDTH=1600,DESIGN_HEIGHT=900;
-export function fitGameViewport(width,height){
- const scale=Math.max(0,Math.min(width/DESIGN_WIDTH,height/DESIGN_HEIGHT));
- const gameWidth=DESIGN_WIDTH*scale,gameHeight=DESIGN_HEIGHT*scale;
- return {scale,width:gameWidth,height:gameHeight,x:(width-gameWidth)/2,y:(height-gameHeight)/2};
-}
-// The logical camera/UI size stays fixed, while GPU resolution follows the
-// physical game area. A small phone must not render a desktop-sized framebuffer.
-export function gamePixelRatio(dpr,scale,quality){return Math.min(dpr||1,quality==='battery'?1:1.5)*Math.max(.01,scale||1);}
-export function gameHost(win){
- try{return win.parent&&win.parent!==win&&win.parent.pntFrame?win.parent:null;}catch{return null;}
+// Inkwave-style sizing reference: scale UI components together without boxing
+// the renderer into that aspect ratio. The scene always fills the real screen.
+export function layoutUnit(width,height){return Math.min(width*.01,height/56.25);}
+export function menuPreviewFrame({width,height,left,right,mode='home',bodyHeight=2.325,bodyWidth=1.6,fov=40}){
+ const u=layoutUnit(width,height),freeLeft=Math.max(u*2,left+u*1.8),freeRight=Math.min(width-u*2,right-u);
+ const available=Math.max(u*4,freeRight-freeLeft),heightLimit=height*(mode==='home'?.68:.78);
+ const pixelsPerUnit=Math.max(.01,Math.min(heightLimit/bodyHeight,available*.88/bodyWidth));
+ return {x:(freeLeft+freeRight)/2,y:height*.5,distance:height/(2*Math.tan(fov*Math.PI/360)*pixelsPerUnit),focus:bodyHeight*.5,pixelsPerUnit,freeLeft,freeRight};
 }

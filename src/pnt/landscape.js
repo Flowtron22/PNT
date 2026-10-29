@@ -1,15 +1,9 @@
-import {gameHost} from './viewport.js';
 export function phoneNeedsLandscape(win){return win.matchMedia('(pointer: coarse)').matches&&win.innerWidth<win.innerHeight;}
 export async function lockPhoneLandscape(doc,win){
  if(typeof win.screen?.orientation?.lock!=='function')return false;
  try{if(!doc.fullscreenElement&&doc.documentElement.requestFullscreen)await doc.documentElement.requestFullscreen({navigationUI:'hide'});await win.screen.orientation.lock('landscape');return true;}catch{return false;}
 }
 export function configureLandscape({onChange=()=>{},doc=document,win=window}={}){
- const host=gameHost(win);if(host){
-  doc.addEventListener('pointerup',()=>void host.pntFrame.requestLandscape(),{capture:true});
-  win.addEventListener('pnt-viewport',()=>onChange(host.pntFrame.blocked));
-  return {get blocked(){return host.pntFrame.blocked;}};
- }
  const overlay=doc.createElement('section');overlay.id='phone-landscape';overlay.hidden=true;overlay.setAttribute('role','dialog');overlay.setAttribute('aria-label','Landscape view');
  overlay.innerHTML='<div><span class="rotate-phone-icon" aria-hidden="true">▯ ↶</span><h2>TURN YOUR DEVICE</h2><p>The chase plays in landscape.</p><button class="primary">ENTER LANDSCAPE</button></div>';doc.body.append(overlay);
  const button=overlay.querySelector('button');button.hidden=typeof win.screen?.orientation?.lock!=='function';let blocked=false,attempted=false;

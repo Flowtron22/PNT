@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
-Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.68**, online multiplayer test release. Server: **0.9.21**.
+Updated: 30 October 2026 (Asia/Kuala_Lumpur).
+Current app version: **0.9.69**, online multiplayer test release. Server: **0.9.21**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,27 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.69 reverts the rejected fixed 16:9 letterboxed layout and adopts Inkwave's
+full-screen layout approach. index.html once again contains the game directly;
+removed game.html, game-shell.js and shell/fixed-viewport styles. Normal fullscreen
+and physical screen coordinates are restored; portrait touch tablets still ask
+to rotate. New responsive-layout.css uses one --u=min(1vw,1.777778vh) for menu
+buttons, logo, profile/loadout anchors and HUD readouts. Touch controls retain
+physical sizing. Tools/costume panels use shared units; Inkwave-style menu camera
+measurement reads actual panel/profile edges at 5 Hz, eases toward the available
+space, fits character height/width, and uses setViewOffset to centre the subject
+there. Existing 1.5x model scale and 30-degree left-facing pose are retained.
+Gameplay uses the established 16:9 vertical FOV reference while filling the actual
+screen; it pulls back only as needed to keep stage/objective corners visible.
+The phone lobby's compact landscape rule now depends on height <=600, so iPads
+no longer receive the short-phone roster layout. No server/rule/audio/VFX changes.
+Browser checks cover full-screen iPad/phone menu, costume page, training lobby,
+gameplay and pause. Screenshots: .local/responsive-ipad-menu.png,
+.local/responsive-phone-menu.png, .local/responsive-ipad-gameplay.png.
+All 211 client checks, syntax and build pass. Frontend-only deployment.
+The 0.9.68 shell release instructions below are obsolete: update index.html and
+package versions normally. There is no game.html or fixed logical canvas now.
 
 0.9.68 implements the user's chosen universal 16:9 view with borders. index.html
 is now a same-origin shell, and game.html contains the original full game markup.
