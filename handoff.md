@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.50**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.51**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,24 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.51 is the user's Dota-inspired turning animation experiment. All avatars
+have a separate feet-level Locomotion_Visual pivot around the existing model;
+turn-motion.js applies bounded lean/twist and volume-preserving squash on
+sharp turns/reversals, then settles during straight running or stopping.
+The gameplay actor root, facing, velocity, collision, detection range, shared
+movement code and server are unchanged. Uses actual ground displacement/yaw
+and velocity; skips teleports/long frame gaps. Active in practice, couch and
+online animation, including remote players. Immediately resets for tools,
+stun, capture, airborne/jetpack, countdown and round end. Reduced Motion
+suppresses it. Pause has TURN ANIMATION ON/OFF for A/B comparison, persisted
+in pnt-turn-animation (default on). Held hammer socket fitting first resets the
+cosmetic deformation so rig scale does not alter the tool size. No new assets,
+postprocessing or server update required. Seven dedicated tests cover symmetry,
+settling, volume preservation, root isolation, interruptions and warp guards.
+All 186 tests pass. Browser control remains disabled, so the user needs to judge
+the actual animation visually on the deployed build before further tuning.
+
 
 0.9.50 fixes all three controller/couch review findings. Focused lobby buttons
 retain native Enter/Space; panel shortcuts continue outside those buttons.
