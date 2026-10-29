@@ -16,8 +16,9 @@ test('thieves have independent progress and all three detections award victory o
  const round=createRound('chaser');for(let i=0;i<8;i++)detectThief(round,0,1,.1,1);assert.equal(round.actors[2].detectionProgress,0);detectThief(round,0,2,.1,1);assert.ok(round.actors[1].detectionProgress>round.actors[2].detectionProgress);
  for(const id of [1,2,3]){for(let i=0;i<16;i++){detectThief(round,0,id,.1,1);stepRound(round,.1);}assert.equal(round.actors[id].caught,true);}assert.equal(round.winner,'chaser');assert.equal(detectThief(round,0,1,.1,1),false);
 });
-test('police ring matches detection radius and fills progressively without new geometry',()=>{
- const zone=createDetectionZone(),round=createRound('chaser'),fill=zone.group.children[2],geometry=fill.geometry;
- zone.update(round.actors);assert.equal(fill.geometry.drawRange.count,0);assert.equal(zone.group.children[0].geometry.parameters.radius,DETECTION_RADIUS);
- round.actors[1].detectionProgress=.8;zone.update(round.actors);assert.equal(fill.geometry.drawRange.count,96*3);round.actors[2].detectionProgress=1.6;zone.update(round.actors);assert.equal(fill.geometry.drawRange.count,96*6);assert.equal(fill.geometry,geometry);zone.update(round.actors,false);assert.equal(zone.group.visible,false);zone.dispose();
+test('conditional police indicator matches gameplay range and reuses its geometry',()=>{
+ const zone=createDetectionZone(),disk=zone.group.children[0],geometry=disk.geometry;
+ assert.equal(zone.group.visible,false);assert.equal(geometry.parameters.radius,DETECTION_RADIUS);
+ for(let i=0;i<50;i++){zone.update(true);assert.equal(zone.group.visible,true);zone.update(false);assert.equal(zone.group.visible,false);assert.equal(disk.geometry,geometry);}
+ zone.update(true,false);assert.equal(zone.group.visible,false);zone.dispose();
 });

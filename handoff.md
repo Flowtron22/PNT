@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.53**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.54**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,25 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.54 replaces the permanent blue police range disk/orange arc with a faint
+neutral grey disk and rim visible only during valid current detection contact.
+Visibility checks current distance/height, smoke, line of sight, capture/immune
+state, police ability to act and start/grace rules. It does not use decaying
+capture progress, so leaving contact hides it immediately. Actual capture rules
+and centered thief progress/release gauges are unchanged. Works local/couch
+and online; no server update needed.
+The assigned police (any seat/costume) now gets a screen-facing animated P badge
+overhead. Uses the user-provided P-Switch PNG copied unchanged to
+assets/pnt/ui/police-badge-sheet.png. Original source: Downloads/Nintendo Switch -
+Super Mario Maker 2 - New Super Mario Bros. U_ Objects - P-Switch (NSMBU).png.
+Atlas is 596x187 RGBA; seven glow frames in the bottom row at x=1+85*frame,
+y=94, size84x92, excluding cyan grid lines and the top reference/pressed row.
+police-badge.js drives the frame at 9 FPS; Reduced Motion holds a static P.
+CSS crops the source in a small screen-space marker (smaller on phone). Couch
+police P-number label sits lower to avoid overlap. Browser visual verification
+remains unavailable while browser control is disabled.
+
 
 0.9.53 removes the turning animation experiment at the user's request: removed
 turn-motion.js, its tests, model wrapper, per-frame deformation, pause toggle,
