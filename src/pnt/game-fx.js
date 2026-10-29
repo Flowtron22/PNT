@@ -39,17 +39,28 @@ export function createGameFX(scene){
  let jetTimers=new WeakMap();
  function jetpack(actor,state,dt,camera){
   const previous=jetTimers.get(actor);if(state.effect!=='rocket'||state.effectTime<=0||state.caught||state.captureRemaining>0){if(previous?.active)wonder.jetLand(actor.group.position);jetTimers.delete(actor);return;}
-  const timer=previous||{remaining:0,active:false};if(!timer.active){wonder.jetLaunch(actor.group.position);timer.active=true;}
-  let remaining=timer.remaining-Math.max(0,dt);
-  if(remaining<=0){remaining+=.12;const angle=actor.group.rotation.y;
-   const p=actor.group.position.clone().add(new THREE.Vector3(-Math.sin(angle)*.35,.45,-Math.cos(angle)*.35));
-   wonder.jetTrail(p,new THREE.Vector3(Math.sin(angle),0,Math.cos(angle)));
-   for(const kind of ['jetSmoke','jetStar','jetHeart']){const item=emit(kind,p,.65+Math.random()*.2,kind==='jetSmoke'?.16:.13,jetColors[Math.floor(Math.random()*jetColors.length)]);
-    item.v.set(-Math.sin(angle)*.6+(Math.random()-.5)*.6,-.5-Math.random()*.4,-Math.cos(angle)*.6+(Math.random()-.5)*.6);
-    if(kind!=='jetSmoke'){if(camera)item.mesh.quaternion.copy(camera.quaternion);else item.mesh.rotation.set(0,0,0);item.mesh.rotateZ((Math.random()-.5)*1.2);item.spin=(Math.random()-.5)*2;}
+  const angle=actor.group.rotation.y,p=new THREE.Vector3();
+  if(actor.jetpackNozzle){actor.jetpackNozzle.getWorldPosition(p);scene.worldToLocal(p);}
+  else p.copy(actor.group.position).add(new THREE.Vector3(-Math.sin(angle)*.25,.65,-Math.cos(angle)*.25));
+  const timer=previous||{remaining:0,active:false,position:p.clone(),accents:0};
+  if(!timer.active){wonder.jetLaunch(actor.group.position);timer.active=true;}
+  const elapsed=Math.min(Math.max(dt,0),.1);timer.remaining-=elapsed;
+  if(timer.position.distanceToSquared(p)>9)timer.position.copy(p);
+  // Fixed cadence with interpolated birth points keeps the trail continuous at
+  // low FPS. Short lives bound the number of clouds, including four-player play.
+  for(let count=0;timer.remaining<=0&&count<3;count++,timer.remaining+=.035){
+   const fraction=elapsed?THREE.MathUtils.clamp(1+timer.remaining/elapsed,0,1):1;
+   const at=timer.position.clone().lerp(p,fraction);
+   const smoke=emit('jetSmoke',at,.24+Math.random()*.1,.18+Math.random()*.07,[0xe8e9ec,0xd9dce2,0xf4f4f5][Math.floor(Math.random()*3)]);
+   smoke.v.set(-Math.sin(angle)*.9+(Math.random()-.5)*.3,-.3-Math.random()*.2,-Math.cos(angle)*.9+(Math.random()-.5)*.3);
+   if(timer.accents++%4===0)for(const kind of ['jetStar','jetHeart']){
+    const item=emit(kind,at,.18+Math.random()*.08,.1,jetColors[Math.floor(Math.random()*jetColors.length)]);
+    item.v.copy(smoke.v);if(camera)item.mesh.quaternion.copy(camera.quaternion);else item.mesh.rotation.set(0,0,0);
+    item.mesh.rotateZ((Math.random()-.5)*1.2);item.spin=(Math.random()-.5)*2;
    }
-  }timer.remaining=Math.max(0,remaining);jetTimers.set(actor,timer);
+  }
+  timer.position.copy(p);jetTimers.set(actor,timer);
  }
- function emit(kind,p,life,size,color){let item=pool.pop();if(!item){item={mesh:new THREE.Mesh(smokeGeometry,new THREE.MeshLambertMaterial({flatShading:false})),v:new THREE.Vector3()};scene.add(item.mesh);}if(items.length>=MAX){const old=items.shift();old.mesh.visible=false;pool.push(old);}const mesh=item.mesh;mesh.geometry=kind==='impactSmoke'?hammerSmokeGeometry:kind==='ring'?ring:kind==='jetStar'?starGeometry:kind==='jetHeart'?heartGeometry:smokeGeometry;mesh.material.side=THREE.DoubleSide;item.spin=0;item.visualScale=1;mesh.material.color.set(color);const transparent=kind==='ring'||kind==='impactSmoke'||kind.startsWith('jet');if(mesh.material.transparent!==transparent){mesh.material.transparent=transparent;mesh.material.needsUpdate=true;}mesh.material.depthWrite=!transparent;mesh.material.opacity=1;mesh.position.copy(p);mesh.rotation.set(kind==='ring'?-Math.PI/2:Math.random()*6,Math.random()*6,Math.random()*6);if(kind==='ring')mesh.rotation.set(-Math.PI/2,0,0);mesh.visible=true;item.kind=kind;item.life=item.total=life;item.size=size;item.v.set((Math.random()-.5)*.3,.25+Math.random()*.4,(Math.random()-.5)*.3);mesh.scale.setScalar(size);items.push(item);return item;}
+ function emit(kind,p,life,size,color){let item=pool.pop();if(!item){item={mesh:new THREE.Mesh(smokeGeometry,new THREE.MeshLambertMaterial({flatShading:false})),v:new THREE.Vector3()};scene.add(item.mesh);}if(items.length>=MAX){const old=items.shift();old.mesh.visible=false;pool.push(old);}const mesh=item.mesh;mesh.geometry=kind==='impactSmoke'||kind==='jetSmoke'?hammerSmokeGeometry:kind==='ring'?ring:kind==='jetStar'?starGeometry:kind==='jetHeart'?heartGeometry:smokeGeometry;mesh.material.side=THREE.DoubleSide;item.spin=0;item.visualScale=1;mesh.material.color.set(color);const transparent=kind==='ring'||kind==='impactSmoke'||kind.startsWith('jet');if(mesh.material.transparent!==transparent){mesh.material.transparent=transparent;mesh.material.needsUpdate=true;}mesh.material.depthWrite=!transparent;mesh.material.opacity=1;mesh.position.copy(p);mesh.rotation.set(kind==='ring'?-Math.PI/2:Math.random()*6,Math.random()*6,Math.random()*6);if(kind==='ring')mesh.rotation.set(-Math.PI/2,0,0);mesh.visible=true;item.kind=kind;item.life=item.total=life;item.size=size;item.v.set((Math.random()-.5)*.3,.25+Math.random()*.4,(Math.random()-.5)*.3);mesh.scale.setScalar(size);items.push(item);return item;}
  return {jetpack,hammerSwing:actor=>wonder.hammerSwing(actor),capture:position=>wonder.capture(position),rescue:position=>wonder.rescue(position),smokeDeploy:position=>wonder.smokeDeploy(position),bananaDeploy:position=>wonder.bananaDeploy(position),rewind:position=>wonder.rewind(position),run(actor){const p=actor.group.position;if(actor.speed<.2||!actor.grounded){actor.lastDustPosition=null;return;}if(!actor.lastDustPosition){actor.lastDustPosition=p.clone();return;}if(p.distanceTo(actor.lastDustPosition)<1.7)return;actor.lastDustPosition.copy(p);for(let i=0;i<2;i++){const at=p.clone().add(new THREE.Vector3(-Math.sin(actor.group.rotation.y)*(.35+i*.08)+(Math.random()-.5)*.15,.13+i*.07,-Math.cos(actor.group.rotation.y)*(.35+i*.08)));emit('dust',at,.55+i*.08,.11+Math.random()*.12,i%2?0xe9e9e7:0xcfd3d9);}},hammer(position){const p=position.clone().add(new THREE.Vector3(0,.08,0));wonder.hammerImpact(p);const ring=emit('ring',p,.42,.25,0xffd267);ring.visualScale=1.5;ring.mesh.scale.multiplyScalar(1.5);ring.v.multiplyScalar(1.5);for(let i=0;i<16;i++){const angle=i/16*Math.PI*2,item=emit('impactSmoke',p,.7+Math.random()*.25,.2+Math.random()*.23,[0xe8e9ec,0xd9dce2,0xc5cbd4,0xf4f4f5][i%4]);const speed=2.2+Math.random()*1.4;item.v.set(Math.cos(angle)*speed,.25+Math.random()*.5,Math.sin(angle)*speed).multiplyScalar(1.5);item.visualScale=1.5;item.mesh.scale.multiplyScalar(1.5);}},update(dt,camera,context){for(let i=items.length-1;i>=0;i--){const a=items[i];a.life-=dt;if(a.life<=0){a.mesh.visible=false;items.splice(i,1);pool.push(a);continue;}const t=1-a.life/a.total;a.mesh.material.opacity=a.kind==='ring'?(1-t):a.kind==='impactSmoke'||a.kind.startsWith('jet')?Math.min(1,(1-t)*2):1;if(a.kind==='impactSmoke'){const drag=Math.exp(-1.4*dt);a.v.x*=drag;a.v.z*=drag;a.mesh.rotation.x+=dt*1.1;a.mesh.rotation.z+=dt*.7;}a.mesh.position.addScaledVector(a.v,dt);if(a.spin)a.mesh.rotateZ(a.spin*dt);a.mesh.scale.setScalar((a.kind==='ring'?.25+t*2.2:a.size*(1+Math.min(t,.5))*Math.min(1,(1-t)*3))*a.visualScale);}wonder.update(dt,camera,context);},clear(){jetTimers=new WeakMap();for(const a of items){a.mesh.visible=false;pool.push(a);}items.length=0;wonder.clear();}};
 }

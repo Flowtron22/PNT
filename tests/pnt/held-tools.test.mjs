@@ -6,7 +6,7 @@ import * as THREE from '../../vendor/three/build/three.module.js';
 registerHooks({resolve(s,c,next){return s==='three'?{url:new URL('../../vendor/three/build/three.module.js',import.meta.url).href,shortCircuit:true}:next(s,c);}});
 const {GLTFLoader}=await import('../../vendor/three/jsm/loaders/GLTFLoader.js');
 const {makeAnimator}=await import('../../src/pnt/animation.js');
-const {attachHeldHammer}=await import('../../src/pnt/held-tools.js');
+const {attachHeldHammer,prepareJetpackMount,attachHeldJetpack}=await import('../../src/pnt/held-tools.js');
 const {presentOnlineEvent}=await import('../../src/pnt/online-presentation.js');
 const loader=new GLTFLoader();loader.register(()=>({name:'geometry-only',loadTexture:()=>Promise.resolve(new THREE.Texture())}));
 async function load(file){const b=readFileSync(new URL('../../assets/pnt/'+file,import.meta.url));return (await loader.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'')).scene;}
@@ -25,4 +25,22 @@ test('hammer grip stays inside the animated right hand on all nine normalized co
 });
 test('multiplayer tool events use the same hand attachment and existing cleanup lifetime',async()=>{
  const actor=await avatar('police.glb'),hazards=[];presentOnlineEvent({type:'tool',tool:'hammer',actor:0},{actors:[actor],root:new THREE.Group(),hazards,prop});assert.equal(hazards.length,1);assert.equal(hazards[0].mesh.parent.name,'Bip001-R-Hand');assert.equal(hazards[0].time,.48);
+});
+
+test('jetpack stays on the spine throughout flight on every costume and online events share its mount',async()=>{
+ for(const file of ['thief.glb','police.glb',...readdirSync(new URL('../../assets/pnt/costumes/',import.meta.url)).map(n=>'costumes/'+n)]){
+  const actor=await avatar(file),mount=prepareJetpackMount(actor),spine=actor.model.getObjectByName('Bip001-Spine1');
+  assert.equal(mount.parent,spine);actor.group.updateMatrixWorld(true);
+  const rest=actor.group.worldToLocal(mount.getWorldPosition(new THREE.Vector3()));
+  const back=actor.group.worldToLocal(spine.getWorldPosition(new THREE.Vector3()));
+  assert.ok(Math.abs(rest.z-back.z+.18)<1e-6);assert.ok(Math.abs(rest.y-back.y-.12)<1e-6);
+  const expected=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/9,Math.PI/2,0));
+  assert.ok(mount.getWorldQuaternion(new THREE.Quaternion()).normalize().angleTo(expected)<1e-5);
+  const visual=attachHeldJetpack(actor,prop());assert.equal(visual.parent,mount);
+  const offset=mount.position.clone(),anim=makeAnimator(actor.model,clips,'runner');anim.play('jet',{fade:0});
+  for(let i=0;i<60;i++){anim.update(1/60);actor.group.rotation.y=i*.05;actor.group.updateMatrixWorld(true);assert.ok(mount.position.distanceTo(offset)<1e-8);const scale=mount.getWorldScale(new THREE.Vector3());assert.ok(Math.abs(scale.x-1)<1e-5);assert.ok(actor.jetpackNozzle.getWorldPosition(new THREE.Vector3()).distanceTo(mount.getWorldPosition(new THREE.Vector3()))<.35);}
+  visual.removeFromParent();assert.equal(mount.children.length,1,'exhaust socket remains reusable after tool cleanup');
+  const hazards=[];presentOnlineEvent({type:'tool',tool:'rocket',actor:0},{actors:[actor],root:new THREE.Group(),hazards,prop});
+  assert.equal(hazards[0].mesh.parent,mount);assert.equal(hazards[0].time,5);anim.dispose();
+ }
 });

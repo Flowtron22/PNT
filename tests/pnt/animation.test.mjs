@@ -37,6 +37,19 @@ test('run playback can double without restarting and other clips keep their norm
 test('animation priority keeps captured and stunned characters from running',()=>{
  assert.equal(animationFor({caught:false,role:'runner',effectTime:0},true,false),'thiefRun');assert.equal(animationFor({caught:false,role:'chaser',effectTime:0},true,false),'policeRun');assert.equal(animationFor({caught:false,role:'runner',effectTime:1,effect:'banana'},true,false),'banana');assert.equal(animationFor({caught:true,caughtTime:.1},true,true),'airStunned');assert.equal(animationFor({caught:true,caughtTime:2},true,false),'bustedIdle');
 });
+
+test('flight adds thirty degrees forward pitch without changing source clips or gameplay heading',()=>{
+ const model=rig('thief.glb'),anim=makeAnimator(model,clips,'runner');
+ const lean=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/6);
+ for(const name of ['rocket','jet']){
+  const source=clips[name].tracks.find(t=>t.name==='Bip001.quaternion');
+  const before=Array.from(source.values),actual=anim.actions[name].getClip().tracks.find(t=>t.name==='Bip001.quaternion');
+  for(let i=0;i<source.values.length;i+=4){const expected=new THREE.Quaternion().fromArray(source.values,i).premultiply(lean);assert.ok(expected.normalize().angleTo(new THREE.Quaternion().fromArray(actual.values,i).normalize())<.001);}
+  assert.deepEqual(Array.from(source.values),before);
+ }
+ anim.play('jet',{fade:0});anim.update(.2);anim.play('idle',{fade:0});anim.update(.001);
+ assert.ok(model.quaternion.angleTo(new THREE.Quaternion())<.001);anim.dispose();
+});
 test('banana root spins around world up rather than flipping head over heels',()=>{
  const track=clips.banana.tracks.find(t=>t.name==='Bip001.quaternion'),initial=new THREE.Quaternion().fromArray(track.values).invert();let biggestTurn=0;
  for(let i=0;i<track.values.length;i+=4){const delta=new THREE.Quaternion().fromArray(track.values,i).multiply(initial);const vertical=new THREE.Vector3(0,1,0).applyQuaternion(delta);assert.ok(vertical.y>.999,'banana spin axis must remain vertical');biggestTurn=Math.max(biggestTurn,delta.angleTo(new THREE.Quaternion()));}

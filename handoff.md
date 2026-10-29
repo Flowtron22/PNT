@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.60**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.61**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,24 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.61 seats the jetpack on Bip001-Spine1 through a bind-pose socket prepared
+before animation starts. Pack centre is .18 behind / .12 above that bone, with
+20 degrees forward tilt (toward the back) and normalization scale compensation.
+Both local and online tool events use attachHeldJetpack; existing five-second
+visual cleanup remains. Root keys in runtime copies of rocket/jet clips add 30
+degrees forward pitch; other clips and gameplay transforms are unchanged.
+Jet exhaust uses the animated nozzle position converted into matchRoot space,
+including Sunken tilt. Emits one shared noise-displaced cloud every .035 seconds,
+lifetime .24-.34 seconds, with small coloured stars/hearts every fourth birth
+(.18-.26 second lives). Interpolates birth locations across frames; caps catch-up
+at three births per frame and ignores teleport gaps. Removed duplicate old jet
+trail emitter and the long-lived coloured launch puff spheres. Launch rings and
+sparks remain. Tests cover all nine costume mounts through flight/turns, online
+attachment, flight-key pitch/source immutability, tilted exhaust coordinates,
+30/60/144 FPS cadence, short expiry and four-player pool bounds. Browser comparison
+saved at .local/jetpack-flight-comparison.png. All 192 tests, syntax and build pass.
+No multiplayer server update required; only frontend deployment.
 
 0.9.60 applies a generated grayscale noise map to the hammer's grey smoke mesh.
 Source: assets/pnt/vfx/hammer-smoke-noise.png; generation prompt saved alongside

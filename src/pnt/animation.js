@@ -1,12 +1,19 @@
 import * as THREE from 'three';
 export const ANIMATION_PLAY_RATE=1.3;
+const flightLean=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/6);
 export function makeAnimator(model,clips,role){
  const mixer=new THREE.AnimationMixer(model),actions={};
  const bones=new Map();model.traverse(o=>{if(o.isBone)bones.set(o.name.replace(/[_\- ]/g,'').toLowerCase(),o.name);});
  for(const [name,clip]of Object.entries(clips)){
   const tracks=clip.tracks.flatMap(track=>{
    const p=THREE.PropertyBinding.parseTrackName(track.name),target=bones.get(p.nodeName.replace(/[_\- ]/g,'').toLowerCase());
-   if(!target)return [];const result=track.clone();result.name=target+'.'+p.propertyName;return [result];
+   if(!target)return [];const result=track.clone();result.name=target+'.'+p.propertyName;
+   // Add forward pitch to the authored flight root keys. Clip blending restores
+   // the standing pose without tilting gameplay coordinates or collision shapes.
+   if(['rocket','jet'].includes(name)&&target.replace(/[_\- ]/g,'').toLowerCase()==='bip001'&&p.propertyName==='quaternion'){
+    const q=new THREE.Quaternion();for(let i=0;i<result.values.length;i+=4)q.fromArray(result.values,i).premultiply(flightLean).normalize().toArray(result.values,i);
+   }
+   return [result];
   });
   if(!tracks.length)throw new Error(`No ${name} animation bones match this costume`);
   actions[name]=mixer.clipAction(new THREE.AnimationClip(name,clip.duration,tracks));

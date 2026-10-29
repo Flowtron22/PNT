@@ -13,7 +13,7 @@ import {renderCouchLobby,updateCouchHud} from './couch-ui.js';
 import {createWonderUI} from './menu-effects.js';
 import {createGameplayAudio} from './game-audio.js';
 import {createRoundStart} from './round-start.js';
-import {attachHeldHammer} from './held-tools.js';
+import {attachHeldHammer,attachHeldJetpack,prepareJetpackMount} from './held-tools.js';
 import {updateMoneyBar,cacheCenters} from './money-ui.js';
 import {bindingMarkup} from './binding-icons.js';
 import {updateCaptureGauge,createCaptureTint} from './capture-ui.js';
@@ -436,10 +436,11 @@ function avatar(template,id,actorRole){
  model.traverse(o=>{if(o.isMesh){o.frustumCulled=false;for(const m of Array.isArray(o.material)?o.material:[o.material])if(m)m.roughness=Math.max(.55,m.roughness||0);}});
  const appearance=id===0&&template===templates.oyen?applyOyenAppearance(model,oyenAppearance):null;
  const captureTint=createCaptureTint(model);sunkenLook?.register(model);
+ const jetpackRig={model,group};prepareJetpackMount(jetpackRig);
  const anim=makeAnimator(model,clips,actorRole);
  const ring=new THREE.Mesh(new THREE.RingGeometry(.35,.42,24),new THREE.MeshBasicMaterial({color:id===0?0xff8a14:actorRole==='chaser'?0x2f5bff:0xffffff,transparent:true,opacity:.8,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.position.y=.025;group.add(ring);
  const shadow=new THREE.Mesh(new THREE.CircleGeometry(.35,20),new THREE.MeshBasicMaterial({color:0x09154b,transparent:true,opacity:.25,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.015;group.add(shadow);
- return {id,group,model,anim,ring,shadow,appearance,captureTint,velocity:0,grounded:true,speed:0,wander:id*2.2};
+ return {...jetpackRig,id,group,model,anim,ring,shadow,appearance,captureTint,velocity:0,grounded:true,speed:0,wander:id*2.2};
 }
 function populate(){for(const a of avatars)destroy(a);avatars=[];for(const state of round.actors){const template=room?.mode==='couch'?templates[room.players[state.id].costume]:state.id===0?templates[costume]:(templates[room?.players[state.id]?.costume]||templates[state.role==='chaser'?'police':'thief']);const actor=avatar(template,state.id,state.role);const p=mapData.spawns[state.id];actor.group.position.copy(spot(p[0],p[2]));if(state.role==='chaser'){actor.detectionZone=createDetectionZone();actor.group.add(actor.detectionZone.group);}actor.tools=room?.mode==='couch'?normalizeLoadout(room.players[state.id].loadout):state.id===0?loadout:state.role==='chaser'?['hammer','rocket']:state.id%2?['banana','smoke']:['rewind','rocket'];avatars.push(actor);}}
 async function start(){if(!ready||busy)return;clearStageVerdict();resultPortrait?.dispose();resultPortrait=null;if(room){role=resolveRole(room.preference);room.phase='playing';}returnToLobby=false;clearLobbyDisplays();beginLoading('SETTING UP THE CHASE');await nextFrame();try{await ensureCostume();await loadArena(['mall','sunken','iceberg'][room?.map||0]);progress(55,'Placing the crew…');destroy(preview);preview=null;round=createRound(role,mapData.caches);if(room?.mode==='couch'){const police=Math.floor(Math.random()*4);for(const actor of round.actors)actor.role=actor.id===police?'chaser':'runner';role=round.playerRole=round.actors[0].role;}startCountdown(round);round.profileId=globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);paused=false;clearInput();clearHazards();populate();buildMarkers();stageFrame=stageFraming(mapData.spawns,mapData.caches);const center=fixedStageCenter(mapData.spawns,mapData.caches),anchor=spot(center.x,center.z);cameraTarget.set(center.x,anchor.y,center.z);cameraShake=0;positionMatchCamera();progress(85,'Warming up materials…');await renderer.compileAsync(scene,matchCamera);renderer.render(scene,matchCamera);progress(100,'Ready. Set. Run!');await nextFrame();$('#role-label').textContent=room?.mode==='couch'?'COUCH PLAY':role==='runner'?'THIEF':'POLICE';$('#role-label').classList.toggle('chaser',role==='chaser');labels();show('hud');endLoading();if(room?.mode==='couch'&&room.players.some(p=>!p.bot&&!p.connected))pauseGame();say(room?.mode==='couch'?'ONE POLICE · THREE THIEVES':role==='runner'?'HOLD INTERACT TO STEAL CASH!':'CATCH ALL THREE THIEVES!');updateHud();}catch(e){round=null;loadError(e,start);}}
@@ -464,7 +465,7 @@ function useTool(slot,id=0){if(round?.actors[id]?.inSmoke||round?.startRemaining
  }else if(tool==='rewind'){
   if(actor.mark){gameFX.rewind(actor.mark);actor.group.position.copy(spot(actor.mark.x,actor.mark.z));actor.velocity=0;actor.mark=null;for(const h of hazards)if(h.type==='marker'&&h.owner===id)h.time=0;if(id===0)say('BACK TO YOUR MARK!',.8);}
  }else if(tool==='rocket'){
-  setEffect(state,'rocket',5);actor.velocity=4.5;actor.grounded=false;const mesh=prop('propJet',.8);mesh.position.set(0,.6,-.3);mesh.rotation.y=Math.PI/2;actor.group.add(mesh);hazards.push({mesh,type:'visual',time:5});if(id===0)say('JETPACK!',.7);
+  setEffect(state,'rocket',5);actor.velocity=4.5;actor.grounded=false;const mesh=attachHeldJetpack(actor,prop('propJet',.8));if(mesh)hazards.push({mesh,type:'visual',time:5});if(id===0)say('JETPACK!',.7);
  }
 }
 function limitItems(owner,type,max){const all=hazards.filter(h=>h.owner===owner&&h.type===type&&h.time>0);for(let i=0;i<all.length-max;i++)all[i].time=0;}

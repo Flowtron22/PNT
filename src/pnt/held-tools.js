@@ -1,5 +1,29 @@
 import * as THREE from 'three';
 
+// Prepare in the bind pose, before the animator starts. The socket then follows
+// the spine through launch, flight and turning on every normalized costume.
+export function prepareJetpackMount(actor){
+ if(actor.jetpackMount)return actor.jetpackMount;
+ let spine;actor.model.traverse(node=>{if(node.isBone&&node.name.replace(/[_\- ]/g,'').toLowerCase()==='bip001spine1')spine=node;});
+ if(!spine)return null;
+ actor.group.updateWorldMatrix(true,true);
+ const point=actor.group.worldToLocal(spine.getWorldPosition(new THREE.Vector3()));
+ point.y+=.12;point.z-=.18;
+ const desired=new THREE.Matrix4().compose(point,new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/9,Math.PI/2,0)),new THREE.Vector3(1,1,1));
+ const local=new THREE.Matrix4().copy(spine.matrixWorld).invert().multiply(actor.group.matrixWorld).multiply(desired);
+ const socket=new THREE.Group();socket.name='Jetpack_SpineMount';local.decompose(socket.position,socket.quaternion,socket.scale);spine.add(socket);
+ const nozzle=new THREE.Object3D();nozzle.name='Jetpack_Exhaust';nozzle.position.y=-.34;socket.add(nozzle);
+ actor.jetpackMount=socket;actor.jetpackNozzle=nozzle;return socket;
+}
+
+export function attachHeldJetpack(actor,visual){
+ if(!visual)return null;
+ const socket=prepareJetpackMount(actor);if(!socket)return null;
+ actor.heldJetpack?.removeFromParent();
+ const center=new THREE.Box3().setFromObject(visual).getCenter(new THREE.Vector3());
+ visual.position.sub(center);socket.add(visual);actor.heldJetpack=visual;return visual;
+}
+
 export function attachHeldHammer(actor,visual){
  if(!visual)return null;
  let hand;actor.model.traverse(node=>{if(node.isBone&&/^(bip001rhand|righthand|handr)$/.test(node.name.replace(/[_\- ]/g,'').toLowerCase()))hand=node;});

@@ -3,6 +3,32 @@ registerHooks({resolve(s,c,next){return s==='three'?{url:new URL('../../vendor/t
 const {createGameFX,createToonSmoke,smokeBombCloud,animateSmokeBomb,attachHazardTelegraph,animateHazardTelegraph,animateBananaHazard}=await import('../../src/pnt/game-fx.js');
 const legacy=scene=>scene.children.filter(node=>node.isMesh);
 
+test('jet exhaust follows the animated nozzle in tilted maps and interpolates births between frames',()=>{
+ const scene=new THREE.Group();scene.rotation.z=.2;scene.position.set(3,2,1);
+ const actor={group:new THREE.Group(),jetpackNozzle:new THREE.Object3D()};scene.add(actor.group);actor.group.add(actor.jetpackNozzle);actor.jetpackNozzle.position.set(0,.9,-.2);
+ const fx=createGameFX(scene),state={effect:'rocket',effectTime:4};fx.jetpack(actor,state,0);
+ const first=legacy(scene).find(m=>m.geometry.name==='hammer-smoke-cluster');
+ assert.ok(first.position.distanceTo(new THREE.Vector3(0,.9,-.2))<1e-6);
+ actor.group.position.x=.8;fx.jetpack(actor,state,.1);
+ const births=legacy(scene).filter(m=>m.geometry.name==='hammer-smoke-cluster');assert.equal(births.length,3);
+ assert.ok(births[1].position.x>.2&&births[1].position.x<.4);
+ assert.ok(births[2].position.x>.5&&births[2].position.x<.7);
+ assert.ok(births.every(m=>Math.abs(m.position.y-.9)<1e-6));fx.clear();
+});
+
+test('jet exhaust cadence is stable at 30/60/144 FPS and four players stay within the particle pool',()=>{
+ const counts=[];
+ for(const fps of [30,60,144]){
+  const scene=new THREE.Scene(),fx=createGameFX(scene),actor={group:new THREE.Group()};
+  for(let i=0;i<fps;i++)fx.jetpack(actor,{effect:'rocket',effectTime:5},1/fps);
+  counts.push(legacy(scene).filter(m=>m.geometry.name==='hammer-smoke-cluster').length);fx.clear();
+ }
+ assert.ok(Math.max(...counts)-Math.min(...counts)<=1);assert.ok(counts.every(n=>n>=28&&n<=30));
+ const scene=new THREE.Scene(),fx=createGameFX(scene),actors=Array.from({length:4},()=>({group:new THREE.Group()}));
+ for(let i=0;i<600;i++){for(const actor of actors)fx.jetpack(actor,{effect:'rocket',effectTime:5},1/60);fx.update(1/60);assert.ok(legacy(scene).filter(m=>m.visible).length<80);}
+ fx.update(.35);assert.ok(legacy(scene).every(m=>!m.visible));fx.clear();
+});
+
 test('smoke displacement changes the silhouette without tessellation or sphere seams',async()=>{
  const {displaceSmokeLobe}=await import('../../src/pnt/smoke-displacement.js');
  const {createHammerSmokeGeometry}=await import('../../src/pnt/game-fx.js');
@@ -25,13 +51,13 @@ test('smoke displacement changes the silhouette without tessellation or sphere s
  assert.ok(cloud.userData.displacementMap.endsWith('hammer-smoke-noise.png'));
  for(const geometry of [base,a,b,cloud])geometry.dispose();
 });
-test('jetpack emits colored smoke, stars and hearts immediately, limits cadence and stops after flight',()=>{
+test('jetpack emits short-lived cloud smoke with occasional coloured stars/hearts and stops after flight',()=>{
  const scene=new THREE.Scene(),fx=createGameFX(scene),actor={group:new THREE.Group()},state={effect:'rocket',effectTime:5},camera=new THREE.PerspectiveCamera();camera.rotation.set(-.5,.8,0);
  fx.jetpack(actor,state,1/60,camera);assert.equal(legacy(scene).length,3);
- assert.ok(legacy(scene).some(m=>m.geometry.name==='jet-star'));assert.ok(legacy(scene).some(m=>m.geometry.name==='jet-heart'));assert.ok(legacy(scene).some(m=>m.geometry.type==='SphereGeometry'));
- const palette=new Set([0xff80bc,0x8cecff,0xffdb70,0xc3a0ff,0x9af5c4]);for(const mesh of legacy(scene)){assert.ok(palette.has(mesh.material.color.getHex()));assert.equal(mesh.material.transparent,true);if(mesh.geometry.type==='ShapeGeometry')assert.ok(new THREE.Vector3(0,0,1).applyQuaternion(mesh.quaternion).distanceTo(new THREE.Vector3(0,0,1).applyQuaternion(camera.quaternion))<1e-6);}
- fx.jetpack(actor,state,1/60,camera);assert.equal(legacy(scene).length,3);fx.jetpack(actor,state,.12,camera);assert.equal(legacy(scene).length,6);
- state.effectTime=0;fx.jetpack(actor,state,.2,camera);assert.equal(legacy(scene).length,6);fx.update(1);assert.ok(legacy(scene).every(m=>!m.visible));
+ assert.ok(legacy(scene).some(m=>m.geometry.name==='jet-star'));assert.ok(legacy(scene).some(m=>m.geometry.name==='jet-heart'));assert.ok(legacy(scene).some(m=>m.geometry.name==='hammer-smoke-cluster'));
+ const palette=new Set([0xff80bc,0x8cecff,0xffdb70,0xc3a0ff,0x9af5c4]);for(const mesh of legacy(scene)){assert.ok((mesh.geometry.type==='ShapeGeometry'?palette:new Set([0xe8e9ec,0xd9dce2,0xf4f4f5])).has(mesh.material.color.getHex()));assert.equal(mesh.material.transparent,true);if(mesh.geometry.type==='ShapeGeometry')assert.ok(new THREE.Vector3(0,0,1).applyQuaternion(mesh.quaternion).distanceTo(new THREE.Vector3(0,0,1).applyQuaternion(camera.quaternion))<1e-6);}
+ fx.jetpack(actor,state,1/60,camera);assert.equal(legacy(scene).length,3);fx.jetpack(actor,state,.1,camera);assert.equal(legacy(scene).length,6);
+ state.effectTime=0;fx.jetpack(actor,state,.2,camera);assert.equal(legacy(scene).length,6);fx.update(.35);assert.ok(legacy(scene).every(m=>!m.visible));
  state.effectTime=5;fx.jetpack(actor,state,1/60,camera);assert.equal(legacy(scene).length,6,'reuse particles');fx.clear();assert.ok(legacy(scene).every(m=>!m.visible));
  state.caught=true;fx.jetpack(actor,state,.2,camera);assert.ok(legacy(scene).every(m=>!m.visible));
 });
