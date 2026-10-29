@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.58**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.59**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,14 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.59 removes the isolated green/grey sphere puffs still emitted by the hammer's
+generic WonderVFX burst. Hammer passes smoke=false to burst; its green/yellow
+outer splash, graphic sparks, rings, clustered neutral smoke, 1.5x size and 2x
+shake remain. Capture and jetpack bursts retain their own smoke. Regression
+checks the hammer has no live generic steam spheres and still emits 16 grey
+nine-sphere clusters; capture still creates its expected puffs afterward.
+
 
 0.9.58 pushes the green/yellow hammer splash band to the outer impact area by
 adding .5 model units to its inner and outer geometry radii. Band height,
