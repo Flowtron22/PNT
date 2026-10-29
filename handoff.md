@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.44**, online multiplayer test release. Server: **0.9.19**.
+Current app version: **0.9.45**, online multiplayer test release. Server: **0.9.19**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,22 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.45 adds a Sunken-only soft stylized rendering experiment inspired by the
+user reference worawork.vercel.app. src/pnt/sunken-look.js owns reversible
+material/light overrides: matte nonmetal scenery and characters, wrapped diffuse
+lighting, warm key/sky light, restrained saturation and teal water preserving
+animated wave textures/white foam. Real PCF soft cast shadows cover the playable
+ship at 1024px Balanced / 512px Battery. Existing ground-contact AO stays; no
+new screen-space AO or heavy post-processing. Shadowing follows ship tilt.
+Pause -> SUNKEN LOOK toggles Original / Stylized and resumes for comparison;
+pnt-sunken-look saves the local choice, default Stylized. Manager restoration
+returns original materials, shadow flags, light colours/positions, exposure and
+renderer settings on exit, leaving other maps/menu unchanged. 147 client tests
+pass; browser verified Sunken, A/B toggle, animated water and no shader errors.
+Reference screenshots: .local/sunken-original.png and sunken-stylized.png.
+Client-only change; multiplayer rules/server remain unchanged.
+
 
 0.9.44 moves the desktop Oyen costume preview right to the user-marked area
 (offset 0.58 at widths >=1025), correcting the overly close 0.9.43 placement.

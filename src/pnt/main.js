@@ -23,6 +23,7 @@ import {configureFullscreen} from './fullscreen.js';
 import {configureLandscape} from './landscape.js';
 import {sampleGround,simulationSteps} from './motion.js';
 import {landingMask} from './landing.js';
+import {createSunkenLook} from './sunken-look.js';
 import {matteMall,bakedArena} from './arena-appearance.js';
 import {matchView,fixedStageCenter,stageFraming,shakeOffset} from './camera-rig.js';
 import {DEFAULT_BINDINGS,BINDING_LABELS,keyLabel,rebind,loadBindings,saveBindings,movementInput,mouseCode} from './keybindings.js';
@@ -75,7 +76,8 @@ let oyenAppearance=loadOyenAppearance(localStorage);
 let costume=normalizeCostume(localStorage.getItem('pnt-costume'));
 let loadout=normalizeLoadout(localStorage.getItem('pnt-loadout'),localStorage.getItem('pnt-tool')),selectedTool=loadout[0];
 let round=null,avatars=[],preview=null,previewClip='idle',previewTime=0,templates={},clips={},ground=[],bounds=null,grid=null;
-let paused=false,activePage='home',toastTime=0,lastFrame=performance.now(),busy=false,waterAnimation=null;
+let paused=false,activePage='home',toastTime=0,lastFrame=performance.now(),busy=false,waterAnimation=null,sunkenLook=null;
+let sunkenStylized=localStorage.getItem('pnt-sunken-look')!=='original';
 const keys=new Set(),input={x:0,z:0},cameraTarget=new THREE.Vector3(),hazards=[];
 let room=null,returnToLobby=false,lobbyDisplays=[];
 const lobbyCamera=new THREE.PerspectiveCamera(34,1,.05,30);lobbyCamera.position.set(0,1.3,3.2);lobbyCamera.lookAt(0,.8,0);
@@ -95,14 +97,14 @@ function applySettings(initial=false){
  haptics.setEnabled(settings.haptics);if(!settings.haptics)haptics.stop();
  uiEffects.sounds.engine.setVolumes({master:.8*settings.master});uiEffects.sounds.setEnabled(settings.uiSounds);
  gameAudio.setLevels({sfx:settings.sfx,music:settings.music});gameAudio.setEnabled(settings.sfx>0);gameAudio.setMusic(settings.music>0);
- if(initial||qualityChanged)resize();
+ if(initial||qualityChanged){resize();sunkenLook?.setQuality(quality);}
 }
 function changeSetting(key,value){settings={...settings,[key]:value};const saved=saveSettings(localStorage,settings);applySettings();return saved;}
 addEventListener('resize',resize);applySettings(true);
 function show(name){if(name==='menu'){scene.fog.near=38;scene.fog.far=85;}for(const [key,node]of Object.entries(ui))node.hidden=key!==name;document.body.classList.toggle('playing',name==='hud'||name==='pause'||name==='results');document.body.classList.toggle('lobby-view',name==='lobby');document.body.classList.toggle('menu-view',name==='menu');$('#lobby-backdrop').hidden=!['menu','lobby'].includes(name);scene.background=name==='menu'?null:new THREE.Color('#70688f');floor.visible=name!=='menu';if(menuArena)menuArena.visible=false;}
 function say(text,seconds=2){$('#toast').textContent=text;toastTime=seconds;}
 function clearInput(){online?.input(0,0,false,performance.now(),true);haptics.stop();controller.reset();padMovement={x:0,z:0};interactionSources.clear();interactHeld=false;keys.clear();input.x=input.z=0;touchControls?.reset();}
-function pauseGame(){if(!round||round.phase!=='playing'||paused||busy)return;paused=true;clearInput();show('pause');$('#pause p').textContent=online?'The online match continues while this menu is open.':'The clock is paused.';}
+function pauseGame(){if(!round||round.phase!=='playing'||paused||busy)return;paused=true;clearInput();show('pause');$('#sunken-look').hidden=!sunkenLook;$('#sunken-look').textContent='SUNKEN LOOK · '+(sunkenStylized?'STYLIZED':'ORIGINAL');$('#pause p').textContent=online?'The online match continues while this menu is open.':'The clock is paused.';}
 function resume(){paused=false;show('hud');lastFrame=performance.now();}
 function progress(value,text){$('#load-progress').style.width=`${Math.round(value)}%`;$('#load-percent').textContent=`${Math.round(value)}%`;$('#load-status').textContent=text;}
 function beginLoading(title){busy=true;clearInput();$('#loading').hidden=false;$('#loading').setAttribute('aria-busy','true');$('#loading-title').textContent=title;$('#retry').hidden=true;$('#error').hidden=true;progress(0,'Preparing assets…');}
@@ -111,7 +113,7 @@ function loadError(error,retry){console.error(error);$('#loading-title').textCon
 const nextFrame=()=>new Promise(resolve=>requestAnimationFrame(resolve));
 async function getGLB(key,url,onProgress){if(cache.has(key))return cache.get(key);const pending=loader.loadAsync(url,onProgress);cache.set(key,pending);try{return await pending;}catch(e){cache.delete(key);throw e;}}
 async function ensureCostume(){const c=COSTUMES.find(c=>c.id===costume);if(templates[c.id]||!c.file)return;templates[c.id]=await getGLB(c.id,`assets/pnt/costumes/${c.file}.glb`,e=>progress(e.total?Math.min(85,e.loaded/e.total*85):30,`Loading ${c.name}…`));}
-function destroy(a){if(!a)return;a.detectionZone?.dispose();a.group.removeFromParent();a.anim.dispose();a.appearance?.dispose();const skeletons=new Set();a.model.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const skeleton of skeletons)skeleton.dispose();for(const mesh of [a.ring,a.shadow]){mesh.geometry.dispose();mesh.material.dispose();}}
+function destroy(a){if(!a)return;a.detectionZone?.dispose();a.group.removeFromParent();a.anim.dispose();sunkenLook?.unregister(a.model);a.appearance?.dispose();const skeletons=new Set();a.model.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const skeleton of skeletons)skeleton.dispose();for(const mesh of [a.ring,a.shadow]){mesh.geometry.dispose();mesh.material.dispose();}}
 function clearHazards(){gameFX.clear();for(const h of hazards)disposeHazard(h);hazards.length=0;}
 function menu(){online?.leave();online=null;onlineLoading=false;onlineRevision++;onlineRoster='';onlineSnapshot=null;clearStageVerdict();resultPortrait?.dispose();resultPortrait=null;restoreMenuArena();room=null;returnToLobby=false;clearLobbyDisplays();round=null;paused=false;clearInput();clearHazards();for(const a of avatars)destroy(a);avatars=[];previewModel();show('menu');openPage('home');}
 function previewModel(){destroy(preview);preview=avatar(templates[costume],0,role);preview.group.position.copy(spot(0,0));preview.group.rotation.y=0;previewClip='idle';previewTime=0;preview.anim.play('idle');labels();}
@@ -296,6 +298,7 @@ $('#profile-name-input').onkeydown=e=>{if(e.code==='Escape'){e.stopPropagation()
 $('#profile-name-form').onsubmit=e=>{e.preventDefault();const name=profileName($('#profile-name-input').value);if(!name)return;profile={...readProfile(localStorage),name};if(!saveProfile(localStorage,profile)){$('#profile-save-status').textContent='Storage unavailable. Name applies for this visit.';}else closeNameForm();labels();uiEffects.sounds.play('ui_confirm');};
 addEventListener('storage',e=>{if(e.key===PROFILE_KEY){profile=readProfile(localStorage);labels();}});
 
+$('#sunken-look').onclick=()=>{if(!sunkenLook)return;sunkenStylized=!sunkenStylized;try{localStorage.setItem('pnt-sunken-look',sunkenStylized?'stylized':'original');}catch{}sunkenLook.setEnabled(sunkenStylized);resume();};
 $('#page-back').onclick=goBack;$('#pause-button').onclick=pauseGame;$('#resume').onclick=resume;$('#leave').onclick=menu;$('#result-menu').onclick=menu;$('#again').onclick=start;
 addEventListener('keydown',e=>{if(!bindingCapture)return;e.preventDefault();e.stopImmediatePropagation();if(e.code==='Escape'){bindingCapture=null;renderBindingSettings();return;}const next=rebind(bindings,bindingCapture,e.code);if(!next){$('#binding-status').textContent='Choose a key, or click left, right or middle mouse button.';return;}bindings=next;bindingCapture=null;clearInput();saveBindings(localStorage,bindings);renderBindingSettings();refreshControlHints();},true);
 addEventListener('keydown',e=>{if(e.target.matches('select,input,textarea')||busy||e.metaKey)return;setControlDevice(false);if(e.code==='Escape'){if(paused)resume();else if(round)pauseGame();else goBack();return;}if(round&&Object.values(bindings).includes(e.code)){e.preventDefault();keys.add(e.code);}if(round&&!paused&&!e.repeat){if(e.code===bindings.interact)interact('keyboard');if(e.code===bindings.tool1)useTool(0);if(e.code===bindings.tool2)useTool(1);}});
@@ -336,15 +339,16 @@ function restoreRemoteFurniture(){for(const f of remoteFurniture){f.parent.add(f
 function prepareRemoteFurniture(){const meshes=[];gameArena.traverse(o=>{if(o.isMesh&&/^BP_Coffee(Chair|Table)/.test(o.name))meshes.push(o);});remoteFurniture=meshes.map(mesh=>{const item={mesh,parent:mesh.parent,position:mesh.position.clone(),quaternion:mesh.quaternion.clone(),scale:mesh.scale.clone()};matchRoot.attach(mesh);return item;});}
 async function loadArena(id){
  const [asset,data,nav,collision]=await Promise.all([getGLB('arena-'+id,`assets/pnt/arenas/${id}-lit.glb?v=contact-1`,e=>progress(e.total?Math.min(50,e.loaded/e.total*50):15,'Loading '+id+' arena…')),fetch(`assets/pnt/arenas/${id}.json`).then(r=>{if(!r.ok)throw Error('Missing arena metadata');return r.json();}),fetch(`assets/pnt/arenas/${id}.nav.json?v=environment-098`).then(r=>{if(!r.ok)throw Error('Missing arena navigation');return r.json();}),fetch(`assets/pnt/arenas/${id}.collision.json?v=environment-098`).then(r=>{if(!r.ok)throw Error('Missing Unreal collision');return r.json();})]);
- restoreRemoteFurniture();furniturePhysics?.dispose();furniturePhysics=null;matchRoot.rotation.set(0,0,0);matchRoot.position.set(0,0,0);shipAngle=0;
+ sunkenLook?.dispose();sunkenLook=null;restoreRemoteFurniture();furniturePhysics?.dispose();furniturePhysics=null;matchRoot.rotation.set(0,0,0);matchRoot.position.set(0,0,0);shipAngle=0;
  gameArena?.removeFromParent();gameArena=asset.scene;gameArena.visible=true;mapData=data;gameArena.position.set(...data.origin.map(v=>-v));matchRoot.add(gameArena);matchRoot.updateMatrixWorld(true);menuArena.visible=false;
  mallFill.visible=id==='mall';if(id==='mall')matteMall(gameArena);await bakedArena(gameArena,id);waterAnimation=id==='sunken'?prepareSunkenWater(gameArena,THREE.RepeatWrapping):null;ground=[];gameArena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m?.map)m.map.anisotropy=2;}});
  bounds=arenaBounds(gameArena,data);sunlight.intensity=(id==='mall'?2.4:3)*.9;fill.intensity=(id==='mall'?.96:1.2)*.9;hemisphere.intensity=(id==='mall'?1.92:2.4)*.9;mallFill.intensity=1.2*.9;renderer.toneMappingExposure=id==='mall'?1.15*1.15:1.15;
  grid={...nav,blocked:collision.blocked,edges:collision.edges,heights:Float32Array.from(collision.groundHeights||nav.heights,v=>v===null?NaN:v)};grid.landingMask=landingMask(grid,data.spawns);floor.position.y=-12;floor.material.color.set(id==='mall'?0x77768c:id==='sunken'?0x24638b:0x9bc4d7);
+ if(id==='sunken'){sunkenLook=createSunkenLook({renderer,scene,sunlight,fill,hemisphere,bounds,quality,enabled:sunkenStylized});sunkenLook.register(gameArena);sunkenLook.register(floor);}
  if(id==='sunken')gameArena.getObjectByName('SunkenShip').getWorldPosition(shipPivot);if(id==='mall'&&!online){progress(50,'Preparing movable furniture…');furniturePhysics=await createMallPhysics(gameArena,matchRoot,grid);}if(id==='mall'&&online)prepareRemoteFurniture();
  const props=[['propBanana','SM_TL_Banana'],['propSmoke','SM_TL_Bomb'],['propHammer','SM_TL_Hammer'],['propJet','jetpack'],['propRewind','rewind']];await Promise.all(props.map(async([key,file])=>{templates[key]=await getGLB(key,`assets/pnt/props/${file}.glb`);}));await gameAudio.prepare(id==='sunken'?'pirate-chase-bgm':id==='iceberg'?'iceberg-chase-bgm':null);
 }
-function restoreMenuArena(){restoreRemoteFurniture();furniturePhysics?.dispose();furniturePhysics=null;waterAnimation=null;matchRoot.rotation.set(0,0,0);matchRoot.position.set(0,0,0);shipAngle=0;sunlight.intensity=3;fill.intensity=1.2;hemisphere.intensity=2.4;mallFill.visible=false;renderer.toneMappingExposure=1.15;if(gameArena)gameArena.visible=false;if(menuArena){menuArena.visible=false;({ground,bounds,grid}=menuNavigation);}floor.position.y=-.3;floor.material.color.set(0x77768c);$('#world-markers').replaceChildren();}
+function restoreMenuArena(){sunkenLook?.dispose();sunkenLook=null;restoreRemoteFurniture();furniturePhysics?.dispose();furniturePhysics=null;waterAnimation=null;matchRoot.rotation.set(0,0,0);matchRoot.position.set(0,0,0);shipAngle=0;sunlight.intensity=3;fill.intensity=1.2;hemisphere.intensity=2.4;mallFill.visible=false;renderer.toneMappingExposure=1.15;if(gameArena)gameArena.visible=false;if(menuArena){menuArena.visible=false;({ground,bounds,grid}=menuNavigation);}floor.position.y=-.3;floor.material.color.set(0x77768c);$('#world-markers').replaceChildren();}
 function prop(key,size=1){const source=templates[key];if(!source)return null;const object=clone(source.scene);const box=new THREE.Box3().setFromObject(object),scale=size/Math.max(.01,...box.getSize(new THREE.Vector3()).toArray());object.scale.multiplyScalar(scale);object.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(object),center=b.getCenter(new THREE.Vector3());object.position.add(new THREE.Vector3(-center.x,-b.min.y,-center.z));const root=new THREE.Group();root.add(object);return root;}
 function disposeHazard(h){h.mesh.removeFromParent();if(h.owned)h.mesh.traverse(o=>{if(o.isMesh){o.geometry.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});}
 function withinSight(p,q,smoke=true,stop=.35){return hasSight(grid,p,q,hazards,smoke,stop);}
@@ -383,6 +387,7 @@ function avatar(template,id,actorRole){
  let box=new THREE.Box3().setFromObject(model),height=box.max.y-box.min.y;model.scale.multiplyScalar(1.55/height);model.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(model);const center=box.getCenter(new THREE.Vector3());model.position.add(new THREE.Vector3(-center.x,-box.min.y,-center.z));group.add(model);(round?matchRoot:scene).add(group);group.position.copy(spot((id-1.5)*2.7,id%2?4:-3));
  model.traverse(o=>{if(o.isMesh){o.frustumCulled=false;for(const m of Array.isArray(o.material)?o.material:[o.material])if(m)m.roughness=Math.max(.55,m.roughness||0);}});
  const appearance=id===0&&template===templates.oyen?applyOyenAppearance(model,oyenAppearance):null;
+ sunkenLook?.register(model);
  const anim=makeAnimator(model,clips,actorRole);
  const ring=new THREE.Mesh(new THREE.RingGeometry(.35,.42,24),new THREE.MeshBasicMaterial({color:id===0?0xff8a14:actorRole==='chaser'?0x2f5bff:0xffffff,transparent:true,opacity:.8,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.position.y=.025;group.add(ring);
  const shadow=new THREE.Mesh(new THREE.CircleGeometry(.35,20),new THREE.MeshBasicMaterial({color:0x09154b,transparent:true,opacity:.25,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.015;group.add(shadow);
