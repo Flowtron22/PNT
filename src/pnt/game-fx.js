@@ -1,14 +1,22 @@
 import * as THREE from 'three';
-import {mergeGeometries} from '../../vendor/three/jsm/utils/BufferGeometryUtils.js';
+import {mergeGeometries,mergeVertices} from '../../vendor/three/jsm/utils/BufferGeometryUtils.js';
+import {displaceSmokeLobe} from './smoke-displacement.js';
 import {WonderVFX,attachHazardTelegraph,animateHazardTelegraph,animateBananaHazard} from './wonder-vfx.js';
 export {attachHazardTelegraph,animateHazardTelegraph,animateBananaHazard};
 const smokeGeometry=new THREE.SphereGeometry(1,10,7),smokeMaterials=[0xe8e9ec,0xd9dce2,0xc5cbd4,0xf4f4f5].map(color=>new THREE.MeshLambertMaterial({color,flatShading:false}));
-// Nine overlapping smooth spheres become one reusable geometry/draw per cloud.
+// Nine noise-displaced lobes become one reusable geometry/draw per cloud.
 // The satellites stay attached while the whole puff billows and moves outward.
 export function createHammerSmokeGeometry(){
- const parts=[smokeGeometry.clone().scale(.64,.6,.64)];
- for(let i=0;i<8;i++){const angle=i*Math.PI/4,radius=i%2?.38:.43,part=smokeGeometry.clone();part.scale(radius,radius*(i%2?.9:1.05),radius);part.translate(Math.cos(angle)*.55,i%2?.2:-.08,Math.sin(angle)*.55);parts.push(part);}
- const geometry=mergeGeometries(parts);geometry.name='hammer-smoke-cluster';geometry.userData.spheres=9;for(const part of parts)part.dispose();return geometry;
+ const parts=[displaceSmokeLobe(smokeGeometry.clone()).scale(.64,.6,.64)];
+ for(let i=0;i<8;i++){const angle=i*Math.PI/4,radius=i%2?.38:.43,part=displaceSmokeLobe(smokeGeometry.clone(),i+1);part.scale(radius,radius*(i%2?.9:1.05),radius);part.translate(Math.cos(angle)*.55,i%2?.2:-.08,Math.sin(angle)*.55);parts.push(part);}
+ const merged=mergeGeometries(parts);
+ // UV/normal splits at sphere seams must be welded before recalculating smooth
+ // lighting. The smoke material is untextured, so neither attribute is needed.
+ merged.deleteAttribute('uv');merged.deleteAttribute('normal');
+ const geometry=mergeVertices(merged);geometry.computeVertexNormals();
+ geometry.name='hammer-smoke-cluster';geometry.userData.spheres=9;
+ geometry.userData.displacementMap='assets/pnt/vfx/hammer-smoke-noise.png';
+ for(const part of parts)part.dispose();merged.dispose();return geometry;
 }
 const hammerSmokeGeometry=createHammerSmokeGeometry();
 const starShape=new THREE.Shape();

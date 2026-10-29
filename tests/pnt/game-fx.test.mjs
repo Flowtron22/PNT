@@ -2,6 +2,29 @@ import test from 'node:test';import assert from 'node:assert/strict';import {reg
 registerHooks({resolve(s,c,next){return s==='three'?{url:new URL('../../vendor/three/build/three.module.js',import.meta.url).href,shortCircuit:true}:next(s,c);}});
 const {createGameFX,createToonSmoke,smokeBombCloud,animateSmokeBomb,attachHazardTelegraph,animateHazardTelegraph,animateBananaHazard}=await import('../../src/pnt/game-fx.js');
 const legacy=scene=>scene.children.filter(node=>node.isMesh);
+
+test('smoke displacement changes the silhouette without tessellation or sphere seams',async()=>{
+ const {displaceSmokeLobe}=await import('../../src/pnt/smoke-displacement.js');
+ const {createHammerSmokeGeometry}=await import('../../src/pnt/game-fx.js');
+ const base=new THREE.SphereGeometry(1,10,7),a=displaceSmokeLobe(base.clone()),b=displaceSmokeLobe(base.clone(),3);
+ assert.equal(a.index.count,base.index.count);
+ assert.equal(a.getAttribute('position').count,base.getAttribute('position').count);
+ const pos=a.getAttribute('position'),other=b.getAttribute('position'),radii=[];
+ let different=0;
+ for(let i=0;i<pos.count;i++){
+  const radius=Math.hypot(pos.getX(i),pos.getY(i),pos.getZ(i));
+  radii.push(radius);assert.ok(radius>.64&&radius<1.36);
+  if(Math.abs(pos.getX(i)-other.getX(i))>.001)different++;
+ }
+ assert.ok(Math.max(...radii)-Math.min(...radii)>.1,'noise visibly changes the lobe outline');
+ assert.ok(different>20,'attached lobes sample different parts of the map');
+ const cloud=createHammerSmokeGeometry(),normal=cloud.getAttribute('normal');
+ assert.equal(cloud.index.count,base.index.count*9);
+ assert.equal(normal.count,62*9,'seam and pole duplicates are welded for smooth lighting');
+ for(let i=0;i<normal.count;i++)assert.ok(Math.abs(Math.hypot(normal.getX(i),normal.getY(i),normal.getZ(i))-1)<1e-5);
+ assert.ok(cloud.userData.displacementMap.endsWith('hammer-smoke-noise.png'));
+ for(const geometry of [base,a,b,cloud])geometry.dispose();
+});
 test('jetpack emits colored smoke, stars and hearts immediately, limits cadence and stops after flight',()=>{
  const scene=new THREE.Scene(),fx=createGameFX(scene),actor={group:new THREE.Group()},state={effect:'rocket',effectTime:5},camera=new THREE.PerspectiveCamera();camera.rotation.set(-.5,.8,0);
  fx.jetpack(actor,state,1/60,camera);assert.equal(legacy(scene).length,3);

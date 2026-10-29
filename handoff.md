@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.59**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.60**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,20 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.60 applies a generated grayscale noise map to the hammer's grey smoke mesh.
+Source: assets/pnt/vfx/hammer-smoke-noise.png; generation prompt saved alongside
+it. tools/bake-smoke-noise.py (Pillow) produces a compact 64x64 runtime height grid.
+Object-space mirrored triplanar sampling displaces each unit sphere before its
+cluster transform, with distinct offsets per lobe. Geometry is built once and
+shared across all 16 clouds. No extra triangles, per-frame noise, GPU textures
+or async image decoding; smooth normals are rebuilt after welding sphere seams
+and poles. Kept existing radial motion, palette, 1.5x splash and 2x shake.
+Other smoke/dust/jet geometry stays unchanged. Regression covers silhouette
+variation, bounded displacement, no tessellation, seam welding and valid normals.
+Browser control now works: visually compared old/new meshes in a temporary local
+Three.js preview. Comparison screenshot: .local/smoke-displacement-comparison.png.
+All 188 tests, syntax checks and build pass. No server deployment required.
 
 0.9.59 removes the isolated green/grey sphere puffs still emitted by the hammer's
 generic WonderVFX burst. Hammer passes smoke=false to burst; its green/yellow
