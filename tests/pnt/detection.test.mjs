@@ -14,7 +14,7 @@ test('escaping, blocked sight and police stun decay progress; rescue immunity cl
 
 test('thieves have independent progress and all three detections award victory once',()=>{
  const round=createRound('chaser');for(let i=0;i<8;i++)detectThief(round,0,1,.1,1);assert.equal(round.actors[2].detectionProgress,0);detectThief(round,0,2,.1,1);assert.ok(round.actors[1].detectionProgress>round.actors[2].detectionProgress);
- for(const id of [1,2,3]){for(let i=0;i<16;i++){detectThief(round,0,id,.1,1);stepRound(round,.1);}assert.equal(round.actors[id].caught,true);}assert.equal(round.winner,'chaser');assert.equal(detectThief(round,0,1,.1,1),false);
+ for(const id of [1,2,3]){while(round.actors[0].captureLock>0)stepRound(round,.1);for(let i=0;i<16;i++){detectThief(round,0,id,.1,1);stepRound(round,.1);}assert.equal(round.actors[id].caught,true);}assert.equal(round.winner,'chaser');assert.equal(detectThief(round,0,1,.1,1),false);
 });
 test('conditional police indicator matches gameplay range and reuses its geometry',()=>{
  const zone=createDetectionZone(),disk=zone.group.children[0],geometry=disk.geometry;

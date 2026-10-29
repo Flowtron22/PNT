@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.64**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.65**, online multiplayer test release. Server: **0.9.21**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,24 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.65 restores the previous smooth sphere-cloud capture style using only neutral
+white/grey materials (no orange spheres). Four reusable 16-puff clouds are sized
+to cover police and thief and positioned at their midpoint. Smoke lasts 1 second,
+then shrinks out; celebration begins at 1.08 seconds. capture-timing.js shares
+visual and rule timing. Successful detection gives police captureLock=1.5 seconds:
+smoke duration plus .5 seconds recovery. canAct blocks tools/detection while the
+lock is active; animation uses idle. Shared movement zeroes momentum and ship/ice
+drift while locked. Prediction decrements the timer per tick, replay matches the
+server, and capture reconciliation clears residual visual correction. Both local
+and server capture immediately zero police velocities. Other free thieves keep
+moving. Server events include policePosition for cloud midpoint placement; older
+servers fall back to the chaser avatar. Movement protocol version 7; server
+0.9.21 must be deployed with the frontend. Screenshot:
+.local/capture-pause-preview.png. All 205 client/rules tests and 18 server tests
+pass, including held input, tools, all map movement, prediction/reconciliation,
+authoritative freeze/release, large neutral cloud and delayed celebration.
+Syntax checks and build pass. Render branch: codex/multiplayer-local.
 
 0.9.64 replaces capture smoke and sequences celebrations afterward. Removed both
 old layers: the opaque spinning 16-sphere capture hazard (local + online) and

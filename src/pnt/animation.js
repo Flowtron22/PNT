@@ -31,6 +31,7 @@ export function makeAnimator(model,clips,role){
 }
 export function animationFor(actor,moving,airborne){
  if(actor.caught)return actor.caughtTime<.5?(airborne?'airStunned':'busted'):'bustedIdle';
+ if(actor.captureLock>0)return 'idle';
  if(actor.effectTime>0)return actor.effect;
  return moving?(actor.role==='chaser'?'policeRun':'thiefRun'):'idle';
 }

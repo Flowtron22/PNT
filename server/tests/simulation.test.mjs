@@ -7,6 +7,16 @@ const {safeLandingCell}=await import('../../src/pnt/landing.js');
 const {startCountdown}=await import('../../src/pnt/rules.js');
 const players=()=>Array.from({length:4},(_,i)=>({sessionId:`player${i}`,name:`Player ${i}`,costume:'thief',preference:i===0?'chaser':'runner',loadout:['hammer','rocket'],bot:false}));
 
+test('authoritative capture freezes police for smoke plus recovery and rejects tools until release',()=>{
+ const sim=flatMatch();try{
+  sim.round.remaining=298;sim.round.actors[1].detectionProgress=1.6-1/60;sim.step();
+  const police=sim.actors[0],position=police.group.position.clone();assert.equal(sim.round.actors[1].caught,true);assert.equal(sim.round.actors[0].captureLock,1.5);
+  assert.equal(sim.snapshot().poses[0].vx,0);assert.ok(sim.events.find(e=>e.type==='capture').policePosition);
+  for(let i=1;i<=89;i++){sim.input(0,{seq:i,x:1,z:0});sim.step();assert.ok(Math.hypot(police.group.position.x-position.x,police.group.position.z-position.z)<1e-8);assert.equal(sim.tool(0,0),false);}
+  sim.input(0,{seq:90,x:1,z:0});sim.step();assert.equal(sim.round.actors[0].captureLock,0);assert.ok(police.group.position.x>position.x);assert.equal(sim.tool(0,0),true);
+ }finally{sim.dispose();}
+});
+
 test('batched input acknowledges simulated frames only and cannot accelerate the authoritative clock',async()=>{
  const sim=await MatchSimulation.create('sunken',players());try{
   const frames=Array.from({length:6},(_,i)=>({seq:i+1,x:1,z:0,interact:false}));assert.equal(sim.input(0,{frames}),true);

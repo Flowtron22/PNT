@@ -2,11 +2,11 @@ import {environmentVelocity} from './environment.js';
 import {sampleGround} from './motion.js';
 import {canTraverse} from './collision.js';
 import {safeLandingCell,nearestLanding} from './landing.js';
-export const MOVEMENT_VERSION=6;
+export const MOVEMENT_VERSION=7;
 export function movementSpeed(role,map,human=true,flying=false){return (role==='chaser'?3.65:3.4)*1.15*(map==='iceberg'?1.5:1)*(human?1.08:1)*(flying?1.8:1);}
 // Map-local movement shared by authoritative server, practice and client prediction.
 export function advanceActor(actor,state,dx,dz,dt,{grid,map,tilt=0,speed,furniture=null,respawn=null}){
- const p=actor.group.position,previous=p.clone(),magnitude=Math.hypot(dx,dz),flying=state.effect==='rocket'&&state.effectTime>0,locked=speed===0||state.caught||state.captureRemaining>0||state.effectTime>0&&!['rocket','banana'].includes(state.effect);
+ const p=actor.group.position,previous=p.clone(),magnitude=Math.hypot(dx,dz),flying=state.effect==='rocket'&&state.effectTime>0,locked=speed===0||state.captureLock>0||state.caught||state.captureRemaining>0||state.effectTime>0&&!['rocket','banana'].includes(state.effect);
  if(actor.wasFlying&&!flying){const landing=actor.flightLanding||nearestLanding(grid,p.x,p.z);if(landing){p.x=landing.x;p.z=landing.z;p.y=Math.max(p.y,landing.y);actor.vx=actor.vz=actor.slideX=0;}else if(respawn)p.copy(typeof respawn==='function'?respawn():respawn);actor.flightLanding=null;previous.copy(p);}
  if(flying&&!actor.wasFlying){actor.flightFloor=p.y;actor.flightLanding=null;}actor.wasFlying=flying;
  environmentVelocity(actor,dx,dz,speed,dt,{map,grounded:actor.grounded,flying,locked,tilt});const nx=p.x+(actor.vx+(actor.slideX||0))*dt,nz=p.z+actor.vz*dt;
@@ -19,5 +19,5 @@ export function advanceActor(actor,state,dx,dz,dt,{grid,map,tilt=0,speed,furnitu
  if(flying){if(!Number.isFinite(actor.flightFloor)||safeLandingCell(grid,p.x,p.z))actor.flightFloor=Number.isFinite(rawGround)?rawGround:p.y;const base=actor.flightLanding?.y??actor.flightFloor??p.y,target=base+1.8*Math.min(1,state.effectTime/.5),blend=actor.flightLanding?Math.min(1,dt/Math.max(dt,state.effectTime)):1-Math.exp(-6*dt);p.y+=(target-p.y)*blend;actor.velocity=0;}else{actor.velocity=(actor.velocity||0)-16*dt;p.y+=actor.velocity*dt;}
  if(!flying&&Number.isFinite(h)&&(p.y<=h||actor.grounded&&Math.abs(p.y-h)<.55)){p.y+=(h-p.y)*(1-Math.exp(-30*dt));actor.velocity=0;actor.grounded=true;}else actor.grounded=false;
  if(p.y< -15&&respawn){actor.warp=(actor.warp||0)+1;p.copy(typeof respawn==='function'?respawn():respawn);actor.velocity=0;actor.vx=actor.vz=actor.slideX=0;}
- actor.speed=(actor.speed||0)+((moved?1:0)-(actor.speed||0))*(1-Math.exp(-10*dt));return moved;
+ if(state.captureLock>0)actor.speed=0;actor.speed=(actor.speed||0)+((moved?1:0)-(actor.speed||0))*(1-Math.exp(-10*dt));return moved;
 }

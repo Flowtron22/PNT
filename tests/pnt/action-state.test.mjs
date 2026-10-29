@@ -1,4 +1,4 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {stageEndState,rollSpinDirection,movementGroundReference} from '../../src/pnt/action-state.js';import {createRound,detectThief,harvest,canAct} from '../../src/pnt/rules.js';
+import test from 'node:test';import assert from 'node:assert/strict';import {stageEndState,rollSpinDirection,movementGroundReference} from '../../src/pnt/action-state.js';import {createRound,detectThief,harvest,canAct,stepRound} from '../../src/pnt/rules.js';
 test('rocket movement uses ground clearance instead of rejecting its airborne height',()=>{assert.equal(movementGroundReference(1.8,0),0);assert.equal(movementGroundReference(4.8,3),3);assert.equal(movementGroundReference(2,NaN),2);});
 test('stage verdict remains visible before fade and only then advances to results',()=>{assert.deepEqual(stageEndState(0),{fade:0,ready:false});assert.deepEqual(stageEndState(1.6),{fade:0,ready:false});assert.ok(stageEndState(2).fade>0);assert.equal(stageEndState(2).ready,false);assert.equal(stageEndState(2.4).ready,true);assert.equal(stageEndState(3).fade,1);});
 test('banana random directions are unit length and can choose different movement axes',()=>{assert.deepEqual(rollSpinDirection(()=>0),{x:0,z:1});const d=rollSpinDirection(()=>.25);assert.ok(d.x>.99);assert.ok(Math.abs(d.z)<1e-10);assert.ok(Math.abs(Math.hypot(d.x,d.z)-1)<1e-10);});
@@ -6,5 +6,5 @@ test('detection leaves the thief free to escape until the full capture threshold
  const r=createRound('chaser',[{id:'cash',amount:2000}]);for(let i=0;i<15;i++)assert.equal(detectThief(r,0,1,.1,.5),false);assert.equal(canAct(r,1),true);assert.equal(r.actors[1].caught,false);assert.ok(harvest(r,1,'cash',.1,0)>0);assert.equal(detectThief(r,0,1,.1,.5),true);assert.equal(canAct(r,1),false);assert.equal(r.caches[0].harvester,null);assert.equal(r.actors[1].releaseCooldown,10);
 });
 test('the last full detection awards police victory without an obsolete pending capture timer',()=>{
- const r=createRound('chaser');for(const id of [1,2,3])for(let i=0;i<16;i++)detectThief(r,0,id,.1,.5);assert.equal(r.phase,'finished');assert.equal(r.winner,'chaser');assert.equal(r.reason,'captured');
+ const r=createRound('chaser');for(const id of [1,2,3]){while(r.actors[0].captureLock>0)stepRound(r,.1);for(let i=0;i<16;i++)detectThief(r,0,id,.1,.5);}assert.equal(r.phase,'finished');assert.equal(r.winner,'chaser');assert.equal(r.reason,'captured');
 });

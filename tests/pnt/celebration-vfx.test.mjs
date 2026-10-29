@@ -51,5 +51,5 @@ test('actual cache harvest and online capture presentation both trigger the cele
  assert.equal(batch.visible,true);assert.ok(batch.children[0].geometry.drawRange.count>0);
  fx.clear();fx.syncCaches(round.caches);assert.equal(batch.visible,false,'joining an already empty cache is silent');
  presentOnlineEvent({type:'capture',actor:0,position:[1,0,2]},{actors:[{group:new THREE.Group()}],root,hazards:[],fx});
- fx.update(.05,new THREE.PerspectiveCamera());assert.equal(batch.visible,false,'capture celebration waits for smoke');for(let i=0;i<16;i++)fx.update(.05,new THREE.PerspectiveCamera());assert.equal(batch.visible,true);fx.clear();assert.equal(batch.visible,false);
+ fx.update(.05,new THREE.PerspectiveCamera());assert.equal(batch.visible,false,'capture celebration waits for smoke');for(let i=0;i<24;i++)fx.update(.05,new THREE.PerspectiveCamera());assert.equal(batch.visible,true);fx.clear();assert.equal(batch.visible,false);
 });

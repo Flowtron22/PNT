@@ -1,3 +1,4 @@
+import {CAPTURE_LOCK_SECONDS} from './capture-timing.js';
 export const ROUND_SECONDS=300;
 export const DETECTION_RADIUS=2,CAPTURE_SECONDS=1.6;
 export const CAPTURE_DECAY=.4,SMOKE_RADIUS=2.6,START_SECONDS=4;
@@ -6,9 +7,9 @@ export const INTERACT_RADIUS=2.2,RELEASE_COOLDOWN=10,RESCUE_SECONDS=1.5,STEAL_RA
 export const TOOL_COOLDOWNS={hammer:10,banana:5,rocket:15,smoke:30,rewind:10};
 export function createRound(playerRole='runner',caches=[]){
  if(!['runner','chaser'].includes(playerRole))throw new Error('Unknown role');
- return {remaining:ROUND_SECONDS,startRemaining:0,phase:'playing',winner:null,reason:null,playerRole,collected:0,totalMoney:caches.reduce((n,c)=>n+c.amount,0),caches:caches.map(c=>({...c,remaining:c.amount,harvester:null})),actors:Array.from({length:4},(_,i)=>({id:i,role:(playerRole==='chaser'?i===0:i===1)?'chaser':'runner',caught:false,inSmoke:false,caughtTime:0,releaseCooldown:0,rescueProgress:0,rescuer:null,immune:0,toolCooldowns:[0,0],effect:null,effectTime:0,captureRemaining:0,detectionProgress:0,money:0,interacting:false}))};
+ return {remaining:ROUND_SECONDS,startRemaining:0,phase:'playing',winner:null,reason:null,playerRole,collected:0,totalMoney:caches.reduce((n,c)=>n+c.amount,0),caches:caches.map(c=>({...c,remaining:c.amount,harvester:null})),actors:Array.from({length:4},(_,i)=>({id:i,role:(playerRole==='chaser'?i===0:i===1)?'chaser':'runner',caught:false,inSmoke:false,caughtTime:0,releaseCooldown:0,rescueProgress:0,rescuer:null,immune:0,toolCooldowns:[0,0],effect:null,effectTime:0,captureRemaining:0,captureLock:0,detectionProgress:0,money:0,interacting:false}))};
 }
-export function canAct(round,id){const a=round.actors[id];return !!(round.phase==='playing'&&!(round.startRemaining>0)&&a&&!a.caught&&a.captureRemaining<=0&&a.effectTime<=0);}
+export function canAct(round,id){const a=round.actors[id];return !!(round.phase==='playing'&&!(round.startRemaining>0)&&a&&!a.caught&&!(a.captureLock>0)&&a.captureRemaining<=0&&a.effectTime<=0);}
 export function startCountdown(round){round.startRemaining=START_SECONDS;}
 export function updateSmokeCoverage(round,positions,clouds){
  const xyz=p=>Array.isArray(p)?p:[p.x,p.y,p.z];
@@ -32,7 +33,7 @@ export function detectThief(round,chaserId,runnerId,dt,distance,clear=true){
  if(!canAct(round,chaserId)||c.role!=='chaser'||c.inSmoke||r.inSmoke||!clear||!Number.isFinite(distance)||distance<0||distance>DETECTION_RADIUS){r.detectionProgress=Math.max(0,(r.detectionProgress||0)-Math.min(dt,.1)*CAPTURE_DECAY);return false;}
  r.detectionProgress=(r.detectionProgress||0)+Math.min(dt,.1);
  if(r.detectionProgress<CAPTURE_SECONDS-1e-8)return false;
- completeCapture(round,r);return true;
+ completeCapture(round,r);c.captureLock=CAPTURE_LOCK_SECONDS;cancelInteraction(round,chaserId);return true;
 }
 export function harvest(round,id,cacheId,dt,distance,clear=true){
  const a=round.actors[id],cache=round.caches.find(c=>c.id===cacheId);if(!canAct(round,id)||a.inSmoke||a.role!=='runner'||!cache||cache.remaining<=0||!clear||!Number.isFinite(distance)||distance<0||distance>INTERACT_RADIUS||!Number.isFinite(dt)||dt<=0||(cache.harvester!==null&&cache.harvester!==id))return 0;
@@ -47,6 +48,6 @@ export function rescue(round,helperId,targetId,dt,distance,clear=true){
 export function cancelInteraction(round,id){const a=round.actors[id];if(a)a.interacting=false;for(const c of round.caches)if(c.harvester===id)c.harvester=null;for(const t of round.actors)if(t.rescuer===id){t.rescuer=null;t.rescueProgress=0;}}
 export function stepRound(round,dt){
  if(round.phase!=='playing'||!Number.isFinite(dt)||dt<=0)return;const step=Math.min(dt,.1);if(round.startRemaining>0){round.startRemaining=Math.max(0,round.startRemaining-step);if(round.startRemaining<1e-8)round.startRemaining=0;return;}round.remaining=Math.max(0,round.remaining-step);
- for(const a of round.actors){a.toolCooldowns=a.toolCooldowns.map(t=>Math.max(0,t-step));a.effectTime=Math.max(0,a.effectTime-step);a.releaseCooldown=Math.max(0,a.releaseCooldown-step);a.immune=Math.max(0,a.immune-step);if(a.caught)a.caughtTime+=step;}
+ for(const a of round.actors){a.captureLock=Math.max(0,(a.captureLock||0)-step);if(a.captureLock<1e-8)a.captureLock=0;a.toolCooldowns=a.toolCooldowns.map(t=>Math.max(0,t-step));a.effectTime=Math.max(0,a.effectTime-step);a.releaseCooldown=Math.max(0,a.releaseCooldown-step);a.immune=Math.max(0,a.immune-step);if(a.caught)a.caughtTime+=step;}
  if(round.remaining===0)finishRound(round,'chaser','timeout');
 }
