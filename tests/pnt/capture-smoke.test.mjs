@@ -19,8 +19,9 @@ test('capture cloud tumbles rapidly on every axis with independent lobe motion a
 });
 
 test('restored capture cloud covers both characters with neutral smooth spheres',()=>{
- const scene=new THREE.Group(),fx=createGameFX(scene),hazards=[];
- presentOnlineEvent({type:'capture',actor:0,position:[2,0,3],policePosition:[0,0,3]},{actors:[{group:new THREE.Group()}],root:scene,hazards,fx});
+ const scene=new THREE.Group(),fx=createGameFX(scene),hazards=[],sounds=[];
+ presentOnlineEvent({type:'capture',actor:0,position:[2,0,3],policePosition:[0,0,3]},{actors:[{group:new THREE.Group()}],root:scene,hazards,fx,audio:{capture:id=>sounds.push(id)}});
+ assert.deepEqual(sounds,[0],'capture sound starts with the smoke event');
  assert.equal(hazards.length,0);const smoke=scene.getObjectByName('capture-smoke'),cloud=smoke.children.find(p=>p.visible);
  assert.equal(cloud.children.length,16);assert.equal(new Set(cloud.children.map(p=>p.geometry)).size,1);
  assert.ok(cloud.position.distanceTo(new THREE.Vector3(1,.8,3))<1e-8);

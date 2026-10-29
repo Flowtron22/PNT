@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import {smokeBombCloud,attachHazardTelegraph} from './game-fx.js';
 import {attachHeldHammer,attachHeldJetpack} from './held-tools.js';
 import {createPlayerMirage} from './player-mirage.js';
-export function presentOnlineEvent(event,{actors,root,hazards,prop,fx}){
+export function presentOnlineEvent(event,{actors,root,hazards,prop,fx,audio}){
  const actor=actors[event.actor];if(!actor)return;
- if(event.type==='capture'){const cop=actors.find(a=>a?.anim?.role==='chaser');const policePosition=event.policePosition?new THREE.Vector3().fromArray(event.policePosition):cop?.group.position;fx?.capture(new THREE.Vector3().fromArray(event.position),policePosition);return;}
+ if(event.type==='capture'){const cop=actors.find(a=>a?.anim?.role==='chaser');const policePosition=event.policePosition?new THREE.Vector3().fromArray(event.policePosition):cop?.group.position;fx?.capture(new THREE.Vector3().fromArray(event.position),policePosition);audio?.capture(event.actor,actors);return;}
  if(event.type!=='tool')return;
  const point=new THREE.Vector3().fromArray(event.position||[0,0,0]);
  if(event.tool==='hammer'){actor.hammerImpact=.18/1.3;fx?.hammerSwing(actor);const mesh=attachHeldHammer(actor,prop('propHammer',1.25));if(mesh)hazards.push({mesh,type:'visual',time:.48});}

@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.66**, online multiplayer test release. Server: **0.9.21**.
+Current app version: **0.9.67**, online multiplayer test release. Server: **0.9.21**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,18 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.67 uses the user's 00019 - WAV_19_GUESS_BNK_SE_DICE.wav during capture smoke.
+Copied unchanged to assets/pnt/audio/Capture_Scuffle.wav (48 kHz mono, ~2.84 sec).
+Audio is preloaded/decoded with game cues, played at original pitch on the exact
+local/online capture event, and scheduled to stop after CAPTURE_SMOKE_SECONDS
+with a 60 ms gain fade. Existing distance/couch volume and mute settings apply;
+menu/pause cleanup retains voice tracking. Removed the previous capture-success
+sound from state-transition playback/preload to prevent duplicate layers. Explicit
+event playback also works for the last capture that finishes the round. No changes
+to smoke timing, police recovery or server. Regression covers the supplied WAV,
+start/stop/fade timing, event audio binding, no duplicate state cue, mute and cleanup.
+All 207 client tests, syntax and build pass. Frontend-only release.
 
 0.9.66 makes capture smoke a fast chaotic toon scuffle. The cloud tumbles on
 all three axes (16/-24/19 radians per second, randomized handedness), with

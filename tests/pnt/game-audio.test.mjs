@@ -1,5 +1,20 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createGameplayAudio} from '../../src/pnt/game-audio.js';
+
+test('capture scuffle uses the supplied WAV once, fades at smoke end and respects mute and cleanup',async()=>{
+ const oldStorage=globalThis.localStorage,oldFetch=globalThis.fetch,sources=[],automation=[];
+ globalThis.localStorage={getItem:()=>null,setItem(){}};
+ globalThis.fetch=async url=>({ok:true,arrayBuffer:async()=>new TextEncoder().encode(url).buffer});
+ const context={currentTime:5,state:'running',createGain:()=>({gain:{value:1,setValueAtTime:(value,time)=>automation.push(['set',value,time]),linearRampToValueAtTime:(value,time)=>automation.push(['fade',value,time])},connect(){},disconnect(){}}),decodeAudioData:async b=>new TextDecoder().decode(b),createBufferSource(){return {connect(){},disconnect(){},start(){sources.push(this);},stop(time){if(time===undefined){this.stopped=true;this.onended?.();}else this.stopAt=time;}};}},engine={ctx:context,master:{},init(){},resume(){}};
+ try{
+  const audio=createGameplayAudio(()=>engine);await audio.prepare();const actors=[{group:{position:{distanceTo:()=>0}}}];
+  const round={profileId:'match',phase:'playing',actors:[{role:'runner',caught:false}],caches:[]};audio.update(round,actors,false,false);audio.capture(0,actors);assert.equal(sources.length,1);assert.match(sources[0].buffer,/Capture_Scuffle.wav$/);assert.equal(sources[0].loop,false);
+  assert.equal(sources[0].stopAt,6);assert.deepEqual(automation,[['set',1,5.94],['fade',0,6]]);
+  round.phase='finished';round.actors[0].caught=true;audio.update(round,actors,false,false);
+  assert.equal(sources.filter(s=>s.buffer.includes('Capture_Scuffle')).length,1,'state updates do not duplicate the event cue');
+  audio.setEnabled(false);audio.capture(0,actors);assert.equal(sources.length,1);audio.stop();assert.equal(sources[0].stopped,true);
+ }finally{globalThis.localStorage=oldStorage;globalThis.fetch=oldFetch;}
+});
 test('menu music downloads before audio unlock and prepare reuses the warmed bytes',async()=>{
  const oldStorage=globalThis.localStorage,oldFetch=globalThis.fetch,requests=[];globalThis.localStorage={getItem:()=>null,setItem(){}};globalThis.fetch=async url=>{requests.push(url);return {ok:true,arrayBuffer:async()=>new TextEncoder().encode(url).buffer};};
  const context={state:'running',createGain:()=>({gain:{value:1},connect(){}}),decodeAudioData:async bytes=>bytes,createBufferSource(){return {connect(){},start(){},stop(){}};}},engine={ctx:context,master:{},init(){},resume(){}};

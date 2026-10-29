@@ -239,7 +239,7 @@ function receiveOnlineSnapshot(snapshot,initial=false){
   // Compatibility with a server that has not yet received the input-frame update.
   if(pose.id===0&&!snapshot.inputFrames){actor.netTarget=new THREE.Vector3(...pose.position);if(!initial)actor.group.position.lerp(actor.netTarget,.65);actor.vx=pose.vx;actor.vz=pose.vz;actor.slideX=pose.slideX;actor.velocity=pose.velocity;actor.grounded=pose.grounded;actor.speed=pose.speed;}
  }
- for(const event of snapshot.events)if(event.id>onlineEventId){if(!initial){if(event.type==='tool')gameAudio.tool(event.tool,event.actor,avatars);presentOnlineEvent(event,{actors:avatars,root:matchRoot,hazards,prop,fx:gameFX});}onlineEventId=event.id;}
+ for(const event of snapshot.events)if(event.id>onlineEventId){if(!initial){if(event.type==='tool')gameAudio.tool(event.tool,event.actor,avatars);presentOnlineEvent(event,{actors:avatars,root:matchRoot,hazards,prop,fx:gameFX,audio:gameAudio});}onlineEventId=event.id;}
  syncOnlineHazards(snapshot.hazards,{root:matchRoot,hazards,prop,dispose:disposeHazard,actors:avatars});
  for(const item of snapshot.furniture){const f=remoteFurniture.find(f=>f.mesh.name===item.name);if(f){f.target=new THREE.Vector3(...item.position);f.rotation=new THREE.Quaternion(...item.rotation);if(initial){f.mesh.position.copy(f.target);f.mesh.quaternion.copy(f.rotation);}}}
  if(round.phase==='finished'&&!round.endStarted){if(!ui.pause.hidden)show('hud');beginStageVerdict();}
@@ -500,7 +500,7 @@ function updateGame(dt){
  }
  furniturePhysics?.step(dt,avatars);
  for(const h of hazards)h.time-=dt;smokeCoverage();for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];if(h.type==='smoke')animateSmokeBomb(h.mesh,dt);else if(h.type==='banana')animateBananaHazard(h.mesh,dt);animateHazardTelegraph(h.mesh,dt);animatePlayerMirage(h.mesh,dt);if(h.type==='banana'&&h.time>0)for(const state of round.actors){if(state.caught||state.inSmoke||state.role===h.ownerRole||state.effectTime>0)continue;if(avatars[state.id].group.position.distanceTo(h.mesh.position)<.8){setEffect(state,'banana',2);h.time=0;break;}}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}
- for(const r of round.actors.filter(a=>a.role==='runner')){const p=cop.group.position,q=avatars[r.id].group.position;if(detectThiefAt(round,chaser.id,r.id,dt,p,q,withinSight(p,q))){gameFX.capture(q,p);cop.vx=cop.vz=cop.slideX=cop.speed=0;cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAPTURED!':'CATCHING THIEF!',1);}}
+ for(const r of round.actors.filter(a=>a.role==='runner')){const p=cop.group.position,q=avatars[r.id].group.position;if(detectThiefAt(round,chaser.id,r.id,dt,p,q,withinSight(p,q))){gameFX.capture(q,p);gameAudio.capture(r.id,avatars);cop.vx=cop.vz=cop.slideX=cop.speed=0;cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAPTURED!':'CATCHING THIEF!',1);}}
  cop.detectionZone.update(hasDetectedThief(round,avatars,chaser.id,(p,q)=>withinSight(p,q)),round.phase==='playing'&&!chaser.inSmoke);
  for(const c of round.caches)c.harvester=null;
  for(const wish of wishes){const target=wish.wants?interactionTarget(wish.id):null,key=target?target.type+':'+target.target.id:null,actor=avatars[wish.id];if(actor.interactionKey!==key||!target)cancelInteraction(round,wish.id);actor.interactionKey=key;if(target)performInteraction(wish.id,target,dt);}
