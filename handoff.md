@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.56**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.57**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,18 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.57 makes hammer smoke a cloud of attached spheres rather than isolated balls.
+Each of 16 radial puffs uses a shared merged geometry with one core plus eight
+smaller overlapping smooth satellites (nine spheres / one mesh draw per puff).
+Starts at impact centre, expands/rolls while bursting outward, then radial drag
+slows the cloud at the outer area as it fades/shrinks. Sphere normals are smooth;
+no extra tessellation or image assets. Existing pooled slots reset geometry when
+reused for run dust or jetpack, so other effects retain their original shapes.
+The enlarged 1.5x comic splash and 2x camera shake remain. Regression verifies
+attached sphere geometry, shared reuse, centre-origin outward travel, expansion
+and expiry. All 186 tests pass; no multiplayer server update is needed.
+
 
 0.9.56 reverts the sharp blue/pixel hammer experiment per user feedback. Restored
 the pre-0.9.55 green/yellow comic splash, rings, graphic sparks and 16 toon dust
