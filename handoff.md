@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.51**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.52**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,16 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.52 strengthens the turning animation after the user found the first pass
+almost invisible. Sharp turns/reversals now target 28% vertical compression,
+hold the impulse for 80 ms and settle smoothly; ordinary triggered turns use
+16%. Maximum lean increases from about 9 to 16 degrees, with a stronger visual
+twist. Trigger threshold is slightly lower. Volume is preserved through lateral
+widening. Pause A/B toggle and reduced-motion suppression remain. Gameplay,
+collisions and networking are unchanged. Added a regression requiring at least
+23% visible peak compression and several visibly compressed frames on reversal.
+
 
 0.9.51 is the user's Dota-inspired turning animation experiment. All avatars
 have a separate feet-level Locomotion_Visual pivot around the existing model;
