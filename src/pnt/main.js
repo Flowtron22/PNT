@@ -14,6 +14,7 @@ import {createWonderUI} from './menu-effects.js';
 import {createGameplayAudio} from './game-audio.js';
 import {createRoundStart} from './round-start.js';
 import {attachHeldHammer,attachHeldJetpack,prepareJetpackMount} from './held-tools.js';
+import {createPlayerMirage,animatePlayerMirage,disposePlayerMirage} from './player-mirage.js';
 import {updateMoneyBar,cacheCenters} from './money-ui.js';
 import {bindingMarkup} from './binding-icons.js';
 import {updateCaptureGauge,createCaptureTint} from './capture-ui.js';
@@ -238,7 +239,7 @@ function receiveOnlineSnapshot(snapshot,initial=false){
   if(pose.id===0&&!snapshot.inputFrames){actor.netTarget=new THREE.Vector3(...pose.position);if(!initial)actor.group.position.lerp(actor.netTarget,.65);actor.vx=pose.vx;actor.vz=pose.vz;actor.slideX=pose.slideX;actor.velocity=pose.velocity;actor.grounded=pose.grounded;actor.speed=pose.speed;}
  }
  for(const event of snapshot.events)if(event.id>onlineEventId){if(!initial){if(event.type==='tool')gameAudio.tool(event.tool,event.actor,avatars);presentOnlineEvent(event,{actors:avatars,root:matchRoot,hazards,prop,fx:gameFX});}onlineEventId=event.id;}
- syncOnlineHazards(snapshot.hazards,{root:matchRoot,hazards,prop,dispose:disposeHazard});
+ syncOnlineHazards(snapshot.hazards,{root:matchRoot,hazards,prop,dispose:disposeHazard,actors:avatars});
  for(const item of snapshot.furniture){const f=remoteFurniture.find(f=>f.mesh.name===item.name);if(f){f.target=new THREE.Vector3(...item.position);f.rotation=new THREE.Quaternion(...item.rotation);if(initial){f.mesh.position.copy(f.target);f.mesh.quaternion.copy(f.rotation);}}}
  if(round.phase==='finished'&&!round.endStarted){if(!ui.pause.hidden)show('hud');beginStageVerdict();}
 }
@@ -255,7 +256,7 @@ function updateOnlineMatch(dt){
   animate(actor,state,dt);if(actor.detectionZone)actor.detectionZone.update(hasDetectedThief(round,avatars,actor.id,(p,q)=>withinSight(p,q)),!state.caught&&!state.inSmoke);
  }
  if(buffered){const {a,b,alpha}=buffered;for(const f of remoteFurniture){const to=b.furniture.find(item=>item.name===f.mesh.name),from=a.furniture.find(item=>item.name===f.mesh.name)||to;if(to){f.mesh.position.fromArray(from.position).lerp(new THREE.Vector3(...to.position),alpha);f.mesh.quaternion.fromArray(from.rotation).slerp(new THREE.Quaternion(...to.rotation),alpha);}}}
- for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];if(h.type==='smoke')animateSmokeBomb(h.mesh,dt);if(h.type==='banana')animateBananaHazard(h.mesh,dt);animateHazardTelegraph(h.mesh,dt);if(h.networkId)continue;h.time-=dt;if(h.type==='capture'){h.mesh.rotation.x+=dt*h.spin.x;h.mesh.rotation.y+=dt*h.spin.y;h.mesh.rotation.z+=dt*h.spin.z;h.mesh.scale.setScalar(Math.min(1,h.time*4));}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}gameFX.update(dt,matchCamera,{map:mapData?.id,bounds});updateHud();
+ for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];if(h.type==='smoke')animateSmokeBomb(h.mesh,dt);if(h.type==='banana')animateBananaHazard(h.mesh,dt);animateHazardTelegraph(h.mesh,dt);animatePlayerMirage(h.mesh,dt);if(h.networkId)continue;h.time-=dt;if(h.type==='capture'){h.mesh.rotation.x+=dt*h.spin.x;h.mesh.rotation.y+=dt*h.spin.y;h.mesh.rotation.z+=dt*h.spin.z;h.mesh.scale.setScalar(Math.min(1,h.time*4));}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}gameFX.update(dt,matchCamera,{map:mapData?.id,bounds});updateHud();
 }
 
 function choice(id,name,sub,selected,icon=''){return `<button class="choice${selected?' selected':''}" data-choice="${id}" aria-pressed="${selected}">${icon}<strong>${name}</strong><small>${sub}</small></button>`;}
@@ -393,11 +394,11 @@ async function loadArena(id){
  grid={...nav,blocked:collision.blocked,edges:collision.edges,heights:Float32Array.from(collision.groundHeights||nav.heights,v=>v===null?NaN:v)};grid.landingMask=landingMask(grid,data.spawns);floor.position.y=-12;floor.material.color.set(id==='mall'?0x77768c:id==='sunken'?0x24638b:0x9bc4d7);
  if(id==='sunken'){sunkenLook=createSunkenLook({renderer,scene,sunlight,fill,hemisphere,bounds,quality,enabled:sunkenStylized});sunkenLook.register(gameArena);sunkenLook.register(floor);}
  if(id==='sunken')gameArena.getObjectByName('SunkenShip').getWorldPosition(shipPivot);if(id==='mall'&&!online){progress(50,'Preparing movable furniture…');furniturePhysics=await createMallPhysics(gameArena,matchRoot,grid);}if(id==='mall'&&online)prepareRemoteFurniture();
- const props=[['propBanana','SM_TL_Banana'],['propSmoke','SM_TL_Bomb'],['propHammer','SM_TL_Hammer'],['propJet','jetpack'],['propRewind','rewind']];await Promise.all(props.map(async([key,file])=>{templates[key]=await getGLB(key,`assets/pnt/props/${file}.glb`);}));await gameAudio.prepare(id==='sunken'?'pirate-chase-bgm':id==='iceberg'?'iceberg-chase-bgm':null);
+ const props=[['propBanana','SM_TL_Banana'],['propSmoke','SM_TL_Bomb'],['propHammer','SM_TL_Hammer'],['propJet','jetpack']];await Promise.all(props.map(async([key,file])=>{templates[key]=await getGLB(key,`assets/pnt/props/${file}.glb`);}));await gameAudio.prepare(id==='sunken'?'pirate-chase-bgm':id==='iceberg'?'iceberg-chase-bgm':null);
 }
 function restoreMenuArena(){sunkenLook?.dispose();sunkenLook=null;restoreRemoteFurniture();furniturePhysics?.dispose();furniturePhysics=null;waterAnimation=null;matchRoot.rotation.set(0,0,0);matchRoot.position.set(0,0,0);shipAngle=0;sunlight.intensity=3;fill.intensity=1.2;hemisphere.intensity=2.4;mallFill.visible=false;renderer.toneMappingExposure=1.15;if(gameArena)gameArena.visible=false;if(menuArena){menuArena.visible=false;({ground,bounds,grid}=menuNavigation);}floor.position.y=-.3;floor.material.color.set(0x77768c);$('#world-markers').replaceChildren();}
 function prop(key,size=1){const source=templates[key];if(!source)return null;const object=clone(source.scene);const box=new THREE.Box3().setFromObject(object),scale=size/Math.max(.01,...box.getSize(new THREE.Vector3()).toArray());object.scale.multiplyScalar(scale);object.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(object),center=b.getCenter(new THREE.Vector3());object.position.add(new THREE.Vector3(-center.x,-b.min.y,-center.z));const root=new THREE.Group();root.add(object);return root;}
-function disposeHazard(h){h.mesh.removeFromParent();if(h.owned)h.mesh.traverse(o=>{if(o.isMesh){o.geometry.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});}
+function disposeHazard(h){disposePlayerMirage(h.mesh);h.mesh.removeFromParent();if(h.owned)h.mesh.traverse(o=>{if(o.isMesh){o.geometry.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});}
 function withinSight(p,q,smoke=true,stop=.35){return hasSight(grid,p,q,hazards,smoke,stop);}
 function steerBot(a,target,dt){
  a.routeTime=(a.routeTime||0)-dt;const p=a.group.position;
@@ -451,7 +452,7 @@ function smokeCoverage(){if(round)updateSmokeCoverage(round,avatars.map(a=>a.gro
 function setEffect(state,name,time){if(state.inSmoke&&['stunned','airStunned','banana'].includes(name))return;state.effect=name;state.effectTime=time;if(name==='banana'){state.spinDirection=rollSpinDirection();state.spinTurn=.35;}}
 function useTool(slot,id=0){if(round?.actors[id]?.inSmoke||round?.startRemaining>0)return;if(online){if(!paused&&!busy)online.send('tool',{slot});return;}
  smokeCoverage();const actor=avatars[id],state=round?.actors[id],tool=(room?.mode==='couch'?actor?.tools:id===0?loadout:actor?.tools)?.[slot];if(!actor||!state||!canActRule(round,id)||state.inSmoke||paused||busy)return;
- if(tool==='rewind'&&!actor.mark&&state.toolCooldowns[slot]<=0){actor.mark=actor.group.position.clone();const mesh=prop('propRewind',.6);mesh.position.copy(actor.mark);attachHazardTelegraph(mesh,'rewind');matchRoot.add(mesh);hazards.push({mesh,type:'marker',owner:id,time:Infinity});gameFX.rewind(actor.mark);gameAudio.play('Tool_Rewind_Box_Deploy',id===0?1:.5);if(id===0)say('MARK SET · PRESS AGAIN TO RETURN',1.5);return;}
+ if(tool==='rewind'&&!actor.mark&&state.toolCooldowns[slot]<=0){actor.mark=actor.group.position.clone();const mesh=createPlayerMirage(actor);mesh.position.copy(actor.mark);attachHazardTelegraph(mesh,'rewind');matchRoot.add(mesh);hazards.push({mesh,type:'marker',owner:id,time:Infinity});gameFX.rewind(actor.mark);gameAudio.play('Tool_Rewind_Box_Deploy',id===0?1:.5);if(id===0)say('MARK SET · PRESS AGAIN TO RETURN',1.5);return;}
  if(!activateTool(round,id,slot,tool))return;gameAudio.tool(tool,id,avatars);
  const point=actor.group.position.clone();
  if(tool==='hammer'){
@@ -496,7 +497,7 @@ function updateGame(dt){
   const moved=move(a,dx,dz,dt,(state.role==='chaser'?3.65:3.4)*1.15*(mapData.id==='iceberg'?1.5:1)*(state.id===0||couchHuman(room,state.id)?1.08:1)*(state.effect==='rocket'&&state.effectTime>0?1.8:1));if(!moved&&state.effect==='banana'&&state.effectTime>0)state.spinDirection=rollSpinDirection();if(!moved&&state.id!==0&&!locked&&Math.hypot(dx,dz)>.1){a.routeTime=0;}animate(a,state,dt);wishes.push({id:state.id,wants:wants&&!locked});
  }
  furniturePhysics?.step(dt,avatars);
- for(const h of hazards)h.time-=dt;smokeCoverage();for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];if(h.type==='capture'){h.mesh.rotation.x+=dt*h.spin.x;h.mesh.rotation.y+=dt*h.spin.y;h.mesh.rotation.z+=dt*h.spin.z;h.mesh.scale.setScalar(Math.min(1,h.time*4));}else if(h.type==='smoke')animateSmokeBomb(h.mesh,dt);else if(h.type==='banana')animateBananaHazard(h.mesh,dt);animateHazardTelegraph(h.mesh,dt);if(h.type==='banana'&&h.time>0)for(const state of round.actors){if(state.caught||state.inSmoke||state.role===h.ownerRole||state.effectTime>0)continue;if(avatars[state.id].group.position.distanceTo(h.mesh.position)<.8){setEffect(state,'banana',2);h.time=0;break;}}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}
+ for(const h of hazards)h.time-=dt;smokeCoverage();for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];if(h.type==='capture'){h.mesh.rotation.x+=dt*h.spin.x;h.mesh.rotation.y+=dt*h.spin.y;h.mesh.rotation.z+=dt*h.spin.z;h.mesh.scale.setScalar(Math.min(1,h.time*4));}else if(h.type==='smoke')animateSmokeBomb(h.mesh,dt);else if(h.type==='banana')animateBananaHazard(h.mesh,dt);animateHazardTelegraph(h.mesh,dt);animatePlayerMirage(h.mesh,dt);if(h.type==='banana'&&h.time>0)for(const state of round.actors){if(state.caught||state.inSmoke||state.role===h.ownerRole||state.effectTime>0)continue;if(avatars[state.id].group.position.distanceTo(h.mesh.position)<.8){setEffect(state,'banana',2);h.time=0;break;}}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}
  for(const r of round.actors.filter(a=>a.role==='runner')){const p=cop.group.position,q=avatars[r.id].group.position;if(detectThiefAt(round,chaser.id,r.id,dt,p,q,withinSight(p,q))){const cloud=createToonSmoke(.7,16);cloud.position.copy(q).addScaledVector(up,.8);matchRoot.add(cloud);cloud.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);hazards.push({mesh:cloud,type:'capture',owner:r.id,time:1,spin:new THREE.Vector3(12+Math.random()*16,14+Math.random()*18,10+Math.random()*16)});gameFX.capture(q);cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAPTURED!':'CATCHING THIEF!',1);}}
  cop.detectionZone.update(hasDetectedThief(round,avatars,chaser.id,(p,q)=>withinSight(p,q)),round.phase==='playing'&&!chaser.inSmoke);
  for(const c of round.caches)c.harvester=null;

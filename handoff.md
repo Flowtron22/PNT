@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.61**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.62**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,23 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.62 renames the displayed Rewind Box tool to B2B. Internal rewind ID,
+description, tool icon, cooldown and all mark/return/capture rules stay the same.
+In-game local/couch and online marker hazards now use createPlayerMirage(owner)
+instead of the box prop. The current costume/skinned pose is baked once into
+ordinary meshes, excluding bone-mounted hammer/jetpack props. Frozen silhouette
+keeps the owner's heading at creation and stays at the existing return point.
+One cyan hologram shader per marker provides transparency, rim glow and animated
+scanlines without cloning skeletons or running another animator. Geometry and
+material disposal is explicit and does not dispose source costume/shared ring
+resources. Online sync takes the remapped avatars list, reuses existing markers,
+and waits for a missing owner rather than falling back to a box. Removed the
+unused rewind GLB download; existing menu icon is retained. Browser preview at
+.local/b2b-hologram-preview.png; checks cover all nine costume pose snapshots,
+freeze/cleanup, shared asset ownership and online marker persistence/removal.
+All 194 tests, syntax checks and static build pass. Frontend-only deployment;
+no server or protocol changes required.
 
 0.9.61 seats the jetpack on Bip001-Spine1 through a bind-pose socket prepared
 before animation starts. Pack centre is .18 behind / .12 above that bone, with
