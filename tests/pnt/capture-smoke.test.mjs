@@ -7,6 +7,17 @@ const {createGameFX}=await import('../../src/pnt/game-fx.js');
 const {CAPTURE_CELEBRATION_DELAY}=await import('../../src/pnt/capture-smoke.js');
 const {presentOnlineEvent}=await import('../../src/pnt/online-presentation.js');
 
+test('capture cloud tumbles rapidly on every axis with independent lobe motion and squash',()=>{
+ const scene=new THREE.Group(),fx=createGameFX(scene);fx.capture(new THREE.Vector3(),new THREE.Vector3(1,0,0));
+ const cloud=scene.getObjectByName('capture-smoke').children.find(c=>c.visible),center=cloud.position.clone(),rotation=cloud.rotation.clone();
+ const puff=cloud.children[0],position=puff.position.clone(),geometry=puff.geometry,material=puff.material;
+ let travel=0,previous=cloud.rotation.clone(),maxSquash=0,maxWobble=0;
+ for(let i=0;i<12;i++){fx.update(1/60);travel+=Math.abs(cloud.rotation.x-previous.x)+Math.abs(cloud.rotation.y-previous.y)+Math.abs(cloud.rotation.z-previous.z);previous.copy(cloud.rotation);maxSquash=Math.max(maxSquash,Math.abs(cloud.scale.x-cloud.scale.y));maxWobble=Math.max(maxWobble,puff.position.distanceTo(position));}
+ assert.ok(travel>8);assert.ok(Math.abs(cloud.rotation.x-rotation.x)>2);assert.ok(Math.abs(cloud.rotation.y-rotation.y)>3);assert.ok(Math.abs(cloud.rotation.z-rotation.z)>2);
+ assert.ok(maxSquash>.1);assert.ok(maxWobble>.04);assert.equal(cloud.position.distanceTo(center),0);
+ assert.equal(cloud.children.length,16);assert.equal(puff.geometry,geometry);assert.equal(puff.material,material);fx.clear();
+});
+
 test('restored capture cloud covers both characters with neutral smooth spheres',()=>{
  const scene=new THREE.Group(),fx=createGameFX(scene),hazards=[];
  presentOnlineEvent({type:'capture',actor:0,position:[2,0,3],policePosition:[0,0,3]},{actors:[{group:new THREE.Group()}],root:scene,hazards,fx});

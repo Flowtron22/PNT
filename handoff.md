@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.65**, online multiplayer test release. Server: **0.9.21**.
+Current app version: **0.9.66**, online multiplayer test release. Server: **0.9.21**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,19 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.66 makes capture smoke a fast chaotic toon scuffle. The cloud tumbles on
+all three axes (16/-24/19 radians per second, randomized handedness), with
+continuous high-frequency angular jolts and pulsing squash/stretch. Individual
+puffs wobble, breathe and counter-rotate independently using cached base poses.
+Animation evaluates from effect age for consistent motion across frame rates;
+no new meshes/materials/geometry are allocated while animating. The midpoint
+anchor, white/grey palette, large two-character coverage, one-second smoke,
+1.5-second police lock and delayed celebration timing are unchanged. Regression
+covers rapid multi-axis motion, independent puff movement, squash, fixed anchor
+and resource reuse. All 206 client tests, syntax and build pass. Frontend-only
+update; Render remains 0.9.21 / movementVersion 7, already deployed and verified
+for the previous police-lock release (commit 3b037b9).
 
 0.9.65 restores the previous smooth sphere-cloud capture style using only neutral
 white/grey materials (no orange spheres). Four reusable 16-puff clouds are sized
