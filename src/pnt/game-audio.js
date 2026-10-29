@@ -7,7 +7,7 @@ const CLIP_VERSIONS={'iceberg-chase-bgm':'0.9.39'};
 const CLIPS=['Coin_GET3','Footstep_A','Footstep_B','menu-bgm','gameplay-bgm','Match_Countdown','Match_Start','Player_Land','Player_Launch','Player_Spin_Out','Player_Stunned','Police_Capture_Start','Police_Capture_Success','Thief_Escape','Thief_Loot_Stolen','Tool_Banana_Slip','Tool_Banana_Throw','Tool_Hammer_Activate','Tool_Hammer_Impact','Tool_Jetpack_Flight','Tool_Jetpack_Land','Tool_Jetpack_Launch','Tool_Rewind_Box_Deploy','Tool_Rewind_Teleport','Tool_Smoke_Activate','Tool_Smoke_Throw',...NARRATION];
 export function createGameplayAudio(getEngine){
  let sfxLevel=1,musicLevel=1;
- let coinVoice=null;const footsteps=new Map();
+ let sharedScreen=false,coinVoice=null;const footsteps=new Map();
  let context=null,sfx=null,music=null,musicVoice=null,musicTrack=null,match=null,previous=[],previousPhase=null,freeRunners=0,cacheRemaining=new Map(),suddenDeath=false,praise=0,enabled=localStorage.getItem('pnt-game-sfx')!=='off',musicEnabled=localStorage.getItem('pnt-game-music')!=='off';
  const buffers=new Map(),downloads=new Map(),decoding=new Map(),last=new Map(),loops=new Map(),voices=new Set();
  function unlock(){const engine=getEngine();engine.init();context=engine.ctx;if(!context)return;engine.resume();if(!sfx){sfx=context.createGain();sfx.gain.value=enabled?.55*sfxLevel:0;sfx.connect(engine.master);music=context.createGain();music.gain.value=musicEnabled?.2*musicLevel:0;music.connect(engine.master);}}
@@ -17,18 +17,19 @@ export function createGameplayAudio(getEngine){
  async function prepare(extra=[]){unlock();if(!context)return;const names=Array.isArray(extra)?extra:extra?[extra]:[];return Promise.all([...CLIPS,...names].map(decode));}
  function voice(name,{volume=1,loop=false,bus=sfx}={}){if(!context||context.state!=='running'||!buffers.has(name)||!bus)return null;const source=context.createBufferSource(),gain=context.createGain();source.buffer=buffers.get(name);source.loop=loop;gain.gain.value=volume;source.connect(gain);gain.connect(bus);const item={source,gain,stop(){try{source.stop();}catch{}}};voices.add(item);source.onended=()=>{voices.delete(item);source.disconnect();gain.disconnect();};source.start();return item;}
  function play(name,volume=1,cooldown=.08){if(!enabled||!context)return;const now=context.currentTime;if(now-(last.get(name)??-Infinity)<cooldown)return;last.set(name,now);voice(name,{volume});}
- function distanceVolume(id,actors){if(!actors[id]||!actors[0])return 0;return id===0?1:Math.max(0,1-actors[id].group.position.distanceTo(actors[0].group.position)/18)*.65;}
+ function distanceVolume(id,actors){if(!actors[id]||!actors[0])return 0;return sharedScreen?.75:id===0?1:Math.max(0,1-actors[id].group.position.distanceTo(actors[0].group.position)/18)*.65;}
  function tool(name,id,actors){const volume=distanceVolume(id,actors);if(volume<=0)return;play(TOOL_SOUNDS[name],volume);if(name==='smoke')play('Tool_Smoke_Activate',volume*.8);}
  function narrateBeat(beat){const name=NARRATION_BEATS[beat];if(name)play(name,1,.05);}
  function setMusicTrack(name){if(name===musicTrack&&musicVoice)return;if(musicVoice){const old=musicVoice;musicVoice=null;musicTrack=null;old.stop();}if(name){const next=voice(name,{bus:music,loop:true});if(next){musicVoice=next;musicTrack=name;}}}
  function stop(){for(const item of voices)item.stop();loops.clear();coinVoice=null;footsteps.clear();musicVoice=null;musicTrack=null;previous=[];match=null;}
  function stopEffects(){for(const item of voices)if(item!==musicVoice)item.stop();loops.clear();coinVoice=null;footsteps.clear();previous=[];previousPhase=null;freeRunners=0;cacheRemaining.clear();suddenDeath=false;praise=0;match=null;}
- function update(round,actors,active,musicActive=active,map='mall',localInteractHeld=true){
+ function update(round,actors,active,musicActive=active,map='mall',localInteractHeld=true,shared=false){
+  sharedScreen=shared;
   if(!round){if(match)stopEffects();}
   else if(match!==round.profileId){stopEffects();match=round.profileId;previous=round.actors.map(a=>({...a}));previousPhase=round.phase;freeRunners=round.actors.filter(a=>a.role==='runner'&&!a.caught).length;cacheRemaining=new Map(round.caches?.map(cache=>[cache.id,cache.remaining])||[]);void prepare();}
   const chaseTrack=map==='sunken'?'pirate-chase-bgm':map==='iceberg'?'iceberg-chase-bgm':'gameplay-bgm';setMusicTrack(musicActive&&musicEnabled?(active?chaseTrack:'menu-bgm'):null);
   if(!round)return;
-  const me=round.actors[0],collecting=active&&enabled&&localInteractHeld&&me?.role==='runner'&&!me.caught&&!me.inSmoke&&me.interacting&&round.caches?.some(c=>c.harvester===0&&c.remaining>0);
+  const localCollectors=Array.isArray(localInteractHeld)?localInteractHeld:localInteractHeld?[0]:[],collecting=active&&enabled&&localCollectors.some(id=>{const me=round.actors[id];return me?.role==='runner'&&!me.caught&&!me.inSmoke&&me.interacting&&round.caches?.some(c=>c.harvester===id&&c.remaining>0);});
   if(collecting){if(!coinVoice)coinVoice=voice('Coin_GET3',{loop:true,volume:.7});}else if(coinVoice){coinVoice.stop();coinVoice=null;}
   if(!active||!enabled)footsteps.clear();
   round.actors.forEach((state,id)=>{const before=previous[id]||state,volume=distanceVolume(id,actors),flying=state.effect==='rocket'&&state.effectTime>0;

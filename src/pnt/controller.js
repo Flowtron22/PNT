@@ -5,14 +5,15 @@ export function padStick(x=0,y=0,dz=.14,outer=.96){
  const magnitude=Math.hypot(x,y);if(magnitude<=dz)return {x:0,z:0};
  const gain=Math.min(1,(magnitude-dz)/(outer-dz))/magnitude;return {x:x*gain,z:y*gain};
 }
-export function createController(device){
+export function createController(device,index=null){
  let identity=null,previous=[],armed=false,pad=null,lastDirection=null,nextRepeat=0,rumbleEffect=null,rumbleIn=0;
- const empty=()=>({x:0,z:0,pressed:new Set(),held:new Set(),direction:null,connected:!!pad,id:pad?.id||''});
+ const empty=()=>({x:0,z:0,pressed:new Set(),held:new Set(),direction:null,connected:!!pad,id:pad?.id||'',index:pad?.index??index});
  function stopRumble(){if(rumbleEffect)try{pad?.vibrationActuator?.reset?.()?.catch?.(()=>{});}catch{}rumbleEffect=null;rumbleIn=0;}
  function reset(){armed=false;lastDirection=null;nextRepeat=0;stopRumble();}
  function poll(now){
   let pads=[];try{pads=device.getGamepads?.()||[];}catch{}
-  const next=Array.from(pads).find(p=>p?.connected&&p.mapping==='standard'&&p.index===pad?.index)||Array.from(pads).find(p=>p?.connected&&p.mapping==='standard')||null;
+  const available=Array.from(pads).filter(p=>index===null||p?.index===index);
+  const next=available.find(p=>p?.connected&&p.mapping==='standard'&&p.index===pad?.index)||available.find(p=>p?.connected&&p.mapping==='standard')||null;
   const key=next?next.index+':'+next.id:null;
   if(key!==identity){stopRumble();pad=next;identity=key;previous=[];reset();}else pad=next;
   const result=empty();if(!pad)return result;
@@ -57,4 +58,10 @@ export function controllerMenu(doc,command){
  const r=current.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let next=null,best=Infinity;
  for(const el of items){if(el===current)continue;const b=el.getBoundingClientRect(),dx=b.left+b.width/2-cx,dy=b.top+b.height/2-cy,vertical=command==='up'||command==='down',distance=(vertical?dy:dx)*(['up','left'].includes(command)?-1:1);if(distance<8)continue;const score=distance+Math.abs(vertical?dx:dy)*2;if(score<best){best=score;next=el;}}
  focus(next);
+}
+
+// Each reader is pinned to its physical browser index; it never falls back to
+// a different controller after disconnecting.
+export function createControllerPool(device){
+ const readers=new Map();return {poll(now){let pads=[];try{pads=Array.from(device.getGamepads?.()||[]);}catch{}for(const pad of pads)if(pad?.connected&&pad.mapping==='standard'&&!readers.has(pad.index))readers.set(pad.index,createController(device,pad.index));return [...readers].map(([index,reader])=>({...reader.poll(now),index}));},reset(){for(const reader of readers.values())reader.reset();},rumble(index,...args){readers.get(index)?.rumble(...args);}};
 }

@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.47**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.48**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,34 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.48 implements the approved Four player lanes Couch Play lobby. PLAY now
+chooses Solo Online (the prior Host/Join/Public flow) or Couch Play. Training
+remains on the main menu. Couch needs 2–4 human players, one shared camera,
+independent costume/two-tool pickers and ready state; unused seats become bots.
+Each standard-mapped pad is pinned to its browser index (including identical
+controller model names); first pad joins P1, subsequent pads join P2–P4. To use
+keyboard/mouse for P1, choose USE KEYBOARD before other pads join (or use keyboard
+lobby navigation). Up/down selects rows; A selects; B backs out/leaves a guest
+slot; X toggles ready; host LB/RB selects map and Start begins when all ready.
+Keyboard uses arrows/Enter/Space, plus existing game key/mouse bindings.
+Local humans share the existing simulation/capture/smoke/jetpack/tool rules;
+only bot seats run AI. Police is randomly assigned among the four seats.
+Per-player number labels and HUD tool/cooldown panels identify everyone.
+Controller loss pauses local gameplay, cancels a lobby countdown and clears
+held input. Reconnecting on a new browser index can reclaim the disconnected
+seat by pressing a button. Resume requires all joined controllers connected,
+and readers require neutral controls before accepting fresh input.
+Couch collection sound follows any held local collector, with one shared loop.
+Results name the winning team and return to the couch lobby for customisation;
+P1 profile progression remains local. Wardrobe choices in couch do not overwrite
+the main-menu equipped outfit/loadout. Modules: couch-state.js, couch-ui.js;
+controller.js adds a pinned reader pool; styles/couch.css owns the couch layout.
+Browser control was disabled during implementation: UI output/ownership/input
+are covered by automated tests, but the finished screen and four physical pads
+still need hands-on verification. No multiplayer server changes are required;
+server remains 0.9.20 / movement 6. Build includes the new stylesheet/modules.
+
 
 0.9.47 keeps money stripes fixed-size, clipping the full-width fill instead of scaling it.
 Thief capture/release markers now use centered round-ended circular gauges, including
