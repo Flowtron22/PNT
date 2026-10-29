@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.54**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.55**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,22 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.55 revamps hammer impact visuals from the user's reference. hammer-impact.js
+owns pooled pointed triangle crown / jagged shock geometry: vivid blue/cyan
+spikes and a violet ground shock, with tone mapping disabled for saturated
+unlit colours. Removed the old rounded green halftone splash and hammer's extra
+smooth rings. Shortened/lowered dust (10 brief puffs) so the silhouette reads.
+After about 120–200 ms, 24 tiny square camera-facing pixels per hit drift outward
+with quantised positions and stepped alpha fade, in cyan/blue/purple/magenta/lime.
+No flashing, bloom or postprocess. Shared geometry, 8 bursts / 96 pixels bound
+resources for simultaneous couch/online hits; clear cancels delayed effects.
+Camera billboarding compensates parent map tilt. Swing trail, gameplay stun,
+collision and camera shake are unchanged; both local and online hammer paths
+already call createGameFX.hammer. Tests cover sharp geometry, phase timing,
+colour handling, square fade, tilt alignment, bounded reuse/clear and real FX
+integration. Browser visual verification still needs the user while disabled.
+
 
 0.9.54 replaces the permanent blue police range disk/orange arc with a faint
 neutral grey disk and rim visible only during valid current detection contact.
