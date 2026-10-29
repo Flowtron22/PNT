@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.48**, online multiplayer test release. Server: **0.9.20**.
+Current app version: **0.9.49**, online multiplayer test release. Server: **0.9.20**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,12 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.49 removes the user-marked couch lobby helper copy: the header kicker,
+one-screen caption, empty-slot tags, join instructions, bot-fill notes, map-owner
+label, ready/join helper line beneath Start and footer control legend. Couch
+controls, device labels for joined players, readiness logic and layout remain.
+
 
 0.9.48 implements the approved Four player lanes Couch Play lobby. PLAY now
 chooses Solo Online (the prior Host/Join/Public flow) or Couch Play. Training
