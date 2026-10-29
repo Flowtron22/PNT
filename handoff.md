@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 29 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.67**, online multiplayer test release. Server: **0.9.21**.
+Current app version: **0.9.68**, online multiplayer test release. Server: **0.9.21**.
 
 **Current user instruction: deploy multiplayer for a free online test on Render.**
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
@@ -37,6 +37,30 @@ Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
 ## Continue here
+
+0.9.68 implements the user's chosen universal 16:9 view with borders. index.html
+is now a same-origin shell, and game.html contains the original full game markup.
+The shell sizes a 1600x900 logical iframe to fit the available safe-area viewport,
+centred with letterboxing/pillarboxing. This fixes both camera aspect and CSS
+breakpoint basis, so menu/character spacing, lobbies and map framing agree across
+PC/iPad/phone. Desktop layout no longer depends on hover/fine pointer. Touch HUD
+controls retain minimum physical finger sizes via --display-scale; joystick-size
+settings still apply. WebGL pixel ratio includes outer scale, preventing a fixed
+desktop framebuffer on smaller phones. Fullscreen resolves to the outer document;
+orientation checks use the physical host and require landscape on portrait touch
+tablets too. Child pointer gestures forward orientation requests, and host resize/
+fullscreen changes notify the child without reloading or resetting a match.
+Build inputs include both HTML files and shell/fixed-viewport styles. Existing menu
+markup tests now read game.html. Browser previews checked the same menu composition
+at 1024x768 iPad and 932x430 phone sizes, plus 1280x720 desktop; a training lobby,
+match and pause were exercised inside the iframe. Screenshots in .local/:
+layout-ipad-1024x768.png, layout-phone-932x430.png,
+layout-desktop-1280x720.png and layout-ipad-gameplay.png. This is browser size
+verification, not physical Safari/iPad hardware testing. All 211 tests, syntax
+checks and build pass. Frontend-only; Render remains 0.9.21 / movementVersion 7.
+IMPORTANT for future releases: update game.html's visible WEB version as well as
+index.html's pnt-version metadata and iframe ?v= version, plus package versions.
+Keep the 1600x900 design basis fixed; resize only the outer frame and pixel ratio.
 
 0.9.67 uses the user's 00019 - WAV_19_GUESS_BNK_SE_DICE.wav during capture smoke.
 Copied unchanged to assets/pnt/audio/Capture_Scuffle.wav (48 kHz mono, ~2.84 sec).

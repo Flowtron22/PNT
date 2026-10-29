@@ -1,8 +1,11 @@
+import {gameHost} from './viewport.js';
 export function fullscreenMode(doc,win){
+ const host=gameHost(win);if(host){doc=host.document;win=host;}
  if(win.navigator.standalone||win.matchMedia('(display-mode: standalone)').matches||win.matchMedia('(display-mode: fullscreen)').matches)return 'standalone';
  return (doc.fullscreenEnabled&&typeof doc.documentElement.requestFullscreen==='function')||(doc.webkitFullscreenEnabled&&typeof doc.documentElement.webkitRequestFullscreen==='function')?'native':'unsupported';
 }
 export function configureFullscreen(button,status,doc=document,win=window){
+ const host=gameHost(win);if(host){doc=host.document;win=host;}
  const active=doc.fullscreenElement||doc.webkitFullscreenElement;
  button.disabled=false;button.textContent=active?'EXIT FULLSCREEN':'TOGGLE FULLSCREEN';status.textContent='';status.hidden=true;
  button.onclick=async()=>{

@@ -1,6 +1,6 @@
-/* Auto desktop layout: cap content width rather than stretching with the monitor.
-   Phones, including iPhone 14 Plus landscape, retain their existing rules. */
-@media(min-width:1025px) and (hover:hover) and (pointer:fine){
+/* Shared design-canvas layout, applied equally to mouse and touch devices.
+   The outer shell fits this composition into the physical screen. */
+@media(min-width:1025px){
  #menu,#results{--desktop-content:min(1200px,calc(100vw - 96px));--desktop-inset:max(48px,calc((100vw - 1200px)/2))}
  :is(#menu[data-page=play],#menu[data-page=online]) .page-panel,#menu[data-page=join] .page-panel{left:var(--desktop-inset);right:auto;width:var(--desktop-content);max-width:1200px}
  :is(#menu[data-page=play],#menu[data-page=online]) .flow-options,#menu[data-page=join] .flow-options{width:100%;max-width:1200px;gap:24px}
