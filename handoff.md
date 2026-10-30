@@ -283,17 +283,16 @@ This is documentation only; the approved effect and app version are unchanged.
 
 ## Continue here
 
-Latest completed frontend: **0.9.80**, implementation commit **dfd7993** on main.
-Production: https://police-n-thief.vercel.app/ — WEB 0.9.80, arena-appearance.js,
-sunken-look.js and main.js verified against source. All map PBR surfaces now
-use roughness .7 / metalness 0, including Mall menu and Sunken styled overrides.
-Roughness/metalness maps are cleared for consistent scalar settings. No new
-reflection pass or environment map. Build/syntax checks pass; automated suites
-and browser/VFX tests skipped at the user's request. User is content with the
-hammer shapes for now; do not continue VFX tuning/testing unless requested.
-No local preview server running. Render stays **0.9.23 / movementVersion 7**,
-deployed server commit **332f217** on codex/multiplayer-local. No server deployment
-needed; no pending implementation task.
+Latest completed frontend: **0.9.81**, implementation commit **8bb2d0e** on main.
+Production: https://police-n-thief.vercel.app/ — WEB 0.9.81, game-audio.js and the
+new vc_narration_failure.wav verified against source. Losing stats play failure
+once, after the existing defeated verdict cue. Winning stats retain congratulations.
+Source WAV copied unchanged from Downloads/audio. Build/syntax checks pass;
+no browser/VFX tests or automated suites run. No local preview server running.
+User is content with hammer shapes for now; do not resume VFX tuning unasked.
+Map PBR settings remain roughness .7 / metalness 0. Render stays **0.9.23 /
+movementVersion 7**, deployed server commit **332f217** on codex/multiplayer-local.
+No server deployment needed; no pending implementation task.
 
 Reference project inspected: `F:/PROJECTS/JORAN/inkwave-main/inkwave-main`.
 Its full-window renderer, shared CSS unit, anchored panels and measured free-space
