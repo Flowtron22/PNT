@@ -418,6 +418,41 @@ regressions and new allocation/placement/cleanup/FPS/reduced-motion checks pass.
 Preview: `.local/hammer-gloss-preview.png`. Physical mobile performance was not
 measured. No gameplay radius or stun timing changed.
 
+### User-directed refinement — asymmetric cutouts (0.9.79)
+
+The user liked the initial direction but identified three missing details in
+their supplied reference sequence: varied pink shapes, breakup by masks, and
+yellow strokes that overlap independently instead of tracing a perfect outline.
+This refines the implementation trial; it is not yet final approval.
+
+- **Author variants:** the generator now bakes four seeded layouts with four,
+  five or six uneven lobes. Each lobe varies in angle, width, length and inner
+  opening. Each impact chooses a layout and adds size/aspect variation, so a
+  rotated copy of one symmetric flower is no longer the only result.
+- **Separate colour from coverage:** R stores only pink contour coverage; G
+  stores independently authored, tapered open yellow strokes. A stroke can use
+  part of a lobe's path, with its own skew, offset and wipe timing. Yellow is no
+  longer obtained by colouring high-value pixels of the pink mask.
+- **Mask the shape away:** per-lobe directional half-planes progressively cut
+  from the stems towards the outer corners. Their staggered starts leave distinct
+  angular remnants. Late opacity fade is secondary, starting at 82% of life.
+  This is different from dissolving everything with noisy alpha at once.
+- **Animate independent registration:** pink and yellow use separate ground
+  quads. Yellow gets its own position, aspect, angle, spin, small drift and 0.63s
+  lifetime, against pink's 0.66s. The two layers can cross and separate.
+- **Keep the texture contract explicit:** the RGB atlas is now 1024x1024, with
+  four quadrants containing 16 frames each. B still stores sparkles. Green fans
+  use shader-generated sectors to free the G channel. Round the interpolated
+  variant ID before selecting its quadrant to avoid floating-point stripe
+  artifacts. Use the versioned texture URL to avoid cached old channel layouts.
+- **Preserve scope and budget:** the original hammer smash remains. The added
+  layer uses ten quads per hit, still one draw and a 96-sprite allocation.
+  Integration checks continue to cover the original components and cleanup.
+
+Reusable lesson: when two colours visibly cross and separate in a reference,
+author separate masks and independently controlled layers. A shared outline with
+colour changes cannot reproduce their relative movement or staggered breakup.
+
 ## Approved project technique — grenade smoke
 
 Overlapping puff meshes use one cloud-space ellipsoid normal field and one grey

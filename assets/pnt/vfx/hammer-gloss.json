@@ -3,14 +3,57 @@
   "reference": "https://cdna.artstation.com/p/assets/images/images/099/641/878/original/octopo-vfx-studio-6-gloss-special.gif?1780543801",
   "provenance": "Original procedural animation inspired by OCTOPO's MISFITZ Gloss special. No reference artwork extracted.",
   "atlas": "hammer-gloss-flipbook.png",
-  "grid": [4, 4],
-  "frames": 16,
+  "grid": [
+    8,
+    8
+  ],
+  "frames": 64,
   "cellPixels": 128,
-  "order": "left-to-right, top-to-bottom",
-  "channels": {"r": "hollow angular petals: pink body and high-value yellow rim", "g": "radial green fans", "b": "four-point sparkle"},
+  "order": "Four quadrants; each contains a 4x4 animation ordered left-to-right, top-to-bottom.",
+  "channels": {
+    "r": "asymmetric pink contours with directional cutout masks",
+    "g": "independently authored open yellow strokes and cutouts",
+    "b": "four-point sparkle"
+  },
   "noise": "jet-energy-noise.png",
   "colourSpace": "linear mask data",
   "runtime": "src/pnt/hammer-gloss.js",
-  "layers": {"petals": {"life": 0.66, "quadHalfExtent": 3.8}, "fans": {"life": 0.59, "quadHalfExtent": 3.65}, "sparkles": {"count": 7, "lifeRange": [0.4, 0.63]}},
-  "integration": "Additive effect layer at the existing hammer impact event; original smash components retained. Material uses normal alpha blending."
+  "layers": {
+    "pink": {
+      "life": 0.66,
+      "quadHalfExtent": 3.8,
+      "sizeVariation": [
+        0.94,
+        1.06
+      ],
+      "aspectVariation": [
+        0.9,
+        1.1
+      ]
+    },
+    "yellow": {
+      "life": 0.63,
+      "independentRegistration": true
+    },
+    "fans": {
+      "life": 0.59,
+      "quadHalfExtent": 3.65
+    },
+    "sparkles": {
+      "count": 7,
+      "lifeRange": [
+        0.4,
+        0.63
+      ]
+    }
+  },
+  "integration": "Additive effect layer at the existing hammer impact event; original smash components retained. Material uses normal alpha blending.",
+  "atlasURL": "hammer-gloss-flipbook.png?v=2",
+  "atlasPixels": [
+    1024,
+    1024
+  ],
+  "framesPerVariant": 16,
+  "variants": 4,
+  "fans": "Procedural radial sectors in the fragment shader; no atlas channel."
 }

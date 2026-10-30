@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.78**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.79**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,25 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Asymmetric masked hammer contours — 30 October 2026
+
+0.9.79 refines the added Gloss layer from the user's supplied image sequence.
+Pink now selects one of four asymmetric 4/5/6-lobe layouts, with varied size/aspect
+per impact. Yellow is an independent open-stroke mask, not a pink edge colour.
+Its position, rotation/spin, aspect and lifetime vary independently, allowing
+crossing strokes and detached accents. Authored directional wipes remove inner
+sections first and leave outer angular fragments; opacity holds until the final
+18% of life. This replaces the previous noise-based dissolution/early fade.
+Atlas is now 1024px with four 4x4-frame quadrants: R pink, G yellow, B sparkle.
+Green fans are reconstructed as shader sectors to free the G channel. Texture
+URL has ?v=2 to bypass the old one-hour cached 512px channel layout. Round the
+interpolated variant index before quadrant selection to prevent precision stripes.
+Source remains tools/bake-hammer-gloss.py; metadata updated in hammer-gloss.json.
+The added layer now emits ten quads per hit in the same 96-sprite/one-draw batch.
+Original hammer splash/smoke/rings/sparks, gameplay timing and jetpack are intact.
+Tests cover independent registrations/variants and preserve previous cleanup,
+reduced-motion, original component counts and tilted placement checks.
 
 ## Additional Gloss-inspired hammer smash — 30 October 2026
 

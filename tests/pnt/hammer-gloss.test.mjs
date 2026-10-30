@@ -13,7 +13,7 @@ test('Gloss adds an independent impact batch while retaining the existing hammer
  assert.equal(scene.children.filter(m=>m.isMesh&&m.visible).length,17);
  assert.equal(scene.children.filter(m=>m.geometry?.name==='hammer-smoke-cluster').length,16);
  assert.ok(scene.getObjectByName('comic-hammer-splash').visible);
- assert.equal(added.geometry.drawRange.count,9*6);
+ assert.equal(added.geometry.drawRange.count,10*6);
  const pos=added.geometry.attributes.position;
  assert.ok(Math.abs(pos.getY(0)-2.095)<1e-6,'fans are placed just above the original impact height');
  fx.clear();assert.equal(added.visible,false);assert.equal(added.geometry.drawRange.count,0);
@@ -29,7 +29,7 @@ test('floor layers stay coplanar in a tilted arena while sparkles face the world
  for(let i=0;i<6;i++)assert.ok(Math.abs(pos.getY(i)-.415)<1e-6);
  for(let i=6;i<12;i++)assert.ok(Math.abs(pos.getY(i)-.425)<1e-6);
  const world=i=>new THREE.Vector3().fromBufferAttribute(pos,i).applyMatrix4(root.matrixWorld);
- const x=world(13).sub(world(12)),y=world(14).sub(world(13));
+ const x=world(19).sub(world(18)),y=world(20).sub(world(19));
  const normal=x.cross(y).normalize(),cameraForward=new THREE.Vector3(0,0,1).applyQuaternion(camera.quaternion);
  assert.ok(Math.abs(normal.dot(cameraForward))>.999999);
 });
@@ -52,4 +52,25 @@ test('added layer lifetimes are stable at 30, 60 and 144 FPS without altering im
   for(let n=0;n<Math.ceil(fps*.8);n++)fx.update(1/fps);
   assert.equal(fx.mesh.visible,false);assert.deepEqual(point.toArray(),[4,1,3]);
  }
+});
+
+
+test('pink and yellow use separate floor layers, registration, lifetimes and seeded layouts',()=>{
+ const original=Math.random;let seed=77;Math.random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+ try{
+  const fx=new HammerGloss(new THREE.Group()),variants=new Set();
+  for(let n=0;n<24;n++){
+   fx.clear();fx.hit(new THREE.Vector3());
+   const pink=fx.items.find(i=>i.life>0&&i.kind===0),yellow=fx.items.find(i=>i.life>0&&i.kind===3);
+   variants.add(pink.variant);assert.equal(pink.variant,yellow.variant);
+   assert.notEqual(pink,yellow);assert.notEqual(pink.total,yellow.total);
+   assert.notEqual(pink.angle,yellow.angle);assert.notEqual(pink.aspect,yellow.aspect);
+   const before=yellow.p.clone();fx.update(.1);
+   assert.ok(yellow.p.distanceTo(before)>0);assert.equal(pink.p.x,0);
+   const kinds=fx.geometry.attributes.kind;
+   for(let i=12;i<18;i++)assert.equal(kinds.getX(i),3);
+   for(let i=12;i<18;i++)assert.ok(Math.abs(fx.geometry.attributes.position.getY(i)-.035)<1e-6);
+  }
+  assert.equal(variants.size,4);
+ }finally{Math.random=original;}
 });
