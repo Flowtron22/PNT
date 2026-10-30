@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.77**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.78**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,26 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Additional Gloss-inspired hammer smash — 30 October 2026
+
+0.9.78 layers a pink/yellow hollow four-petal ground burst, translucent green
+radial fans and seven rising four-point sparkles onto the current hammer smash.
+The user explicitly said to retain the current effect. Existing wonder hammer
+splash, grey clustered smoke, rings, sparks, impact position and timing remain.
+Source reference: MISFITZ Gloss special GIF (6-gloss-special on ArtStation).
+Original packed 16-frame RGB atlas is baked by tools/bake-hammer-gloss.py:
+R hollow petals (grey pink fill/high-value yellow rim), G radial fans, B sparkle.
+The runtime reuses jet-energy-noise.png for small UV distortion and late erosion;
+frames interpolate, shapes expand/open/cut apart, and opacity fades late in life.
+Floor layers use parent-local XZ planes; sparkles face the world camera with root
+rotation removed. Separate 96-sprite batch adds one draw call across impacts.
+Petals last .66s, fans .59s, sparkles .4-.63s. Reduced motion suppresses only the
+new layer; shared clear resets it. Asset metadata: assets/pnt/vfx/hammer-gloss.json.
+Browser before/after preview uses actual animated thief/held hammer, dark and
+bright floors and a tilted root; no shader/console errors observed. Regression
+checks retain old hammer components, verify tilted placement/camera-facing stars,
+fixed allocation, cleanup, reduced motion and multiple FPS. No server change.
 
 ## MISFITZ-inspired jetpack energy — 30 October 2026
 

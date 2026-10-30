@@ -371,6 +371,53 @@ The accepted result combines authored shape evolution, subtle texture distortion
 erosion and discrete accents. Preserve it as a baseline, not a requirement to
 reuse this palette or recipe for every future effect.
 
+## Implementation trial — Gloss-inspired hammer addition (0.9.78)
+
+Reference: MISFITZ Gloss special (Study 02), specifically
+`octopo-vfx-studio-6-gloss-special.gif`. The user requested an additional layer
+and explicitly retained the current smash. Awaiting user feedback on this trial;
+do not label it approved merely because its checks pass.
+
+### Asset and material method
+
+- Run `python tools/bake-hammer-gloss.py` to rebuild the original 512px 4x4 atlas.
+  Each of 16 frames has three independently authored masks: R hollow angular
+  petals, G radial fans and B four-point sparkles. Draw at 3x resolution, then
+  downsample for controlled edge antialiasing.
+- Petals use nested polygons: high-value outer rim, mid-value thick band and an
+  empty inner shape. In the material those mask levels become yellow and pink;
+  the centre remains transparent. Frames expand the petals and later cut gaps
+  through them, rather than only enlarging one static image.
+- Green fans use alternating filled sectors over a faint disk, with an empty
+  centre. Their low opacity supports the main petals without covering the floor.
+- `src/pnt/hammer-gloss.js` interpolates adjacent atlas frames and reuses the
+  existing jet flow/erosion noise. UV warp is only 0.012 times the centred noise
+  vector, preserving the hard corners. Erosion starts after 65% of life; fade
+  starts after 56%. Pink bands use a coverage threshold for a solid graphic read.
+- Floor quads lie in the arena's local XZ plane, at small Y offsets to separate
+  fans and petals. Sparkles face the camera after removing root rotation. All
+  nine sprites per impact share one material and one bounded dynamic batch.
+
+### Timing and integration
+
+The existing `gameFX.hammer()` impact emits the additional layer at the same
+position and time. Petals last 0.66s, fans 0.59s, and seven sparkles last
+0.4-0.63s. Sparkles move outward/upward with gravity. Reduced motion skips the
+new layer; the original splash, rings, sparks and clustered smoke remain.
+The pool caps at 96 sprites and uses one extra draw call for overlapping impacts.
+Metadata and exact layer sizes: `assets/pnt/vfx/hammer-gloss.json`.
+
+### Visual iteration and verification
+
+The original splash obscured the first floor pattern. Increase the added petals'
+extent beyond that wall, move sparkles outward and make the pink band solid;
+keep the fan fill translucent. This reveals the addition without retuning the
+original. Browser comparison covers an animated thief with held hammer, dark and
+bright floors, a tilted arena, and impact/dissipation samples. Existing hammer
+regressions and new allocation/placement/cleanup/FPS/reduced-motion checks pass.
+Preview: `.local/hammer-gloss-preview.png`. Physical mobile performance was not
+measured. No gameplay radius or stun timing changed.
+
 ## Approved project technique — grenade smoke
 
 Overlapping puff meshes use one cloud-space ellipsoid normal field and one grey

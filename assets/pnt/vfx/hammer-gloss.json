@@ -1,0 +1,16 @@
+{
+  "generator": "tools/bake-hammer-gloss.py",
+  "reference": "https://cdna.artstation.com/p/assets/images/images/099/641/878/original/octopo-vfx-studio-6-gloss-special.gif?1780543801",
+  "provenance": "Original procedural animation inspired by OCTOPO's MISFITZ Gloss special. No reference artwork extracted.",
+  "atlas": "hammer-gloss-flipbook.png",
+  "grid": [4, 4],
+  "frames": 16,
+  "cellPixels": 128,
+  "order": "left-to-right, top-to-bottom",
+  "channels": {"r": "hollow angular petals: pink body and high-value yellow rim", "g": "radial green fans", "b": "four-point sparkle"},
+  "noise": "jet-energy-noise.png",
+  "colourSpace": "linear mask data",
+  "runtime": "src/pnt/hammer-gloss.js",
+  "layers": {"petals": {"life": 0.66, "quadHalfExtent": 3.8}, "fans": {"life": 0.59, "quadHalfExtent": 3.65}, "sparkles": {"count": 7, "lifeRange": [0.4, 0.63]}},
+  "integration": "Additive effect layer at the existing hammer impact event; original smash components retained. Material uses normal alpha blending."
+}
