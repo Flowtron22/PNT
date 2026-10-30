@@ -70,7 +70,8 @@ vertex-buffer allocation. Still at most two pooled draw calls for four players.
 All client checks, syntax and build pass; browser actual-costume preview has no
 shader errors. Screenshot: .local/banana-green-chubby-stars-preview.png.
 Frontend only; Render stays 0.9.23 / movementVersion 7.
-Deployment verification pending for green ribbons.
+Implemented in commit 8395e49 and pushed to main. Live HTML reports WEB 0.9.75;
+both banana VFX modules match verified source. No local preview server left running.
 
 ## Thick cartoon banana bands — 30 October 2026
 
@@ -152,11 +153,11 @@ No local preview server was left running.
 
 ## Continue here
 
-Latest completed frontend: **0.9.74**, implementation commit **f591e28** on main.
+Latest completed frontend: **0.9.75**, implementation commit **8395e49** on main.
 Production: https://police-n-thief.vercel.app/ — live HTML and both banana VFX
 modules verified against source. Render stays **0.9.23 / movementVersion 7**,
-deployed server commit **332f217** on codex/multiplayer-local. Banana spin now uses
-thick purple bands, opaque rounded stars and occasional glitch sprites; no pending task.
+deployed server commit **332f217** on codex/multiplayer-local. Banana spin uses
+three narrow green ribbons of varied widths and chubby unoutlined stars; no pending task.
 
 Reference project inspected: `F:/PROJECTS/JORAN/inkwave-main/inkwave-main`.
 Its full-window renderer, shared CSS unit, anchored panels and measured free-space
