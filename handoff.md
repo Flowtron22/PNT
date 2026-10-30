@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.71**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.72**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,23 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Banana spin light trails — 30 October 2026
+
+0.9.72 adds the requested stylized yellow-core/orange-red ribbon trails while
+characters spin from banana slips. src/pnt/banana-trails.js maintains two short
+hand-bone histories per avatar in map-local space and renders all four players
+through one dynamic mesh. Shader edge flow, taper and age fading create light
+ribbons without textures, bloom, extra lights or per-frame geometry/material
+allocation. Shared animate() covers practice/couch and online local/remote actors.
+Trails stop emitting at effect expiry, fade in .34 seconds, clear immediately on
+capture/reduced-motion and reset on teleports, long gaps and match cleanup.
+History samples run at 60 Hz with interpolation; four slots / two strips / 26
+samples cap resources. Regression checks 30/60/144 FPS, map tilt, teleport cleanup,
+reduced motion, integration and all nine actual costumes in their banana pose.
+Client suite, syntax and build pass. Browser actual-costume preview has no shader
+errors. Frontend only: Render remains 0.9.23 / movementVersion 7.
+Deployment verification pending for the banana trail release.
 
 ## Supplied announcer audio — 30 October 2026
 
