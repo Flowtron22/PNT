@@ -70,7 +70,10 @@ unchanged; no SDK dependency. Desktop keyboard layout and couch visibility stay
 under their existing rules. Browser layout checks at 844x390, 667x375 and 1180x820;
 tablet preview applies the touch rules explicitly because viewport resizing does
 not emulate coarse pointers. Physical iPhone/iPad Safari validation remains.
-Static build and whitespace checks pass. Client-only; Render remains 0.9.23.
+Static build and whitespace checks pass. Committed as b50c0f3 and pushed to main;
+Vercel serves WEB 0.9.82 and the exact new stylesheet. Preview captures are
+.local/touch-controls-iphone.png and .local/touch-controls-ipad.png.
+Client-only; Render remains 0.9.23.
 
 ## Defeat results narration — 30 October 2026
 
