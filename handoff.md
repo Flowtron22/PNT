@@ -75,7 +75,9 @@ future update: .local/app-update-preview.png. Production metadata must be 0.9.84
 Existing old installed documents need one normal refresh to load this updater;
 future deployments can then be offered without deleting/reinstalling the app.
 Physical iOS standalone lifecycle validation remains with user. Client-only;
-Render remains 0.9.23.
+Render remains 0.9.23. Committed as 75ee324 and pushed to main. Live Vercel
+confirms WEB 0.9.84, the stamped updater entry, and release.json 0.9.84 with
+Cache-Control: no-store.
 
 ## Consistent release URLs — 30 October 2026
 
