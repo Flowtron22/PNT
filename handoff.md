@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.86**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.87**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,15 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Matte Police eyes — 30 October 2026
+
+0.9.87 sets Police M_ch_eye roughness to 1 and metalness to 0 immediately after
+GLB load, before preview/avatar/capture tint/results material clones. Source GLB
+had roughnessFactor .5, omitted metallicFactor (glTF default 1), and no roughness
+map, so these values fully remove its metallic response. Eye colour, normal and
+occlusion maps stay intact. Scope is Police eye material only. Syntax/static
+build and whitespace checks pass. Client-only; no Render change.
 
 ## Costume-specific replacement palettes — 30 October 2026
 
