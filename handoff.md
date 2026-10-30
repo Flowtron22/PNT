@@ -77,7 +77,9 @@ Browser inspected all four recolours, dark faces, reload persistence, excluded
 Racer and 844x390 layout; no shader/console errors. Local preview settings restored.
 Captures: .local/costume-thief-mint.png, .local/costume-police-violet.png,
 .local/costume-pingu-mint.png, .local/costume-raptor-violet.png and
-.local/costume-raptor-phone.png. Client-only; Render remains 0.9.23.
+.local/costume-raptor-phone.png. Committed as df7bcd3 and pushed to main;
+Vercel confirms WEB/release.json 0.9.85 and exact built main/appearance/CSS files.
+Client-only; Render remains 0.9.23.
 
 ## Installed app update notice — 30 October 2026
 
