@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.75**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.76**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,22 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Shared smoke grenade normals — 30 October 2026
+
+0.9.76 makes the grenade's animated sphere lobes shade as one cloud. A custom
+Lambert vertex shader transfers normals from a cloud-space enclosing ellipsoid,
+whose bounds follow the billowing lobes. Per-puff rotations and nonuniform scale
+are cancelled before lighting; the field follows parent/world transforms too.
+The grenade uses one consistent grey material instead of four per-lobe shades.
+Sphere silhouettes, gameplay coverage, animation and draw counts are unchanged.
+Generic, hammer and capture smoke keep their existing geometry/materials.
+Each grenade owns one private material, released idempotently through the shared
+hazard cleanup used for expiry, online removal and match/menu cleanup.
+Regression checks cover tilted/scaled parents, billowing, unchanged shared normals
+and independent material disposal. Browser comparison renders without shader errors
+and confirms continuous lighting under different light directions. Screenshot:
+.local/smoke-shared-normals-preview.png. No server change or Render deployment.
 
 ## Three narrow green ribbons and chubby stars — 30 October 2026
 

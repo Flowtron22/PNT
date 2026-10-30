@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {registerHooks} from 'node:module';import * as THREE from '../../vendor/three/build/three.module.js';
 registerHooks({resolve(s,c,next){return s==='three'?{url:new URL('../../vendor/three/build/three.module.js',import.meta.url).href,shortCircuit:true}:next(s,c);}});
-const {createGameFX,createToonSmoke,smokeBombCloud,animateSmokeBomb,attachHazardTelegraph,animateHazardTelegraph,animateBananaHazard}=await import('../../src/pnt/game-fx.js');
+const {createGameFX,createToonSmoke,smokeBombCloud,animateSmokeBomb,disposeSmokeBomb,attachHazardTelegraph,animateHazardTelegraph,animateBananaHazard}=await import('../../src/pnt/game-fx.js');
 const legacy=scene=>scene.children.filter(node=>node.isMesh);
 
 test('jet exhaust follows the animated nozzle in tilted maps and interpolates births between frames',()=>{
@@ -78,3 +78,47 @@ test('restored hammer splash and impact particles are 1.5x without enlarging oth
 test('hammer smoke is a shared smooth nine-sphere cluster that expands radially from impact centre',()=>{const scene=new THREE.Scene(),fx=createGameFX(scene),impact=new THREE.Vector3(4,0,-3);fx.hammer(impact);const clouds=legacy(scene).filter(m=>m.geometry.name==='hammer-smoke-cluster');assert.equal(clouds.length,16);assert.equal(new Set(clouds.map(c=>c.geometry)).size,1);assert.equal(clouds[0].geometry.userData.spheres,9);assert.ok(clouds[0].geometry.getAttribute('normal').count>500);const size=clouds[0].scale.x;for(const cloud of clouds){assert.equal(cloud.material.flatShading,false);assert.ok(Math.hypot(cloud.position.x-4,cloud.position.z+3)<1e-9);}for(let i=0;i<12;i++)fx.update(1/60);const before=clouds.map(c=>Math.hypot(c.position.x-4,c.position.z+3));assert.ok(before.every(d=>d>.5));assert.ok(clouds[0].scale.x>size);for(let i=0;i<12;i++)fx.update(1/60);assert.ok(clouds.every((c,i)=>Math.hypot(c.position.x-4,c.position.z+3)>before[i]));for(let i=0;i<60;i++)fx.update(1/60);assert.ok(clouds.every(c=>!c.visible));fx.clear();});
 
 test('hammer emits no isolated coloured sphere puffs while retaining clustered grey smoke',()=>{const scene=new THREE.Scene(),fx=createGameFX(scene);fx.hammer(new THREE.Vector3());fx.update(.05);const steam=scene.getObjectByName('wonder-vfx-steam-pool');assert.ok(steam.children.every(p=>!p.visible));const clouds=legacy(scene).filter(p=>p.geometry.name==='hammer-smoke-cluster');assert.equal(clouds.length,16);for(const p of clouds){const c=p.material.color;assert.ok(Math.abs(c.r-c.g)<.08&&Math.abs(c.g-c.b)<.08);}assert.ok(scene.getObjectByName('comic-hammer-splash').visible);fx.clear();fx.smokeDeploy(new THREE.Vector3());fx.update(.05);assert.ok(steam.children.some(p=>p.visible),'other effects retain their puffs');fx.clear();});
+
+
+test('grenade normal transfer follows billowing and tilted parents without modifying shared sphere geometry',()=>{
+ const parent=new THREE.Group(),root=new THREE.Group(),cloud=smokeBombCloud();parent.add(root);root.add(cloud);
+ parent.rotation.set(.2,.5,-.3);parent.scale.set(1.3,.8,1.1);root.position.set(4,2,-3);
+ const generic=createToonSmoke(),original=Array.from(generic.children[0].geometry.attributes.normal.array);
+ const material=cloud.children[0].material;
+ assert.ok(cloud.children.every(p=>p.material===material));
+ assert.notEqual(material,generic.children[0].material);
+ const shader={uniforms:{},vertexShader:THREE.ShaderLib.lambert.vertexShader};material.onBeforeCompile(shader);
+ assert.ok(shader.vertexShader.includes('objectNormal = vec3(dot(smokeObjectToCloud'));
+ const uniforms=shader.uniforms,center=uniforms.uSmokeCenter.value,weights=uniforms.uSmokeInverseRadiusSquared.value;
+ const previousCenter=center.clone();animateSmokeBomb(root,.1);parent.updateMatrixWorld(true);
+ assert.ok(previousCenter.distanceTo(center)>0);
+ for(const puff of cloud.children){
+  puff.onBeforeRender();
+  const inverse=uniforms.uSmokeWorldToCloud.value;
+  const identity=new THREE.Matrix4().multiplyMatrices(inverse,cloud.matrixWorld);
+  assert.ok(identity.elements.every((value,i)=>Math.abs(value-(i%5===0?1:0))<1e-10));
+  const toCloud=new THREE.Matrix4().multiplyMatrices(inverse,puff.matrixWorld);
+  const localPoint=new THREE.Vector3(.6,.8,0),point=localPoint.clone().applyMatrix4(toCloud);
+  const expected=point.sub(center).multiply(weights).normalize();
+  const objectNormal=expected.clone().applyMatrix3(new THREE.Matrix3().setFromMatrix4(toCloud).transpose());
+  const view=new THREE.Matrix4().makeRotationY(.4).multiply(cloud.matrixWorld);
+  const modelView=view.clone().multiply(puff.matrix);
+  const actual=objectNormal.applyNormalMatrix(new THREE.Matrix3().getNormalMatrix(modelView));
+  expected.applyNormalMatrix(new THREE.Matrix3().getNormalMatrix(view));
+  assert.ok(actual.distanceTo(expected)<1e-10,'puff rotation and scale cancel out of the transferred normal');
+ }
+ assert.deepEqual(Array.from(generic.children[0].geometry.attributes.normal.array),original);
+ disposeSmokeBomb(root);
+});
+
+test('grenade cleanup releases its private material once without touching other smoke',()=>{
+ const root=new THREE.Group(),cloud=smokeBombCloud(),sibling=smokeBombCloud(),generic=createToonSmoke();root.add(cloud);
+ let released=0,sharedReleased=0;
+ cloud.children[0].material.addEventListener('dispose',()=>released++);
+ sibling.children[0].material.addEventListener('dispose',()=>sharedReleased++);
+ generic.children[0].material.addEventListener('dispose',()=>sharedReleased++);
+ generic.children[0].geometry.addEventListener('dispose',()=>sharedReleased++);
+ disposeSmokeBomb(root);disposeSmokeBomb(root);disposeSmokeBomb(new THREE.Group());
+ assert.equal(released,1);assert.equal(sharedReleased,0);
+ const otherRoot=new THREE.Group();otherRoot.add(sibling);disposeSmokeBomb(otherRoot);
+});

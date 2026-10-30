@@ -38,7 +38,7 @@ import {createHaptics} from './haptics.js';
 import {creditsMarkup} from './credits-ui.js';
 import {hasSight} from './sight.js';
 import {createResultPortrait} from './result-portrait.js';
-import {createGameFX,smokeBombCloud,animateSmokeBomb,attachHazardTelegraph,animateHazardTelegraph,animateBananaHazard} from './game-fx.js';
+import {createGameFX,smokeBombCloud,animateSmokeBomb,disposeSmokeBomb,attachHazardTelegraph,animateHazardTelegraph,animateBananaHazard} from './game-fx.js';
 import {stageEndState,rollSpinDirection} from './action-state.js';
 import {renderResults} from './results-ui.js';
 import {createDetectionZone,hasDetectedThief} from './detection-zone.js';
@@ -400,7 +400,7 @@ async function loadArena(id){
 }
 function restoreMenuArena(){sunkenLook?.dispose();sunkenLook=null;restoreRemoteFurniture();furniturePhysics?.dispose();furniturePhysics=null;waterAnimation=null;matchRoot.rotation.set(0,0,0);matchRoot.position.set(0,0,0);shipAngle=0;sunlight.intensity=3;fill.intensity=1.2;hemisphere.intensity=2.4;mallFill.visible=false;renderer.toneMappingExposure=1.15;if(gameArena)gameArena.visible=false;if(menuArena){menuArena.visible=false;({ground,bounds,grid}=menuNavigation);}floor.position.y=-.3;floor.material.color.set(0x77768c);$('#world-markers').replaceChildren();}
 function prop(key,size=1){const source=templates[key];if(!source)return null;const object=clone(source.scene);const box=new THREE.Box3().setFromObject(object),scale=size/Math.max(.01,...box.getSize(new THREE.Vector3()).toArray());object.scale.multiplyScalar(scale);object.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(object),center=b.getCenter(new THREE.Vector3());object.position.add(new THREE.Vector3(-center.x,-b.min.y,-center.z));const root=new THREE.Group();root.add(object);return root;}
-function disposeHazard(h){disposePlayerMirage(h.mesh);h.mesh.removeFromParent();if(h.owned)h.mesh.traverse(o=>{if(o.isMesh){o.geometry.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});}
+function disposeHazard(h){disposePlayerMirage(h.mesh);disposeSmokeBomb(h.mesh);h.mesh.removeFromParent();if(h.owned)h.mesh.traverse(o=>{if(o.isMesh){o.geometry.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});}
 function withinSight(p,q,smoke=true,stop=.35){return hasSight(grid,p,q,hazards,smoke,stop);}
 function steerBot(a,target,dt){
  a.routeTime=(a.routeTime||0)-dt;const p=a.group.position;

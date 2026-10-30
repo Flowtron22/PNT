@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createSmokeNormalField} from './smoke-normals.js';
 import {BananaTrails} from './banana-trails.js';
 import {mergeGeometries,mergeVertices} from '../../vendor/three/jsm/utils/BufferGeometryUtils.js';
 import {displaceSmokeLobe} from './smoke-displacement.js';
@@ -34,8 +35,10 @@ export function animateSmokeBomb(root,dt){
  const data=cloud.userData.smokeBomb;data.time+=Math.min(dt,.1);const time=data.time;
  cloud.rotation.y=time*.14;
  cloud.children.forEach((puff,i)=>{const base=data.puffs[i],phase=time*.9+i*1.7;puff.position.copy(base.position);puff.position.x+=Math.sin(phase)*.16;puff.position.z+=Math.cos(phase*.83)*.16;puff.position.y+=Math.sin(phase*1.2)*.18;puff.scale.copy(base.scale).multiplyScalar(1+Math.sin(phase)*.12);puff.rotation.y+=dt*(i%2?-.22:.22);});
+ data.normalField.update();
 }
-export function smokeBombCloud(){const cloud=createToonSmoke(1.2,14);cloud.position.y=.9;cloud.userData.smokeBomb={time:0,puffs:cloud.children.map(puff=>({position:puff.position.clone(),scale:puff.scale.clone()}))};return cloud;}
+export function smokeBombCloud(){const cloud=createToonSmoke(1.2,14);cloud.position.y=.9;cloud.userData.smokeBomb={time:0,normalField:createSmokeNormalField(cloud),puffs:cloud.children.map(puff=>({position:puff.position.clone(),scale:puff.scale.clone()}))};return cloud;}
+export function disposeSmokeBomb(root){root.children.find(child=>child.userData.smokeBomb)?.userData.smokeBomb.normalField.dispose();}
 export function createGameFX(scene){
  const ring=new THREE.RingGeometry(.84,1,40),items=[],pool=[],MAX=100;
  const wonder=new WonderVFX(scene),bananaTrails=new BananaTrails(scene);
