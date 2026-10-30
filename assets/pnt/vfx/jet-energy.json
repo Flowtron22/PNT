@@ -1,0 +1,15 @@
+{
+  "generator": "tools/bake-jet-energy.py",
+  "reference": "https://www.artstation.com/artwork/lGJwnz",
+  "provenance": "Original procedural shapes inspired by the reference's energy accents; no source artwork extracted.",
+  "atlas": "jet-energy-flipbook.png",
+  "grid": [4, 4],
+  "frames": 16,
+  "cellPixels": 128,
+  "order": "left-to-right, top-to-bottom",
+  "channels": {"r": "torn thrust", "g": "expanding broken ring", "b": "ignition burst"},
+  "noise": "jet-energy-noise.png",
+  "noiseChannels": {"rg": "tileable UV flow vectors", "b": "erosion field"},
+  "colourSpace": "linear masks, not sRGB",
+  "runtime": "src/pnt/jet-energy.js"
+}

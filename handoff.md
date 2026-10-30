@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.76**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.77**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,27 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## MISFITZ-inspired jetpack energy — 30 October 2026
+
+0.9.77 adds a separate pink/violet energy layer to the existing jetpack exhaust.
+Smoke geometry, materials, cadence, size, lifetime and velocity are unchanged.
+The source reference is OCTOPO's Enemy 02 rocket GIF from MISFITZ Part I.
+Original assets are authored by tools/bake-jet-energy.py: a 512px 4x4 RGB-packed
+16-frame flipbook (R thrust, G broken ring, B ignition) and a 128px tileable RG
+flow/B erosion map. assets/pnt/vfx/jet-energy.json documents channel semantics.
+No reference artwork was extracted; no AI-generated assets are used here.
+The shader blends neighbouring frames, scrolls vector noise for UV distortion,
+erodes masks with age and colours the result with hot pink/violet/cyan accents.
+A bounded camera-facing batch also emits small square fragments. One extra draw
+call serves all four players; it has a separate 192-sprite allocation and cannot
+consume the existing smoke pool. No bloom/postprocessing or extra lights.
+Births follow the animated nozzle in transformed arenas. Capture/reduced motion,
+teleports, match cleanup and flight-end decay clear or retire the energy layer.
+Reduced motion retains the original smoke. Main passes the existing preference.
+Browser preview covers three real costumes and dark/light floors without shader
+errors; actual Mall training jetpack activation and menu cleanup also verified.
+Original Hammer/Banana loadout restored after the test. No Render server change.
 
 ## Shared smoke grenade normals — 30 October 2026
 
