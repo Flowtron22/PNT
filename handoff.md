@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.87**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.88**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,19 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Thief Urban camo — 30 October 2026
+
+0.9.88 replaces Thief Mint with Urban camo: black hood/shirt and grayscale
+camouflage trousers, following the supplied reference. Army camo stays as its
+own option. Saved Thief Mint migrates to Urban, preserving skin preference.
+The extra rest-space mask limits camo to trouser height .30–.735 and |x|<.37,
+protecting belt, gloves and boots. Trouser shading is normalized separately from
+the light shirt so the black source texture can produce readable white patches.
+Finer 3D noise layers create black/grey/white camo without texture/geometry copies.
+Ten targeted tests, syntax/build and browser visual/shader checks pass. Reload
+preserves the selection; preview restored to Original after checks. No errors.
+Capture: .local/costume-thief-urban.png. Client-only; Render remains 0.9.23.
 
 ## Matte Police eyes — 30 October 2026
 
