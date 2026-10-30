@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.81**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.82**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,21 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Translucent phone and tablet controls — 30 October 2026
+
+0.9.82 recreates the mobile controls with translucent blue movement, cyan
+Interact, coral tool 1 and mint tool 2 circles. Dedicated styles/touch-controls.css
+loads last and is included in the static build. Phone controls have minimums of
+140px movement base, 78px tools and 94px Interact; larger touch viewports grow to
+184/104/124px, with safe-area offsets. The saved joystick size still applies.
+Cooldown discs now use a 28% dark fill with readable white countdowns instead of
+opaque white. Existing floating joystick, multitouch and action handlers remain
+unchanged; no SDK dependency. Desktop keyboard layout and couch visibility stay
+under their existing rules. Browser layout checks at 844x390, 667x375 and 1180x820;
+tablet preview applies the touch rules explicitly because viewport resizing does
+not emulate coarse pointers. Physical iPhone/iPad Safari validation remains.
+Static build and whitespace checks pass. Client-only; Render remains 0.9.23.
 
 ## Defeat results narration — 30 October 2026
 

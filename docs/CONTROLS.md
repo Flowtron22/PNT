@@ -43,6 +43,17 @@ autoscroll are suppressed during play and capture, with normal menu behavior
 otherwise. Separate interaction owners prevent one device releasing another's
 held interaction. Pause, hidden tabs and blur clear all held input.
 
+## Touch
+
+Phone and tablet gameplay uses translucent circular controls. At default scale,
+phone minimum sizes are 140px for the joystick base, 78px for each tool and 94px
+for Interact. Larger touch screens grow those to at most 184/104/124px, with
+safe-area spacing. Settings → Controls still adjusts joystick size/sensitivity.
+Cooldown overlays also remain translucent so the arena stays visible.
+
+The floating joystick and each action track separate pointers: movement can
+continue while holding Interact or tapping a tool. Pause/blur clears held input.
+
 ## Verification
 
 `tests/pnt/controller.test.mjs` covers radial input, action edges, menu repeat,
