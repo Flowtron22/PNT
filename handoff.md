@@ -273,16 +273,15 @@ This is documentation only; the approved effect and app version are unchanged.
 
 ## Continue here
 
-Latest completed frontend: **0.9.79**, implementation commit **fc46d96** on main.
-Production: https://police-n-thief.vercel.app/ — WEB 0.9.79, hammer-gloss.js and
-the versioned 1024px atlas (?v=2) verified against source. Hammer's added floor
-contours now have four asymmetric layouts and independent pink/yellow masks,
-registration and timing. Directional wipes leave angular fragments. The original
-hammer components and other effects remain intact. Practical study updated.
-Client tests, syntax and build pass. Browser impact/breakup comparisons on dark,
-bright and tilted floors show no console errors. Evidence:
-.local/hammer-gloss-asymmetric-preview.png and .local/hammer-gloss-mask-breakup.png.
-No local preview server left running. Render stays **0.9.23 / movementVersion 7**,
+Latest completed frontend: **0.9.80**, implementation commit **dfd7993** on main.
+Production: https://police-n-thief.vercel.app/ — WEB 0.9.80, arena-appearance.js,
+sunken-look.js and main.js verified against source. All map PBR surfaces now
+use roughness .7 / metalness 0, including Mall menu and Sunken styled overrides.
+Roughness/metalness maps are cleared for consistent scalar settings. No new
+reflection pass or environment map. Build/syntax checks pass; automated suites
+and browser/VFX tests skipped at the user's request. User is content with the
+hammer shapes for now; do not continue VFX tuning/testing unless requested.
+No local preview server running. Render stays **0.9.23 / movementVersion 7**,
 deployed server commit **332f217** on codex/multiplayer-local. No server deployment
 needed; no pending implementation task.
 
