@@ -4,6 +4,15 @@ Project learning notes: observations from references, implementation ideas, and
 approved direction. These notes preserve context for later chats; they do not
 change model weights or automatically approve changes to existing effects.
 
+## How to use these studies
+
+The user prioritizes practical implementation: making textures, noise maps,
+flipbooks, materials and emitters. Reference summaries alone are insufficient.
+For each implemented effect, record the reproducible asset workflow, channel
+packing, shader operations, actual timing, integration and visual findings.
+Separate techniques we built and verified from guesses about reference source
+files. Use the approved jetpack implementation below as a practical example.
+
 ## Study 01 — Laser beam breakdown
 
 Reference: [VFX Breakdown Laser Beam](https://www.youtube.com/watch?v=Zf4skMYAPu4)
@@ -253,6 +262,114 @@ not universal rules attributed to Riot.
 8. Preserve PNT's approved chubby filled stars, narrow green strands and shared
    smoke normals. League's precise saturation limits, spell palettes and painted
    texture requirements are style-specific references, not automatic PNT rules.
+
+## Approved implementation — MISFITZ-inspired jetpack energy (0.9.77)
+
+User approved the deployed result on 30 October 2026: "nicely done".
+Implementation commit: `6a42649`. This approval covers the added energy layer;
+the existing smoke was explicitly preserved. Reference:
+[Enemy 02 rocket](https://cdnb.artstation.com/p/assets/images/images/099/641/893/original/octopo-vfx-studio-14-enemy-02-attack.gif?1780543830).
+
+### 1. Author the shape animation, then bake the atlas
+
+Source: `tools/bake-jet-energy.py`, using Python and Pillow. Run from the repo:
+
+```text
+python tools/bake-jet-energy.py
+```
+
+The generator draws original polygon masks at 3x resolution and downsamples for
+antialiasing. It authors shape changes across 16 frames, rather than just scaling
+one static sprite: thrust tongues sway and separate, gaps cut through their
+tails, broken ring segments expand, and the ignition burst hollows out.
+
+Output: `assets/pnt/vfx/jet-energy-flipbook.png`, 512x512, arranged 4x4 with
+128px cells, ordered left-to-right/top-to-bottom. Independent masks share RGB:
+
+| Channel | Authored animation | Runtime use |
+| --- | --- | --- |
+| R | Torn thrust with brighter internal regions | Directional pink exhaust tongue |
+| G | Uneven expanding arcs with deliberate gaps | Violet/pink/cyan pulse rings |
+| B | Angular burst breaking apart from its centre | Short ignition accent |
+
+These channels are data, not displayed colours. Multiple grey levels within the
+masks control the transition to the hot centre in the shader. Safe empty borders
+and UV inset prevent adjacent atlas cells from bleeding into each other.
+
+### 2. Bake independent flow and erosion noise
+
+Output: `assets/pnt/vfx/jet-energy-noise.png`, 128x128, from seeded periodic sine
+waves at multiple frequencies and amplitudes. Integer spatial frequencies make
+the pattern wrap. Independently seeded channels avoid identical X/Y motion.
+RG supplies UV offset vectors; B supplies the erosion field. Both PNGs are
+sampled as linear data. Noise repeats; atlas sampling stays inside each cell.
+Packing and provenance are recorded in `assets/pnt/vfx/jet-energy.json`.
+
+### 3. Combine them in the material
+
+Runtime: `src/pnt/jet-energy.js`. Each sprite carries normalized age and kind.
+
+1. Sample noise at `uv * 1.6 + time * (0.18, -0.63)`.
+2. Offset the shape UV by `(noise.rg - 0.5) * 0.045`.
+3. Map age to atlas frame `age * 15`; blend the two neighbouring frames. Flip
+   the atlas row index to account for texture-coordinate orientation.
+4. Select the packed channel by sprite kind.
+5. During the last 45% of life, raise a threshold against noise B to erode the
+   mask. This gives spatial breakup in addition to the baked shape evolution.
+6. Fade in over the first 8% and fade out over the final 38% of life. Discard
+   alpha below 0.035. Mix the saturated colour towards pale pink-white in the
+   strongest mask regions. Output in the renderer's colour space.
+
+Material uses normal alpha blending, depth testing and no depth writing.
+No bloom, additional lights or scene-wide colour changes are needed for this
+approved result. Pixel fragments use simple filled quads in the same batch;
+they bypass the atlas but share lifetime fading and palette treatment.
+
+### 4. Emit from the animated nozzle
+
+| Layer | Lifetime | Movement/shape |
+| --- | --- | --- |
+| Ignition | 0.24s | One expanding burst on emitter start |
+| Thrust | 0.26s | Travels at 2.6 units/s along exhaust axis; elongated 2.1x |
+| Ring | 0.36s | Expands and rotates while drifting along exhaust axis |
+| Pixels | 0.30-0.52s | Three per emission group, varied sizes and scatter |
+
+The scheduler ticks every 0.065s and emits a group every second tick: approximately
+one thrust, one ring and three pixels per 0.13s, plus the initial ignition.
+Birth positions interpolate between sampled nozzle positions. Thrust is offset
+0.66 units along the nozzle exhaust axis so the unchanged smoke does not hide it.
+Billboards face the camera; the thrust's long axis follows the projected exhaust
+direction. Parent transforms are accounted for, including tilted arenas.
+
+Runtime `size` is a quad half-extent, not its full width. Full quad width is twice
+that value before age scaling; the visible mask occupies less than the quad.
+When tuning thickness, distinguish geometry width, painted mask coverage,
+elongation, emission density and lifetime: they change different parts of the read.
+
+### 5. Preserve the base effect and validate the addition
+
+The energy uses a separate fixed 192-sprite batch, adding one draw call for all
+players. It cannot evict particles from the original smoke pool. Smoke geometry,
+materials, emission cadence, size, lifetime and velocity were not retuned.
+Reduced motion and capture clear the added energy; flight end lets it expire.
+Teleports discard old owner particles, and match cleanup resets the pool.
+
+Browser validation covered three actual costumes, dark/light preview floors,
+reduced motion, Mall training activation and returning to the menu. No shader or
+console errors were observed. Automated checks cover transformed nozzle placement,
+frame-rate cadence, four-player allocation, staggered atlas ages and cleanup.
+These checks do not establish physical mobile-device performance.
+Preview evidence: `.local/jet-energy-preview.png`.
+
+### What the visual iteration taught us
+
+The first thrust was mostly hidden by the smoke. Moving it into the exhaust path
+revealed it without modifying the smoke. Too many overlapping tongues formed a
+dense mass; fewer, shorter tongues retained the energy while making each shape
+readable. Broader pixel scatter separated small accents from the smoke cluster.
+The accepted result combines authored shape evolution, subtle texture distortion,
+erosion and discrete accents. Preserve it as a baseline, not a requirement to
+reuse this palette or recipe for every future effect.
 
 ## Approved project technique — grenade smoke
 

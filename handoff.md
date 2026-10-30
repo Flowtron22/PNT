@@ -210,6 +210,13 @@ accurate footprints, value/colour, shapes and timing, plus derived PNT rules.
 Embedded motion examples were not played. The ignored study PDF is saved at
 .local/riot-vfx-styleguide-2017.pdf. No game changes or version bump.
 
+The user approved the 0.9.77 jetpack additions ("nicely done") and requested an
+updated VFX study. docs/VFX_STUDY.md now records the implemented asset generator,
+packed channels, periodic noise, shader sequence, emitter timings, size semantics,
+iteration findings and validation limits. Its opening workflow explicitly
+prioritizes practical texture/flipbook/material methods over theory-only summaries.
+This is documentation only; the approved effect and app version are unchanged.
+
 ## Continue here
 
 Latest completed frontend: **0.9.77**, implementation commit **6a42649** on main.
