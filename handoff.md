@@ -65,7 +65,10 @@ capacity derives from lifetime / 60 Hz interval plus two samples (64 per strip),
 so the longer tail is not truncated by the previous 26-sample cap. One shared mesh
 and draw call remain; capture, reduced-motion and match cleanup still clear it.
 Targeted trail regressions, syntax and build pass. Frontend only; server remains
-0.9.23 / movementVersion 7. Deployment verification pending for purple tuning.
+0.9.23 / movementVersion 7. Implemented in commit 430ff65 and pushed to main. Live HTML reports WEB 0.9.73;
+banana-trails.js matches the verified purple/2x-width/1.02-second source.
+Browser preview has no shader errors. Screenshot: .local/banana-purple-trails-preview.png.
+No local preview server left running.
 
 ## Banana spin light trails — 30 October 2026
 
@@ -114,11 +117,11 @@ No local preview server was left running.
 
 ## Continue here
 
-Latest completed frontend: **0.9.72**, implementation commit **c17b975** on main.
-Production: https://police-n-thief.vercel.app/ — live HTML and all changed VFX
-modules verified against source. Render stays **0.9.23 / movementVersion 7**,
-deployed server commit **332f217** on codex/multiplayer-local. Banana spin ribbon
-trails are implemented and deployed; no pending implementation task.
+Latest completed frontend: **0.9.73**, implementation commit **430ff65** on main.
+Production: https://police-n-thief.vercel.app/ — live HTML and purple banana trail
+module verified against source. Render stays **0.9.23 / movementVersion 7**,
+deployed server commit **332f217** on codex/multiplayer-local. Banana trails are
+vibrant purple, twice as wide and three times longer lived; no pending task.
 
 Reference project inspected: `F:/PROJECTS/JORAN/inkwave-main/inkwave-main`.
 Its full-window renderer, shared CSS unit, anchored panels and measured free-space
