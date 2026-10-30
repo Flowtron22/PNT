@@ -258,15 +258,15 @@ This is documentation only; the approved effect and app version are unchanged.
 
 ## Continue here
 
-Latest completed frontend: **0.9.78**, implementation commit **da4cbb7** on main.
-Production: https://police-n-thief.vercel.app/ — WEB 0.9.78, hammer-gloss.js,
-game-fx.js, main.js and hammer-gloss-flipbook.png verified against local source.
-The original hammer smash remains; a separate Gloss-inspired layer adds hollow
-pink/yellow petals, translucent green fans and rising four-point sparkles.
-Client tests, syntax and build pass. Browser comparison covers actual animated
-thief/held hammer, impact/dissipation, dark/light floors and tilted arena without
-console errors. Screenshot: .local/hammer-gloss-preview.png. Practical workflow
-recorded in docs/VFX_STUDY.md as an implementation trial awaiting user feedback.
+Latest completed frontend: **0.9.79**, implementation commit **fc46d96** on main.
+Production: https://police-n-thief.vercel.app/ — WEB 0.9.79, hammer-gloss.js and
+the versioned 1024px atlas (?v=2) verified against source. Hammer's added floor
+contours now have four asymmetric layouts and independent pink/yellow masks,
+registration and timing. Directional wipes leave angular fragments. The original
+hammer components and other effects remain intact. Practical study updated.
+Client tests, syntax and build pass. Browser impact/breakup comparisons on dark,
+bright and tilted floors show no console errors. Evidence:
+.local/hammer-gloss-asymmetric-preview.png and .local/hammer-gloss-mask-breakup.png.
 No local preview server left running. Render stays **0.9.23 / movementVersion 7**,
 deployed server commit **332f217** on codex/multiplayer-local. No server deployment
 needed; no pending implementation task.
