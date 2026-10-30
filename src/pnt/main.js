@@ -1,4 +1,5 @@
 import {menuPreviewFrame} from './viewport.js';
+import {COLOR_COSTUMES,OUTFIT_COLORS,SKIN_COLORS,loadCostumeAppearances,saveCostumeAppearances,applyCostumeAppearance} from './costume-appearance.js';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {clone} from 'three/addons/utils/SkeletonUtils.js';
@@ -81,7 +82,7 @@ const loader=new GLTFLoader(),cache=new Map();
 const gameFX=createGameFX(matchRoot);
 
 let ready=false,role='runner',quality=settings.quality;
-let oyenAppearance=loadOyenAppearance(localStorage);
+let oyenAppearance=loadOyenAppearance(localStorage),costumeAppearances=loadCostumeAppearances(localStorage);
 let costume=normalizeCostume(localStorage.getItem('pnt-costume'));
 let loadout=normalizeLoadout(localStorage.getItem('pnt-loadout'),localStorage.getItem('pnt-tool')),selectedTool=loadout[0];
 let round=null,avatars=[],preview=null,previewClip='idle',previewTime=0,templates={},clips={},ground=[],bounds=null,grid=null;
@@ -275,7 +276,7 @@ function renderTools(){
  for(const slot of [0,1])$('#equip-slot'+(slot+1)).onclick=()=>{loadout=equipTool(loadout,selectedTool,slot);localStorage.setItem('pnt-loadout',JSON.stringify(loadout));labels();renderTools();};
  $('#preview-tool').onclick=()=>demo(selected.clip);
 }
-function openPage(name){if(busy)return;bindingCapture=null;settingsPage=null;activePage=name;ui.menu.classList.toggle('oyen-customizing',name==='costume'&&costume==='oyen');if(preview)preview.group.visible=!['play','online','join','credits','settings'].includes(name);$('#page-back').textContent=returnToLobby?'← LOBBY':'← BACK';ui.menu.dataset.page=name;$('#home').hidden=name!=='home';$('#home-widgets').hidden=name!=='home';$('#page').hidden=name==='home';$('#page').scrollTop=0;if(name==='home'){labels();previewClip='idle';previewTime=0;if(preview)preview.anim.play('idle');return;}
+function openPage(name){if(busy)return;bindingCapture=null;settingsPage=null;activePage=name;ui.menu.classList.toggle('oyen-customizing',name==='costume'&&(costume==='oyen'||COLOR_COSTUMES.includes(costume)));if(preview)preview.group.visible=!['play','online','join','credits','settings'].includes(name);$('#page-back').textContent=returnToLobby?'← LOBBY':'← BACK';ui.menu.dataset.page=name;$('#home').hidden=name!=='home';$('#home-widgets').hidden=name!=='home';$('#page').hidden=name==='home';$('#page').scrollTop=0;if(name==='home'){labels();previewClip='idle';previewTime=0;if(preview)preview.anim.play('idle');return;}
  $('#page-title').textContent={play:'LET’S PLAY',online:'SOLO ONLINE',join:'JOIN THE CHASE',tools:'TOOLS OF THE TRADE',costume:'YOUR LOOK',settings:'SETTINGS',credits:'CREDIT'}[name];
  $('#page-kicker').hidden=true;
  $('#page-kicker').textContent={play:'GATHER THE CREW',join:'FIND YOUR CREW',tools:'A LITTLE HELP FOR YOUR GETAWAY',costume:'LOOK GOOD. RUN FAST.',settings:'MAKE YOURSELF COMFORTABLE',credits:'MADE FOR A LITTLE TROUBLE'}[name];
@@ -293,7 +294,7 @@ function openPage(name){if(busy)return;bindingCapture=null;settingsPage=null;act
   renderTools();
  }else if(name==='costume'){
   content.innerHTML=`<section id="oyen-options"></section><div class="wardrobe-grid">${COSTUMES.map(c=>choice(c.id,c.name,c.id===costume?'EQUIPPED':'',c.id===costume,'<img src="assets/pnt/portraits/'+c.id+'.png" alt="">')).join('')}</div><button id="costume-dance" class="secondary">SHOW YOUR MOVES</button>`;
-  for(const b of content.querySelectorAll('[data-choice]'))b.onclick=()=>selectCostume(b.dataset.choice);$('#costume-dance').onclick=()=>demo('dance');renderOyenOptions();
+  for(const b of content.querySelectorAll('[data-choice]'))b.onclick=()=>selectCostume(b.dataset.choice);$('#costume-dance').onclick=()=>demo('dance');renderCostumeOptions();
  }else if(name==='settings'){
   settingsPage=mountSettings(content,{getSettings:()=>settings,onChange:changeSetting,hapticsSupported:haptics.supported||controller.supported,
    bindingsMarkup:'<div id="key-binding-list"></div><button id="reset-bindings" class="secondary">RESET KEY MAPPING</button><p id="binding-status" role="status"></p>',
@@ -318,15 +319,24 @@ function renderBindingSettings(){
  const list=$('#key-binding-list');if(!list)return;list.replaceChildren(...Object.entries(BINDING_LABELS).map(([action,label])=>{const button=document.createElement('button');button.className='binding-button';button.innerHTML='<span>'+label+'</span><span>'+(bindingCapture===action?'KEY / MOUSE…':bindingMarkup(bindings[action]))+'</span>';button.onclick=()=>{bindingCapture=action;clearInput();renderBindingSettings();$('#binding-status').textContent='Press a key or left, right or middle mouse button. Escape cancels.';};return button;}));
  $('#binding-status').textContent='';
 }
-function renderOyenOptions(){
- const host=$('#oyen-options');if(!host)return;ui.menu.classList.toggle('oyen-customizing',costume==='oyen');host.hidden=costume!=='oyen';if(host.hidden){host.replaceChildren();return;}
+function renderCostumeOptions(){
+ const host=$('#oyen-options');if(!host)return;ui.menu.classList.toggle('oyen-customizing',costume==='oyen'||COLOR_COSTUMES.includes(costume));host.hidden=costume!=='oyen'&&!COLOR_COSTUMES.includes(costume);if(host.hidden){host.replaceChildren();return;}
+ if(COLOR_COSTUMES.includes(costume)){
+  const appearance=costumeAppearances[costume],original={thief:'#eeeeee',police:'#2465ee',pingu:'#2465ee',raptor:'#89ae3e'}[costume];
+  host.innerHTML=`<div class="oyen-variants"><h2>${costume.toUpperCase()} OUTFIT</h2><div class="oyen-coats">${OUTFIT_COLORS.map(c=>`<button class="oyen-swatch outfit-swatch" data-outfit="${c.id}" aria-pressed="${appearance.outfit===c.id}" style="--outfit-color:${c.color||original}"><i aria-hidden="true"></i><span>${c.name}</span></button>`).join('')}</div><div class="oyen-faces"><span>FACE</span>${SKIN_COLORS.map(c=>`<button class="face-swatch" data-skin="${c.id}" aria-label="${c.name}" aria-pressed="${appearance.skin===c.id}" style="--face-color:${c.color}"><i aria-hidden="true"></i></button>`).join('')}</div></div>`;
+  for(const button of host.querySelectorAll('button'))button.onclick=()=>{
+   costumeAppearances[costume]={...costumeAppearances[costume],...(button.dataset.outfit?{outfit:button.dataset.outfit}:{skin:button.dataset.skin})};
+   saveCostumeAppearances(localStorage,costumeAppearances);previewModel();renderCostumeOptions();
+  };
+  return;
+ }
  host.innerHTML=`<div class="oyen-variants"><h2>OYEN COAT</h2><div class="oyen-coats">${OYEN_COATS.map(c=>`<button class="oyen-swatch coat-${c.id}" data-coat="${c.id}" aria-pressed="${oyenAppearance.coat===c.id}"><i aria-hidden="true"></i><span>${c.name}</span></button>`).join('')}</div><div class="oyen-faces"><span>FACE</span>${OYEN_SKINS.map(c=>`<button class="face-swatch" data-skin="${c.id}" aria-label="${c.name}" aria-pressed="${oyenAppearance.skin===c.id}" style="--face-color:${c.color}"><i aria-hidden="true"></i></button>`).join('')}</div></div>`;
  for(const button of host.querySelectorAll('button'))button.onclick=()=>{oyenAppearance={...oyenAppearance,...(button.dataset.coat?{coat:button.dataset.coat}:{skin:button.dataset.skin})};saveOyenAppearance(localStorage,oyenAppearance);previewModel();for(const b of host.querySelectorAll('button'))b.setAttribute('aria-pressed',String(b.dataset.coat?b.dataset.coat===oyenAppearance.coat:b.dataset.skin===oyenAppearance.skin));};
 }
 function refreshCostumeSelection(){
  const panel=$('#page'),scrollTop=panel.scrollTop;
  for(const button of panel.querySelectorAll('.wardrobe-grid [data-choice]')){const equipped=button.dataset.choice===costume;button.classList.toggle('selected',equipped);button.classList.toggle('is-on',equipped);button.setAttribute('aria-pressed',String(equipped));button.querySelector('small').textContent=equipped?'EQUIPPED':'';}
- renderOyenOptions();panel.scrollTop=scrollTop;
+ renderCostumeOptions();panel.scrollTop=scrollTop;
 }
 async function selectCostume(id){if(id===costume)return;const previous=costume;costume=id;beginLoading('DRESSING FOR TROUBLE');try{await ensureCostume();progress(90,'Preparing your character…');previewModel();await renderer.compileAsync(scene,menuCamera);localStorage.setItem('pnt-costume',costume);endLoading();refreshCostumeSelection();}catch(error){costume=previous;loadError(error,()=>selectCostume(id));}}
 for(const b of document.querySelectorAll('[data-page]'))b.onclick=()=>openPage(b.dataset.page);
@@ -438,7 +448,8 @@ function avatar(template,id,actorRole){
  const model=clone(template.scene),group=new THREE.Group();model.updateMatrixWorld(true);
  let box=new THREE.Box3().setFromObject(model),height=box.max.y-box.min.y;model.scale.multiplyScalar(1.55/height);model.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(model);const center=box.getCenter(new THREE.Vector3());model.position.add(new THREE.Vector3(-center.x,-box.min.y,-center.z));group.add(model);(round?matchRoot:scene).add(group);group.position.copy(spot((id-1.5)*2.7,id%2?4:-3));
  model.traverse(o=>{if(o.isMesh){o.frustumCulled=false;for(const m of Array.isArray(o.material)?o.material:[o.material])if(m)m.roughness=Math.max(.55,m.roughness||0);}});
- const appearance=id===0&&template===templates.oyen?applyOyenAppearance(model,oyenAppearance):null;
+ const appearanceCostume=id===0?Object.keys(templates).find(key=>templates[key]===template):null;
+ const appearance=appearanceCostume==='oyen'?applyOyenAppearance(model,oyenAppearance):COLOR_COSTUMES.includes(appearanceCostume)?applyCostumeAppearance(model,appearanceCostume,costumeAppearances[appearanceCostume]):null;
  const captureTint=createCaptureTint(model);sunkenLook?.register(model);
  const jetpackRig={model,group};prepareJetpackMount(jetpackRig);
  const anim=makeAnimator(model,clips,actorRole);
@@ -523,7 +534,7 @@ function refreshOnlineRematch(){
 }
 function showFinalResults(){
  const won=round.winner===round.playerRole;if(!round.profileRecorded){profile=recordMatch(readProfile(localStorage),{id:round.profileId,won});saveProfile(localStorage,profile);round.profileRecorded=true;labels();}
-  gameAudio.results(round,won);const resultCostume=room?.mode==='couch'?room.players[0].costume:costume;show('results');renderResults(ui.results,{round,won,profile,costume:resultCostume,players:room?.players||[],map:mapData?.id||'mall',sounds:uiEffects.sounds,onAgain:online?()=>online.control('rematch'):room?.mode==='couch'?couchRematch:start,onMenu:menu,reduced,online:!!online,couch:room?.mode==='couch',playOutcome:false});try{resultPortrait=createResultPortrait(ui.results.querySelector('.result-character-host'),templates[resultCostume],clips,won,resultCostume==='oyen'?model=>applyOyenAppearance(model,oyenAppearance):null);}catch(error){console.warn('Character portrait could not be rendered',error);}if(room?.mode==='couch'){$('#result-title').textContent=round.winner==='chaser'?'POLICE WIN!':'THIEVES WIN!';$('#again').textContent='BACK TO COUCH LOBBY';}refreshOnlineRematch();
+  gameAudio.results(round,won);const resultCostume=room?.mode==='couch'?room.players[0].costume:costume;show('results');renderResults(ui.results,{round,won,profile,costume:resultCostume,players:room?.players||[],map:mapData?.id||'mall',sounds:uiEffects.sounds,onAgain:online?()=>online.control('rematch'):room?.mode==='couch'?couchRematch:start,onMenu:menu,reduced,online:!!online,couch:room?.mode==='couch',playOutcome:false});try{resultPortrait=createResultPortrait(ui.results.querySelector('.result-character-host'),templates[resultCostume],clips,won,resultCostume==='oyen'?model=>applyOyenAppearance(model,oyenAppearance):COLOR_COSTUMES.includes(resultCostume)?model=>applyCostumeAppearance(model,resultCostume,costumeAppearances[resultCostume]):null);}catch(error){console.warn('Character portrait could not be rendered',error);}if(room?.mode==='couch'){$('#result-title').textContent=round.winner==='chaser'?'POLICE WIN!':'THIEVES WIN!';$('#again').textContent='BACK TO COUCH LOBBY';}refreshOnlineRematch();
 }
 
 function updateHud(){

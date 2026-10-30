@@ -128,3 +128,5 @@ body.menu-view #lobby-backdrop{z-index:0}body.menu-view .menu-backdrop{z-index:1
 .world-marker.police-badge{width:33.6px;height:36.8px;padding:0;border:0;border-radius:0;background:none;box-shadow:none;overflow:hidden;pointer-events:none}.police-badge-art{display:block;width:84px;height:92px;overflow:hidden;transform:scale(.4);transform-origin:top left}.police-badge-art>img{display:block;width:596px;height:187px;max-width:none;transform:translate(-1px,-94px);filter:none}
 
 @media(max-height:500px) and (orientation:landscape){.world-marker.police-badge{width:25.2px;height:27.6px}.police-badge-art{transform:scale(.3)}}
+
+.oyen-swatch.outfit-swatch i{background:var(--outfit-color)}

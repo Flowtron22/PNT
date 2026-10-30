@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.84**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.85**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,28 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Four additional costume colour controls — 30 October 2026
+
+0.9.85 adds Original/Midnight/Mint/Violet outfits and the two Oyen-style face
+colours to Thief, Police, Pingu and Raptor only. costume-appearance.js has explicit
+material routing and colour masks: Thief hood/light vest, Police blue uniform,
+Pingu blue feathers and Raptor green scales. Black accessories, Police gold,
+Pingu red overalls/yellow beak, Raptor belly/spikes/teeth and eye whites/pupils
+remain protected. Source texture shading and Raptor spots are retained.
+Preferences save separately under pnt-costume-appearances-v1. No source GLB edits,
+new textures or geometry copies; changed materials are per-avatar and disposed.
+Applied to local avatar (preview/game) and animated results portrait. As with
+Oyen, choices are local to this device/player and are not transmitted to remote
+players; multiplayer appearance synchronization is not implemented in this release.
+Racer/Pumpkin/Boney/Purple get no controls or rendering changes; Oyen remains.
+Nine targeted tests pass including actual GLB material isolation, capture tint
+composition, safe persistence and existing Oyen behaviour. Syntax/build pass.
+Browser inspected all four recolours, dark faces, reload persistence, excluded
+Racer and 844x390 layout; no shader/console errors. Local preview settings restored.
+Captures: .local/costume-thief-mint.png, .local/costume-police-violet.png,
+.local/costume-pingu-mint.png, .local/costume-raptor-violet.png and
+.local/costume-raptor-phone.png. Client-only; Render remains 0.9.23.
 
 ## Installed app update notice — 30 October 2026
 
