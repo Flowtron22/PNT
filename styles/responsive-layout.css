@@ -26,7 +26,7 @@
 #menu.screen:is([data-page=tools],[data-page=costume]) .page-panel{left:calc(var(--u)*3.6);right:auto;top:calc(var(--u)*3);bottom:calc(var(--u)*5);width:min(calc(var(--u)*52),54vw);padding-right:calc(var(--u)*1)}
 #menu.screen:is([data-page=tools],[data-page=costume]) h1{font-size:max(26px,calc(var(--u)*3));margin-bottom:calc(var(--u)*1.2)}
 #hud .hud-top{margin:max(env(safe-area-inset-top,0px),calc(var(--u)*1.4)) calc(var(--u)*1.6) 0}
-#hud .timer{transform:translateX(-50%);font-size:max(18px,calc(var(--u)*2.1));padding:calc(var(--u)*.65) calc(var(--u)*1.7);border-width:max(1px,calc(var(--u)*.18));border-radius:calc(var(--u)*1)}
+#hud .timer{transform:translateX(-50%) scale(var(--hud-scale,1));font-size:max(18px,calc(var(--u)*2.1));padding:calc(var(--u)*.65) calc(var(--u)*1.7);border-width:max(1px,calc(var(--u)*.18));border-radius:calc(var(--u)*1)}
 #hud .money-status{top:calc(max(env(safe-area-inset-top,0px),var(--u)*1.4) + max(34px,var(--u)*3.9) + var(--u)*.3);font-size:max(9px,calc(var(--u)*.8));padding:calc(var(--u)*.35) calc(var(--u)*.75);border-width:max(1px,calc(var(--u)*.12))}
 #hud .role-tag{font-size:max(11px,calc(var(--u)*1.25));min-width:max(75px,calc(var(--u)*8.75));padding:calc(var(--u)*.75) calc(var(--u)*1.1);border-width:max(1px,calc(var(--u)*.18))}
 #hud .crew-status{top:calc(var(--u)*6.2);left:calc(var(--u)*1.6)}

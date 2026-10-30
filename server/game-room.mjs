@@ -8,7 +8,7 @@ const name=value=>typeof value==='string'?value.trim().replace(/[\u0000-\u001f]/
 const preference=value=>['none','chaser','runner'].includes(value)?value:'none';
 export class GameRoom extends Room {
  async onCreate(options){
-  this.roomId=Array.from(randomBytes(6),b=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b%32]).join('');this.maxClients=4;this.maxMessagesPerSecond=90;this.players=[];this.phase='waiting';this.map=0;this.host=null;this.sim=null;this.public=options.public===true;this.countdown=0;this.accumulator=0;this.publishTime=0;
+  this.roomId=Array.from(randomBytes(6),b=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b%32]).join('');this.maxClients=4;this.maxMessagesPerSecond=90;this.players=[];this.phase='waiting';this.map=0;this.host=null;this.sim=null;this.loadRevision=0;this.public=options.public===true;this.countdown=0;this.accumulator=0;this.publishTime=0;
   await this.setMetadata({public:this.public,map:MAPS[this.map]});await this.setPrivate(!this.public);this.seatReservationTimeout=60;
   this.onMessage('hello',client=>{this.sendLobby(client);if(this.sim&&this.phase!=='loading')client.send('snapshot',this.sim.snapshot());});
   this.onMessage('input',(client,payload)=>{const id=this.players.findIndex(p=>p.sessionId===client.sessionId);if(this.phase==='playing'&&payload&&typeof payload==='object')this.sim.input(id,payload);});
@@ -46,11 +46,20 @@ export class GameRoom extends Room {
   this.sendLobby();
  }
  async loadMatch(){
-  if(this.phase!=='countdown')return;this.phase='loading';await this.lock();for(const p of this.players)p.ready=p.bot;this.sendLobby();
-  try{this.sim?.dispose();this.sim=await MatchSimulation.create(MAPS[this.map],this.players);if(this.phase!=='loading'){this.sim.dispose();this.sim=null;return;}this.loadDeadline=Date.now()+60000;this.sendLobby();this.tryPlay();}catch(error){console.error('Match preparation failed:',error);this.abortLoading('The server could not prepare this map. Please try again.');}
+  if(this.phase!=='countdown')return;
+  const revision=++this.loadRevision;this.phase='loading';this.loadDeadline=Date.now()+60000;
+  const current=()=>this.loadRevision===revision&&this.phase==='loading';
+  try{
+   await this.lock();if(!current())return;
+   this.sim?.dispose();this.sim=null;for(const p of this.players)p.ready=p.bot;this.sendLobby();
+   const prepared=await MatchSimulation.create(MAPS[this.map],this.players);
+   // An aborted attempt may complete after a newer load has already started.
+   if(!current()){prepared.dispose();return;}
+   this.sim=prepared;this.sendLobby();this.tryPlay();
+  }catch(error){if(!current())return;console.error('Match preparation failed:',error);this.abortLoading('The server could not prepare this map. Please try again.');}
  }
  tryPlay(){if(this.phase==='loading'&&this.sim&&this.players.every(p=>p.ready)){startCountdown(this.sim.round);this.phase='playing';this.accumulator=0;this.sendLobby();this.broadcast('snapshot',this.sim.snapshot());}}
- abortLoading(message){this.phase='waiting';this.loadDeadline=0;this.sim?.dispose();this.sim=null;this.unlock();this.broadcast('notice',{message});this.sendLobby();}
+ abortLoading(message){this.loadRevision++;this.phase='waiting';this.loadDeadline=0;this.sim?.dispose();this.sim=null;this.unlock();this.broadcast('notice',{message});this.sendLobby();}
  update(dt){
   if(this.phase==='countdown'){this.countdown=Math.max(0,this.countdown-dt);if(this.countdown<=0){void this.loadMatch();return;}this.publishTime+=dt;if(this.publishTime>.2){this.publishTime=0;this.sendLobby();}return;}
   if(this.phase==='loading'){if(this.loadDeadline&&Date.now()>this.loadDeadline)this.abortLoading('Loading timed out. Please start again.');return;}
@@ -59,5 +68,5 @@ export class GameRoom extends Room {
   this.publishTime+=dt;if(this.publishTime>=.05||this.sim.round.phase==='finished'){this.publishTime=0;this.broadcast('snapshot',this.sim.snapshot());}
   if(this.sim.round.phase==='finished'){this.phase='finished';this.sendLobby();}
  }
- onDispose(){this.sim?.dispose();}
+ onDispose(){this.loadRevision++;this.sim?.dispose();this.sim=null;}
 }

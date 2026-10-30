@@ -216,7 +216,7 @@ function refreshOnlineLobby(){
 async function receiveOnlineLobby(data){
  if(!online)return;room=data;
  if(data.phase==='loading'){if(data.match&&!onlineLoading&&!round)void beginOnlineMatch(data.match);else if(!busy&&!round)beginLoading('PREPARING THE ONLINE MATCH');return;}
- if(['playing','finished'].includes(data.phase)){if(round&&!onlineLoading&&busy){endLoading();show('hud');}return;}
+ if(['playing','finished'].includes(data.phase)){if(round&&!onlineLoading&&busy){endLoading();show('hud');}if(data.phase==='finished')refreshOnlineRematch();return;}
  if(data.phase==='waiting'&&(round||onlineLoading)){onlineRevision++;onlineLoading=false;clearStageVerdict();resultPortrait?.dispose();resultPortrait=null;clearHazards();for(const a of avatars)destroy(a);avatars=[];round=null;restoreMenuArena();}
  const revision=onlineRevision,signature=data.players.map(p=>[p.sessionId,p.costume,p.bot].join(':')).join('|');
  try{await ensureRoster();if(!online||room!==data||revision!==onlineRevision||!['waiting','countdown'].includes(room.phase))return;if(signature!==onlineRoster){buildLobbyDisplays();onlineRoster=signature;}refreshOnlineLobby();if(!returnToLobby){show('lobby');endLoading();}}
@@ -409,7 +409,7 @@ function steerBot(a,target,dt){
 }
 function interactionTarget(id){
  const a=avatars[id],state=round.actors[id];if(!a||state.role!=='runner')return null;const p=a.group.position;
- const teammate=round.actors.filter(t=>t.id!==id&&t.caught&&(t.rescuer===null||t.rescuer===id||!canActRule(round,t.rescuer))).map(t=>({type:'rescue',target:t,position:avatars[t.id].group.position})).filter(t=>p.distanceTo(t.position)<INTERACT_RADIUS&&withinSight(p,t.position,false,1.1)).sort((a,b)=>p.distanceToSquared(a.position)-p.distanceToSquared(b.position))[0];if(teammate)return teammate;
+ const teammate=round.actors.filter(t=>t.id!==id&&t.caught&&t.releaseCooldown<=0&&(t.rescuer===null||t.rescuer===id||!canActRule(round,t.rescuer))).map(t=>({type:'rescue',target:t,position:avatars[t.id].group.position})).filter(t=>p.distanceTo(t.position)<INTERACT_RADIUS&&withinSight(p,t.position,false,1.1)).sort((a,b)=>p.distanceToSquared(a.position)-p.distanceToSquared(b.position))[0];if(teammate)return teammate;
  if(round.actors[id].inSmoke)return null;return round.caches.filter(c=>c.remaining>0).map(c=>({type:'money',target:c,position:new THREE.Vector3(...c.position)})).filter(t=>Math.hypot(p.x-t.position.x,p.z-t.position.z)<INTERACT_RADIUS&&Math.abs(p.y-t.position.y)<2&&withinSight(p,t.position,false,1.1)).sort((a,b)=>p.distanceToSquared(a.position)-p.distanceToSquared(b.position))[0]||null;
 }
 function performInteraction(id,target,dt){
@@ -518,9 +518,12 @@ function tickStageVerdict(elapsed){
  if(!round?.endStarted||round.resultsShown||document.hidden)return;round.endElapsed+=Math.min(elapsed,1);const view=stageEndState(round.endElapsed);$('#round-fade').style.opacity=String(view.fade);for(const a of avatars)a.anim.update(Math.min(elapsed,.1));gameFX.update(Math.min(elapsed,.1));
  if(view.ready){round.resultsShown=true;clearStageVerdict();showFinalResults();}
 }
+function refreshOnlineRematch(){
+ if(!online||ui.results.hidden)return;const button=$('#again');button.disabled=!room.canHost;button.textContent=room.canHost?'ONE MORE CHASE →':'WAITING FOR HOST';
+}
 function showFinalResults(){
  const won=round.winner===round.playerRole;if(!round.profileRecorded){profile=recordMatch(readProfile(localStorage),{id:round.profileId,won});saveProfile(localStorage,profile);round.profileRecorded=true;labels();}
-  const resultCostume=room?.mode==='couch'?room.players[0].costume:costume;show('results');renderResults(ui.results,{round,won,profile,costume:resultCostume,players:room?.players||[],map:mapData?.id||'mall',sounds:uiEffects.sounds,onAgain:online?()=>online.control('rematch'):room?.mode==='couch'?couchRematch:start,onMenu:menu,reduced,online:!!online,couch:room?.mode==='couch',playOutcome:false});try{resultPortrait=createResultPortrait(ui.results.querySelector('.result-character-host'),templates[resultCostume],clips,won,resultCostume==='oyen'?model=>applyOyenAppearance(model,oyenAppearance):null);}catch(error){console.warn('Character portrait could not be rendered',error);}if(room?.mode==='couch'){$('#result-title').textContent=round.winner==='chaser'?'POLICE WIN!':'THIEVES WIN!';$('#again').textContent='BACK TO COUCH LOBBY';}if(online&&!room.canHost){$('#again').textContent='WAITING FOR HOST';$('#again').disabled=true;}
+  const resultCostume=room?.mode==='couch'?room.players[0].costume:costume;show('results');renderResults(ui.results,{round,won,profile,costume:resultCostume,players:room?.players||[],map:mapData?.id||'mall',sounds:uiEffects.sounds,onAgain:online?()=>online.control('rematch'):room?.mode==='couch'?couchRematch:start,onMenu:menu,reduced,online:!!online,couch:room?.mode==='couch',playOutcome:false});try{resultPortrait=createResultPortrait(ui.results.querySelector('.result-character-host'),templates[resultCostume],clips,won,resultCostume==='oyen'?model=>applyOyenAppearance(model,oyenAppearance):null);}catch(error){console.warn('Character portrait could not be rendered',error);}if(room?.mode==='couch'){$('#result-title').textContent=round.winner==='chaser'?'POLICE WIN!':'THIEVES WIN!';$('#again').textContent='BACK TO COUCH LOBBY';}refreshOnlineRematch();
 }
 
 function updateHud(){

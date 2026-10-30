@@ -1,9 +1,11 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.69**, online multiplayer test release. Server: **0.9.21**.
+Current app version: **0.9.70**, online multiplayer test release. Server source: **0.9.22**.
 
-**Current user instruction: deploy multiplayer for a free online test on Render.**
+**Current state: the requested Inkwave-style responsive layout is complete and live.**
+The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
+Multiplayer remains hosted for a free online test on Render.
 Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
 `codex/multiplayer-local`, endpoint `https://pnt-multiplayer.onrender.com`.
 Vercel's build command injects that public endpoint; local development still
@@ -36,7 +38,42 @@ per the latest user instruction; server stays on 0.9.11.
 Sunken/Iceberg lobby previews now use the user-supplied JPGs converted to WebP
 at original dimensions; the preview URL is versioned to avoid stale asset caches.
 
+## Code review fixes — 30 October 2026
+
+0.9.70 / server 0.9.22 fixes the four confirmed review findings. Server map
+preparation uses a load revision checked after locking and preparation; aborted,
+timed-out or disposed attempts cannot publish over a newer match, and stale
+results are disposed. Stale failures cannot abort the active load. The 60-second
+deadline now covers preparation as well as client readiness. Results refresh
+rematch eligibility when host ownership changes. Local/couch rescue targeting
+excludes cooldown-locked teammates, allowing nearby cache stealing just as online.
+Responsive timer styling preserves the saved HUD scale. Movement protocol stays 7.
+Client/server suites, syntax and build pass. New regressions exercise actual room
+and UI handlers, overlapping completion orders, stale failure/disposal/timeout,
+host promotion/demotion and stealing-to-rescue transition at cooldown expiry.
+Release deployment status is recorded below after publishing.
+
 ## Continue here
+
+Latest completed frontend: **0.9.69**, commit **303a52f** on `main`.
+Production: https://police-n-thief.vercel.app/ — Vercel deployment was verified
+successful, live HTML reports WEB 0.9.69, the responsive stylesheet returns 200,
+and the page no longer contains the fixed game-frame wrapper. Render is unchanged:
+**0.9.21 / movementVersion 7**, last deployed server commit **3b037b9** on
+`codex/multiplayer-local`. No pending implementation request at this handoff.
+
+Reference project inspected: `F:/PROJECTS/JORAN/inkwave-main/inkwave-main`.
+Its full-window renderer, shared CSS unit, anchored panels and measured free-space
+showcase framing informed this implementation. Adapt the approach to PNT rather
+than copying its engine. Fullscreen layouts can show different scene widths at
+different aspect ratios; this is intentional. Browser viewport checks are not
+physical iPad/Safari verification; await the user's device feedback.
+
+Working tree was clean before this handoff-only edit. No local development server
+was left running. Diagnostic screenshots below are ignored local files. Preserve
+the user's preference to omit routine automated-test counts from chat updates.
+For future releases update index.html's visible version and package versions;
+verify the live Vercel version after pushing. No game.html exists now.
 
 0.9.69 reverts the rejected fixed 16:9 letterboxed layout and adopts Inkwave's
 full-screen layout approach. index.html once again contains the game directly;
@@ -59,7 +96,8 @@ All 211 client checks, syntax and build pass. Frontend-only deployment.
 The 0.9.68 shell release instructions below are obsolete: update index.html and
 package versions normally. There is no game.html or fixed logical canvas now.
 
-0.9.68 implements the user's chosen universal 16:9 view with borders. index.html
+Historical, rejected and superseded by 0.9.69: 0.9.68 implemented a universal
+16:9 view with borders. index.html
 is now a same-origin shell, and game.html contains the original full game markup.
 The shell sizes a 1600x900 logical iframe to fit the available safe-area viewport,
 centred with letterboxing/pillarboxing. This fixes both camera aspect and CSS
@@ -79,7 +117,7 @@ layout-ipad-1024x768.png, layout-phone-932x430.png,
 layout-desktop-1280x720.png and layout-ipad-gameplay.png. This is browser size
 verification, not physical Safari/iPad hardware testing. All 211 tests, syntax
 checks and build pass. Frontend-only; Render remains 0.9.21 / movementVersion 7.
-IMPORTANT for future releases: update game.html's visible WEB version as well as
+OBSOLETE instructions for 0.9.68 only: update game.html's visible WEB version as well as
 index.html's pnt-version metadata and iframe ?v= version, plus package versions.
 Keep the 1600x900 design basis fixed; resize only the outer frame and pixel ratio.
 
