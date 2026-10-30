@@ -5,6 +5,7 @@ import {readFileSync} from 'node:fs';
 import * as THREE from '../../vendor/three/build/three.module.js';
 registerHooks({resolve(s,c,next){return s==='three'?{url:new URL('../../vendor/three/build/three.module.js',import.meta.url).href,shortCircuit:true}:next(s,c);}});
 const {BananaTrails}=await import('../../src/pnt/banana-trails.js');
+const {BananaSprites}=await import('../../src/pnt/banana-sprites.js');
 const {createGameFX}=await import('../../src/pnt/game-fx.js');
 const {makeAnimator}=await import('../../src/pnt/animation.js');
 const {GLTFLoader}=await import('../../vendor/three/jsm/loaders/GLTFLoader.js');
@@ -19,8 +20,25 @@ test('banana spin creates tapered bright ribbons from moving hand bones, with no
  for(let i=0;i<45;i++){pose(a,i/60);fx.actor(a,state,1/60);fx.update(1/60,camera);}
  assert.equal(fx.mesh.visible,true);assert.equal(fx.geometry,geometry);assert.equal(fx.material,material);assert.equal(fx.geometry.getAttribute('position').array,positions);assert.ok([...positions].every(Number.isFinite));assert.equal(material.depthWrite,false);assert.equal(material.depthTest,true);assert.equal(material.blending,THREE.NormalBlending);
  assert.ok(geometry.getAttribute('fade').array.some(value=>value>.9));assert.ok(geometry.getAttribute('fade').array.some(value=>value>0&&value<.4));
+ const band=geometry.getAttribute('position'),thickness=new THREE.Vector3().fromBufferAttribute(band,0).distanceTo(new THREE.Vector3().fromBufferAttribute(band,1));assert.ok(thickness>.75&&thickness<1,'band spans approximately half the normalized character height');
  const slot=fx.slots.find(s=>s.actor===a),head=slot.strands[0].points[slot.strands[0].head].p;root.updateMatrixWorld(true);assert.ok(head.distanceTo(root.worldToLocal(a.hands[0].getWorldPosition(new THREE.Vector3())))<.015);
  fx.actor(a,{...state,effectTime:0},1/60);for(let i=0;i<24;i++)fx.update(1/60,camera);assert.equal(fx.mesh.visible,true,'the extended tail persists beyond the previous .34-second life');for(let i=0;i<44;i++)fx.update(1/60,camera);assert.equal(fx.mesh.visible,false);assert.equal(fx.geometry.drawRange.count,0);assert.ok(fx.slots.every(s=>s.actor===null));
+});
+
+test('cartoon stars and occasional glitch shapes stay opaque, varied and bounded across four players',()=>{
+ const root=new THREE.Group(),fx=new BananaSprites(root),actors=Array.from({length:4},(_,i)=>actor(root,i)),geometry=fx.geometry,material=fx.material,positions=geometry.getAttribute('position').array,camera=new THREE.PerspectiveCamera();camera.position.set(-4,6,8);
+ const kinds=new Set(),sizes=new Set(),colors=new Set();
+ for(let frame=0;frame<240;frame++){for(const a of actors){pose(a,frame/60);fx.actor(a,state,1/60);}fx.update(1/60,camera);for(const p of fx.items)if(p.life>0){kinds.add(p.kind);sizes.add(p.size);colors.add(p.color.getHex());}assert.ok(fx.items.filter(p=>p.life>0).length<=32);}
+ assert.deepEqual([...kinds].sort(),[0,1]);assert.ok(sizes.size>3);assert.ok(colors.size>2);assert.equal(material.transparent,false);assert.equal(material.opacity,1);assert.equal(material.depthWrite,true);assert.equal(fx.geometry,geometry);assert.equal(fx.material,material);assert.equal(fx.geometry.getAttribute('position').array,positions);assert.ok([...positions].every(Number.isFinite));assert.ok(geometry.drawRange.count<=positions.length/3);
+ for(const a of actors)fx.actor(a,{...state,effectTime:0},1/60);for(let i=0;i<45;i++)fx.update(1/60,camera);assert.equal(fx.mesh.visible,false);assert.ok(fx.items.every(p=>p.owner===null));
+});
+
+test('sprite cleanup suppresses capture/reduced motion and clears old positions on teleport',()=>{
+ const root=new THREE.Group(),fx=new BananaSprites(root),a=actor(root);fx.actor(a,state,1/60);fx.update(1/60);assert.equal(fx.mesh.visible,true);
+ fx.actor(a,{...state,caught:true},1/60);fx.update(1/60);assert.equal(fx.mesh.visible,false);
+ fx.actor(a,state,1/60,{reduced:true});fx.update(1/60);assert.equal(fx.mesh.visible,false);
+ fx.actor(a,state,1/60);a.group.position.x=20;fx.actor(a,state,1/60);fx.update(1/60);assert.ok(fx.items.filter(p=>p.life>0).every(p=>p.p.x>18));
+ fx.clear();assert.equal(fx.mesh.visible,false);assert.equal(fx.geometry.drawRange.count,0);assert.ok(fx.items.every(p=>p.life===0&&p.owner===null));
 });
 
 test('map tilt does not offset the hand anchors and teleports never connect distant ribbon histories',()=>{

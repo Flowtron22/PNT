@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.73**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.74**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,24 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Thick cartoon banana bands — 30 October 2026
+
+0.9.74 makes each ribbon a broad .9-unit band, visually about half of a normalized
+1.55-unit character's height. Physical thickness stays broad through the first
+65% of the trail, with taper confined to its tail; age fades opacity instead of
+shrinking the width. Purple palette, 1.02-second lifetime and orbit radius remain.
+New banana-sprites.js adds random varied-size opaque rounded five-point stars
+with dark outlines, plus occasional stepped pixel/glitch strips. Both shapes
+share one vertex-colour batch with a fixed 32-particle pool; stars pop/shrink
+rather than alpha-fading. Local/couch/online share the existing banana animation
+path. Sprite anchors and camera-facing quads compensate map tilt; capture,
+reduced motion, teleport and match cleanup clear both effects. Ribbon + sprites
+use at most two draw calls total for four players, without textures/lights/bloom.
+All client checks, syntax and build pass. Browser actual-costume preview has no
+shader errors and shows the expected two draws; Reduced Motion removes both.
+Screenshot: .local/banana-cartoon-spin-preview.png. Frontend only; server stays
+0.9.23 / movementVersion 7. Deployment verification pending for cartoon bands.
 
 ## Purple banana trail tuning — 30 October 2026
 

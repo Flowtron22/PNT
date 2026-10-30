@@ -1,11 +1,12 @@
 import * as THREE from 'three';
+import {BananaSprites} from './banana-sprites.js';
 
 const PLAYERS=4,STRANDS=2,STEP=1/60,LIFE=.34*3,SAMPLES=Math.ceil(LIFE/STEP)+2;
 // Hand-mounted ribbons share one small dynamic mesh. History lives in map-local
 // space, so moving/spinning avatars leave a trail rather than dragging a ring.
 export class BananaTrails{
  constructor(root){
-  this.root=root;this.slots=Array.from({length:PLAYERS},()=>({actor:null,active:false,next:0,hands:[],strands:Array.from({length:STRANDS},()=>({head:0,count:0,previous:new THREE.Vector3(),current:new THREE.Vector3(),points:Array.from({length:SAMPLES},()=>({p:new THREE.Vector3(),age:0}))}))}));
+  this.root=root;this.sprites=new BananaSprites(root);this.slots=Array.from({length:PLAYERS},()=>({actor:null,active:false,next:0,hands:[],strands:Array.from({length:STRANDS},()=>({head:0,count:0,previous:new THREE.Vector3(),current:new THREE.Vector3(),points:Array.from({length:SAMPLES},()=>({p:new THREE.Vector3(),age:0}))}))}));
   this.geometry=new THREE.BufferGeometry();
   for(const [name,size]of [['position',3],['uv',2],['fade',1],['strand',1]])this.geometry.setAttribute(name,new THREE.BufferAttribute(new Float32Array(PLAYERS*STRANDS*SAMPLES*2*size),size).setUsage(THREE.DynamicDrawUsage));
   const indices=[];for(let strip=0;strip<PLAYERS*STRANDS;strip++)for(let i=0;i<SAMPLES-1;i++){const a=(strip*SAMPLES+i)*2;indices.push(a,a+1,a+2,a+2,a+1,a+3);}this.geometry.setIndex(indices);this.geometry.setDrawRange(0,0);
@@ -16,7 +17,7 @@ export class BananaTrails{
     void main(){
      float ripple=sin(vUv.x*23.0-time*19.0+vStrand*2.0)*0.13*sin(vUv.x*3.141593);
      float across=abs((vUv.y-0.5)*2.0+ripple);
-     float edge=1.0-smoothstep(0.4,1.0,across);
+     float edge=1.0-smoothstep(0.78,1.0,across);
      float core=1.0-smoothstep(0.06,0.34,across);
      vec3 purple=mix(vec3(0.12,0.002,0.65),vec3(0.42,0.008,1.0),1.0-vUv.x);
      vec3 color=mix(purple,vec3(0.66,0.10,1.0),core*0.9);
@@ -30,6 +31,7 @@ export class BananaTrails{
  reset(slot){slot.actor=null;slot.active=false;slot.next=0;slot.hands.length=0;for(const strand of slot.strands)strand.count=0;}
  push(strand,p,age=0){strand.head=(strand.head+1)%SAMPLES;const point=strand.points[strand.head];point.p.copy(p);point.age=age;strand.count=Math.min(SAMPLES,strand.count+1);}
  actor(actor,state,dt,{reduced=false}={}){
+  this.sprites.actor(actor,state,dt,{reduced});
   let slot=this.slots.find(s=>s.actor===actor);
   const active=state.effect==='banana'&&state.effectTime>0&&!state.caught&&!(state.captureRemaining>0);
   if(reduced||state.caught||state.captureRemaining>0){if(slot)this.reset(slot);return;}
@@ -48,6 +50,7 @@ export class BananaTrails{
   for(const strand of slot.strands)strand.previous.copy(strand.current);
  }
  update(dt,camera){
+  this.sprites.update(dt,camera);
   const elapsed=Number.isFinite(dt)?Math.max(0,Math.min(.1,dt)):0;this.material.uniforms.time.value=(this.material.uniforms.time.value+elapsed)%1000;
   this.root.updateWorldMatrix(true,false);this.inverse.copy(this.root.matrixWorld).invert();if(camera)camera.getWorldPosition(this.camera).applyMatrix4(this.inverse);else this.camera.set(0,5,10);
   const positions=this.geometry.getAttribute('position'),uv=this.geometry.getAttribute('uv'),fade=this.geometry.getAttribute('fade'),strands=this.geometry.getAttribute('strand');let strip=0;
@@ -60,12 +63,14 @@ export class BananaTrails{
      const index=Math.min(i,strand.count-1),point=pointAt(index),u=index/(strand.count-1),strength=i<strand.count?THREE.MathUtils.clamp(1-point.age/LIFE,0,1):0;
      this.tangent.subVectors(pointAt(Math.max(0,index-1)).p,pointAt(Math.min(strand.count-1,index+1)).p);this.view.subVectors(this.camera,point.p);this.side.crossVectors(this.tangent,this.view);
      if(this.side.lengthSq()<1e-10)this.side.set(0,1,0);else this.side.normalize();
-     const width=2*(.055+Math.sin(u*Math.PI)*.11)*Math.pow(1-u,.55)*strength;
+     // A broad .9-unit band reads as about half the 1.55-unit avatar height.
+     // Age fades opacity; only the final third tapers the physical thickness.
+     const width=.45*(1-THREE.MathUtils.smoothstep(u,.65,1));
      for(let edge=0;edge<2;edge++){const n=(strip*SAMPLES+i)*2+edge,sign=edge?1:-1;positions.setXYZ(n,point.p.x+this.side.x*width*sign,point.p.y+this.side.y*width*sign,point.p.z+this.side.z*width*sign);uv.setXY(n,u,edge);fade.setX(n,strength);strands.setX(n,k);}
     }strip++;
    }if(!alive)this.reset(slot);
   }
   for(const attribute of [positions,uv,fade,strands])attribute.needsUpdate=true;this.geometry.setDrawRange(0,strip*(SAMPLES-1)*6);this.mesh.visible=strip>0;
  }
- clear(){for(const slot of this.slots)this.reset(slot);this.geometry.setDrawRange(0,0);this.mesh.visible=false;}
+ clear(){this.sprites.clear();for(const slot of this.slots)this.reset(slot);this.geometry.setDrawRange(0,0);this.mesh.visible=false;}
 }
