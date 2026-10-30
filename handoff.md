@@ -167,6 +167,17 @@ match local source copies). Render manual deployment succeeded; /health reports
 0.9.23 / movementVersion 7. Screenshot: .local/audio-0.9.71-deployed.png.
 No local preview server was left running.
 
+## VFX reference learning — 30 October 2026
+
+The user is teaching VFX art direction through references. First reference:
+https://www.youtube.com/watch?v=Zf4skMYAPu4 (VFX Breakdown Laser Beam).
+Observations and implementation lessons are recorded in docs/VFX_STUDY.md.
+The opening and sampled labelled layers were inspected; browser use then became
+disabled in Work settings. A complete motion/timing review is still outstanding.
+Do not claim exact curves, original shader wiring or full frame-by-frame viewing.
+No game effects or versions changed during this study. Continue recording future
+references with observed evidence separated from proposed implementation.
+
 ## Continue here
 
 Latest completed frontend: **0.9.76**, implementation commit **a4ff03f** on main.
