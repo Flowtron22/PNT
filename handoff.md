@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.70**, online multiplayer test release. Server source: **0.9.22**.
+Current app version: **0.9.70**, online multiplayer test release. Server: **0.9.22**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -51,16 +51,19 @@ Responsive timer styling preserves the saved HUD scale. Movement protocol stays 
 Client/server suites, syntax and build pass. New regressions exercise actual room
 and UI handlers, overlapping completion orders, stale failure/disposal/timeout,
 host promotion/demotion and stealing-to-rescue transition at cooldown expiry.
-Release deployment status is recorded below after publishing.
+Committed as 3c6ebc7 and pushed to main and codex/multiplayer-local. Vercel
+serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
+and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
+timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
+Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
 
 ## Continue here
 
-Latest completed frontend: **0.9.69**, commit **303a52f** on `main`.
-Production: https://police-n-thief.vercel.app/ — Vercel deployment was verified
-successful, live HTML reports WEB 0.9.69, the responsive stylesheet returns 200,
-and the page no longer contains the fixed game-frame wrapper. Render is unchanged:
-**0.9.21 / movementVersion 7**, last deployed server commit **3b037b9** on
-`codex/multiplayer-local`. No pending implementation request at this handoff.
+Latest completed frontend: **0.9.70**, implementation commit **3c6ebc7** on main.
+Production: https://police-n-thief.vercel.app/ — live HTML, updated main.js,
+responsive timer CSS and production network endpoint verified. Render is live at
+**0.9.22 / movementVersion 7**, deployed commit **3c6ebc7** on
+codex/multiplayer-local. All four code-review fixes are complete; no pending task.
 
 Reference project inspected: `F:/PROJECTS/JORAN/inkwave-main/inkwave-main`.
 Its full-window renderer, shared CSS unit, anchored panels and measured free-space
@@ -69,7 +72,7 @@ than copying its engine. Fullscreen layouts can show different scene widths at
 different aspect ratios; this is intentional. Browser viewport checks are not
 physical iPad/Safari verification; await the user's device feedback.
 
-Working tree was clean before this handoff-only edit. No local development server
+Implementation and handoff changes are committed. No local development server
 was left running. Diagnostic screenshots below are ignored local files. Preserve
 the user's preference to omit routine automated-test counts from chat updates.
 For future releases update index.html's visible version and package versions;
