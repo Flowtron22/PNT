@@ -72,7 +72,11 @@ samples cap resources. Regression checks 30/60/144 FPS, map tilt, teleport clean
 reduced motion, integration and all nine actual costumes in their banana pose.
 Client suite, syntax and build pass. Browser actual-costume preview has no shader
 errors. Frontend only: Render remains 0.9.23 / movementVersion 7.
-Deployment verification pending for the banana trail release.
+Implemented in commit c17b975, pushed to main. Vercel live HTML reports WEB 0.9.72;
+banana-trails.js, game-fx.js and main.js match the verified source. Browser preview
+shows orange-red flowing ribbons with bright yellow cores, and Reduced Motion
+removes the extra draw call. Screenshot: .local/banana-spin-trails-preview.png.
+No preview server was left running.
 
 ## Supplied announcer audio — 30 October 2026
 
@@ -100,11 +104,11 @@ No local preview server was left running.
 
 ## Continue here
 
-Latest completed frontend: **0.9.71**, implementation commit **332f217** on main.
-Production: https://police-n-thief.vercel.app/ — live HTML, updated game-audio.js
-and all nine supplied WAVs verified. Render is live at **0.9.23 / movementVersion 7**,
-deployed commit **332f217** on codex/multiplayer-local. The supplied announcer and
-B2B teleport audio are implemented and deployed; no pending implementation task.
+Latest completed frontend: **0.9.72**, implementation commit **c17b975** on main.
+Production: https://police-n-thief.vercel.app/ — live HTML and all changed VFX
+modules verified against source. Render stays **0.9.23 / movementVersion 7**,
+deployed server commit **332f217** on codex/multiplayer-local. Banana spin ribbon
+trails are implemented and deployed; no pending implementation task.
 
 Reference project inspected: `F:/PROJECTS/JORAN/inkwave-main/inkwave-main`.
 Its full-window renderer, shared CSS unit, anchored panels and measured free-space
