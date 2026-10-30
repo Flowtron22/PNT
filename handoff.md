@@ -75,7 +75,9 @@ reserved GLSL identifier caught and corrected before release. Fresh verification
 tab has no console/shader errors. Preview choices restored.
 Captures: .local/costume-police-security.png, .local/costume-police-khaki.png,
 .local/costume-pingu-red.png and .local/costume-thief-army.png.
-Client-only; Render stays 0.9.23. Local appearance synchronization limit remains.
+Committed as da44ef0 and pushed to main. Live Vercel confirms WEB/release.json
+0.9.86 and exact built appearance module. Client-only; Render stays 0.9.23.
+Local appearance synchronization limit remains.
 
 ## Four additional costume colour controls — 30 October 2026
 
