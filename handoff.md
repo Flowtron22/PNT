@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.72**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.73**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,16 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Purple banana trail tuning — 30 October 2026
+
+0.9.73 changes banana trails to vibrant purple with a brighter violet core,
+doubles their width and triples the lifetime from .34 to 1.02 seconds. History
+capacity derives from lifetime / 60 Hz interval plus two samples (64 per strip),
+so the longer tail is not truncated by the previous 26-sample cap. One shared mesh
+and draw call remain; capture, reduced-motion and match cleanup still clear it.
+Targeted trail regressions, syntax and build pass. Frontend only; server remains
+0.9.23 / movementVersion 7. Deployment verification pending for purple tuning.
 
 ## Banana spin light trails — 30 October 2026
 

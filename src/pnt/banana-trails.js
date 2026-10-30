@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const PLAYERS=4,STRANDS=2,SAMPLES=26,STEP=1/60,LIFE=.34;
+const PLAYERS=4,STRANDS=2,STEP=1/60,LIFE=.34*3,SAMPLES=Math.ceil(LIFE/STEP)+2;
 // Hand-mounted ribbons share one small dynamic mesh. History lives in map-local
 // space, so moving/spinning avatars leave a trail rather than dragging a ring.
 export class BananaTrails{
@@ -18,8 +18,8 @@ export class BananaTrails{
      float across=abs((vUv.y-0.5)*2.0+ripple);
      float edge=1.0-smoothstep(0.4,1.0,across);
      float core=1.0-smoothstep(0.06,0.34,across);
-     vec3 warm=mix(vec3(1.0,0.008,0.001),vec3(1.0,0.25,0.015),1.0-vUv.x);
-     vec3 color=mix(warm,vec3(1.0,1.0,0.55),core*0.9);
+     vec3 purple=mix(vec3(0.12,0.002,0.65),vec3(0.42,0.008,1.0),1.0-vUv.x);
+     vec3 color=mix(purple,vec3(0.66,0.10,1.0),core*0.9);
      float alpha=edge*vFade*0.95;if(alpha<0.008)discard;
      gl_FragColor=vec4(color,alpha);
      #include <colorspace_fragment>
@@ -60,7 +60,7 @@ export class BananaTrails{
      const index=Math.min(i,strand.count-1),point=pointAt(index),u=index/(strand.count-1),strength=i<strand.count?THREE.MathUtils.clamp(1-point.age/LIFE,0,1):0;
      this.tangent.subVectors(pointAt(Math.max(0,index-1)).p,pointAt(Math.min(strand.count-1,index+1)).p);this.view.subVectors(this.camera,point.p);this.side.crossVectors(this.tangent,this.view);
      if(this.side.lengthSq()<1e-10)this.side.set(0,1,0);else this.side.normalize();
-     const width=(.055+Math.sin(u*Math.PI)*.11)*Math.pow(1-u,.55)*strength;
+     const width=2*(.055+Math.sin(u*Math.PI)*.11)*Math.pow(1-u,.55)*strength;
      for(let edge=0;edge<2;edge++){const n=(strip*SAMPLES+i)*2+edge,sign=edge?1:-1;positions.setXYZ(n,point.p.x+this.side.x*width*sign,point.p.y+this.side.y*width*sign,point.p.z+this.side.z*width*sign);uv.setXY(n,u,edge);fade.setX(n,strength);strands.setX(n,k);}
     }strip++;
    }if(!alive)this.reset(slot);
