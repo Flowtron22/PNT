@@ -73,7 +73,9 @@ use at most two draw calls total for four players, without textures/lights/bloom
 All client checks, syntax and build pass. Browser actual-costume preview has no
 shader errors and shows the expected two draws; Reduced Motion removes both.
 Screenshot: .local/banana-cartoon-spin-preview.png. Frontend only; server stays
-0.9.23 / movementVersion 7. Deployment verification pending for cartoon bands.
+0.9.23 / movementVersion 7. Implemented in commit f591e28 and pushed to main. Live HTML reports WEB 0.9.74;
+banana-trails.js and banana-sprites.js match verified source. No local preview
+server left running.
 
 ## Purple banana trail tuning — 30 October 2026
 
@@ -135,11 +137,11 @@ No local preview server was left running.
 
 ## Continue here
 
-Latest completed frontend: **0.9.73**, implementation commit **430ff65** on main.
-Production: https://police-n-thief.vercel.app/ — live HTML and purple banana trail
-module verified against source. Render stays **0.9.23 / movementVersion 7**,
-deployed server commit **332f217** on codex/multiplayer-local. Banana trails are
-vibrant purple, twice as wide and three times longer lived; no pending task.
+Latest completed frontend: **0.9.74**, implementation commit **f591e28** on main.
+Production: https://police-n-thief.vercel.app/ — live HTML and both banana VFX
+modules verified against source. Render stays **0.9.23 / movementVersion 7**,
+deployed server commit **332f217** on codex/multiplayer-local. Banana spin now uses
+thick purple bands, opaque rounded stars and occasional glitch sprites; no pending task.
 
 Reference project inspected: `F:/PROJECTS/JORAN/inkwave-main/inkwave-main`.
 Its full-window renderer, shared CSS unit, anchored panels and measured free-space
