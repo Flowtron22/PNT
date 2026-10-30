@@ -175,7 +175,11 @@ Observations and implementation lessons are recorded in docs/VFX_STUDY.md.
 The opening and sampled labelled layers were inspected; browser use then became
 disabled in Work settings. A complete motion/timing review is still outstanding.
 Do not claim exact curves, original shader wiring or full frame-by-frame viewing.
-No game effects or versions changed during this study. Continue recording future
+Browser access recovered after the app restart. Study 02 now covers the full
+MISFITZ Part I gallery at https://www.artstation.com/artwork/lGJwnz: 24 animated
+examples and concept panels inspected. See docs/VFX_STUDY.md for observations,
+explicit concept notes and proposed PNT techniques. Exact timings/shaders were
+not measured. No game effects or versions changed during these studies. Continue recording future
 references with observed evidence separated from proposed implementation.
 
 ## Continue here

@@ -95,6 +95,84 @@ frames around buildup, release and shutdown. Confirm which layers lead or lag,
 which motions converge or spread, and how the beam disappears. Until then, do
 not assign reference-derived timings or claim specific easing curves.
 
+## Study 02 — MISFITZ: VFX Part I
+
+Reference: [MISFITZ - VFX: Part I](https://www.artstation.com/artwork/lGJwnz),
+OCTOPO VFX Studio, collaborating with Antihero Studios. Studied 30 October 2026.
+Page credits: art direction Felix Vivier, VFX direction SOL, VFX art Mean,
+Eren and Jay. Software listed: Unity, After Effects, Photoshop and Blender.
+
+### Evidence and limits
+
+Browser access recovered after the app restart. Went through the full gallery of
+24 animated images, sampling their displayed frames and accompanying concept
+panels. Beat's special was also inspected at its original displayed size. This
+is an art-direction study, not an inspection of source assets or shader graphs.
+Exact durations, animation curves, render settings and implementation methods
+were not measured. A concept panel states intent; it is not proof that every
+detail was reproduced identically in the gameplay panel.
+
+### Observations across the gallery
+
+| Examples | Visible design | Useful lesson |
+| --- | --- | --- |
+| Beat attack/special | Sound-wave curves, angular yellow/cyan shapes, musical notes, dark circular accents and a radial special around the speaker | Secondary shapes reinforce the ability's theme |
+| Drip attack/special | Lime liquid with a strong pink edge, separated droplets and irregular persistent puddles | Distinct silhouettes make liquid read without realistic fluid simulation |
+| Gloss attack/special | Pink capsule projectile; heart/heal and star/hit motifs; a larger green/pink radial special | Shape symbols help distinguish the outcomes as well as the colours |
+| Ray special | Bright yellow/white beam, orange/red outer band, dark edging, sharp accents and comic lettering at the source | A controlled bright centre and clear outer shape keep the beam readable |
+| Rush attack/special | Multiple spinning projectiles; a directional dash treatment, sharp cyan/yellow/orange shapes and ground marks | Flying objects, character movement and residual marks each have a separate role |
+| Shade attack/special | Narrow magenta projectile, yellow/pink angular hit and a separate circular special projectile with pale trailing shapes | Travel, hit and active state use related but different silhouettes |
+| Enemy 01/02 | Separate muzzle, projectile, trail and hit/explosion concepts; repeated purple/magenta energy, rings and square fragments | Build an attack as a coordinated sequence rather than one generic burst |
+| Enemy 03 | Explicit warning-start and warning-loop concepts before an explosion | The warning state deserves its own designed visual language |
+| Enemy 04/05 | Drone energy projectile; melee crescent with angular hit accents | Match effect geometry to the action's path and direction |
+| Golden Goose | Small yellow accents and a displayed sequence of step-dust shapes | Movement detail can be economical and specific to the character |
+| Charger miniboss | Broad attack crescent and a directional charge path with chevrons and streaks | Communicate swept space and travel direction with the large shape |
+| Worldboss | Flamethrower with hollow/broken purple shapes, circular sword slash, missile trail and a distinct explosion | Preserve differences between continuous fire, a sweep and a travelling attack |
+| Death/spawn/down/team-up | Ground rings/arrows, angular character-centred bursts, coloured bands and a large hand symbol | Important state changes need distinct visual identities |
+
+Two notes are explicit in the concept panels: Ray's comic lettering dissolves
+over the laser's lifetime; Rush's ground residue disappears after a short time.
+The flamethrower and Golden Goose panels also display sequences of individual
+shapes. These are useful shape-animation references, but they do not establish
+whether the shipped implementation uses flipbooks, meshes or another method.
+
+### Art direction to carry into PNT
+
+1. **Design the flat silhouette first.** Filled splashes, crescents, wedges and
+   stars remain legible at the gameplay camera distance. Soft glow can support
+   these shapes without replacing their edges.
+2. **Separate a dominant fill from its supporting edge.** Drip's lime/pink and
+   Ray's bright centre/outer band are clear examples. This is a reference
+   technique, not permission to outline every PNT sprite: the user explicitly
+   requested unoutlined, chubby banana stars.
+3. **Use a consistent vocabulary within an effect family.** Musical shapes for
+   Beat, liquid for Drip and repeated purple/square motifs for enemies make
+   related effects feel connected. Avoid unrelated decorative particles added
+   only to increase activity.
+4. **Preserve negative space.** Broken crescents, holes in fire shapes, separated
+   droplets and sparse fragments keep effects from becoming solid visual blocks.
+   More screen coverage is not automatically a better result.
+5. **Give action and aftermath separate lives.** Projectile travel, contact flash,
+   lingering area and final residue serve different purposes. Author their
+   lifetimes and disappearance independently; do not just fade the whole effect
+   uniformly. Exact reference curves remain unmeasured.
+6. **Use the ground deliberately.** Puddles, rings and dash residue communicate
+   location and affected area. Keep decorative expansion distinct from the
+   gameplay footprint so it does not misrepresent collision or range.
+7. **Review at game scale.** This page pairs concept art with gameplay. Follow
+   that practice: compare the planned large shape, accent colour and disappearance
+   against the actual PNT camera, arena colours and multiple-player overlap.
+
+### Proposed implementation options, not observed source techniques
+
+Use ribbons for action-following arcs; shaped meshes or alpha-masked cards for
+filled bursts; reusable sprite sequences for designed shape changes; ground
+planes/decals for residual marks; and instanced accents for droplets or fragments.
+Erosion masks are one option for patterned disappearance. Choose based on the
+desired silhouette and measured cost, not an assumption that the reference used
+the same technique. Start with a readable primary shape, then add only supporting
+layers. Existing approved PNT effects remain unchanged by this study.
+
 ## Approved project technique — grenade smoke
 
 Overlapping puff meshes use one cloud-space ellipsoid normal field and one grey
