@@ -239,17 +239,18 @@ This is documentation only; the approved effect and app version are unchanged.
 
 ## Continue here
 
-Latest completed frontend: **0.9.77**, implementation commit **6a42649** on main.
-Production: https://police-n-thief.vercel.app/ — WEB 0.9.77, jet-energy.js,
-game-fx.js, main.js and both new PNGs verified against local source.
-Jetpack smoke is unchanged; a separate packed flipbook/noise shader adds vibrant
-pink/violet thrust, broken rings and pixel fragments inspired by MISFITZ Enemy 02.
-Tests, syntax and build pass. Browser checks cover real costumes, bright/dark
-floors, reduced motion and actual Mall training activation/menu cleanup without
-console errors. Original Hammer/Banana loadout restored. Preview screenshot:
-.local/jet-energy-preview.png. No local preview server left running.
-Render stays **0.9.23 / movementVersion 7**, deployed server commit **332f217**
-on codex/multiplayer-local. No server deployment needed; no pending task.
+Latest completed frontend: **0.9.78**, implementation commit **da4cbb7** on main.
+Production: https://police-n-thief.vercel.app/ — WEB 0.9.78, hammer-gloss.js,
+game-fx.js, main.js and hammer-gloss-flipbook.png verified against local source.
+The original hammer smash remains; a separate Gloss-inspired layer adds hollow
+pink/yellow petals, translucent green fans and rising four-point sparkles.
+Client tests, syntax and build pass. Browser comparison covers actual animated
+thief/held hammer, impact/dissipation, dark/light floors and tilted arena without
+console errors. Screenshot: .local/hammer-gloss-preview.png. Practical workflow
+recorded in docs/VFX_STUDY.md as an implementation trial awaiting user feedback.
+No local preview server left running. Render stays **0.9.23 / movementVersion 7**,
+deployed server commit **332f217** on codex/multiplayer-local. No server deployment
+needed; no pending implementation task.
 
 Reference project inspected: `F:/PROJECTS/JORAN/inkwave-main/inkwave-main`.
 Its full-window renderer, shared CSS unit, anchored panels and measured free-space
