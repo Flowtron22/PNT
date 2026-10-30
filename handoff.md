@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.83**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.84**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,26 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Installed app update notice — 30 October 2026
+
+0.9.84 adds app-update.js as an independent module entry and app-update.css.
+Build generates release.json; Vercel serves it no-store. Startup, pageshow,
+foreground and reconnect check for a valid newer semver with cache:no-store,
+5-second abort and no overlapping requests; visible sessions also check once a
+minute. A menu-only notice offers UPDATE/LATER. Body class observation hides it
+immediately outside the menu; click rechecks safety. Loading, lobby, match, pause
+and results defer the offer. UPDATE replaces the current URL with a release query
+and reloads without deleting settings/profile. LATER dismisses that version for
+the current document. No automatic match interruption or forced reload.
+Six update/release URL tests and build pass. Browser simulated a future 0.9.85
+metadata response: offer shown, hidden in lobby, restored on menu, Later hides,
+Update navigates and profile remains. No console errors. Screenshot of simulated
+future update: .local/app-update-preview.png. Production metadata must be 0.9.84.
+Existing old installed documents need one normal refresh to load this updater;
+future deployments can then be offered without deleting/reinstalling the app.
+Physical iOS standalone lifecycle validation remains with user. Client-only;
+Render remains 0.9.23.
 
 ## Consistent release URLs — 30 October 2026
 

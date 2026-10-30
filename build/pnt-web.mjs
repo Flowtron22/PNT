@@ -3,7 +3,7 @@ import {resolve,join,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {versionModule,versionHTML} from './release-urls.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),out=resolve(root,'dist');
-const inputs=['manifest.webmanifest','index.html','styles/responsive-layout.css','styles/touch-controls.css','styles/settings.css','styles/couch.css','styles/pnt.css','styles/menu-ui.css','styles/mobile-pages.css','styles/desktop-layout.css','src/menu-audio','src/pnt','src/ui/ui-util.js','assets/pnt','assets/fonts','vendor/three','vendor/rapier','vendor/colyseus','notices'];
+const inputs=['manifest.webmanifest','index.html','styles/responsive-layout.css','styles/touch-controls.css','styles/app-update.css','styles/settings.css','styles/couch.css','styles/pnt.css','styles/menu-ui.css','styles/mobile-pages.css','styles/desktop-layout.css','src/menu-audio','src/pnt','src/ui/ui-util.js','assets/pnt','assets/fonts','vendor/three','vendor/rapier','vendor/colyseus','notices'];
 for(const path of inputs)if(!existsSync(join(root,path)))throw new Error(`Missing input: ${path}`);
 for(const name of ['thief.glb','police.glb','mall-slice.glb','logo.png','animations/clips.json','smoke.png','rewind.png',...['mall','sunken','iceberg'].flatMap(n=>['arenas/'+n+'.glb','arenas/'+n+'.json','arenas/'+n+'.nav.json','arenas/'+n+'.collision.json']),...['SM_TL_Hammer','SM_TL_Banana','SM_TL_Bomb','jetpack','rewind'].map(n=>'props/'+n+'.glb'),...['oyen','pingu','pumpkin','boney','purple','racer','raptor'].map(n=>`costumes/${n}.glb`),...['mall','sunken','iceberg'].map(n=>`maps/${n}.webp`),...['users','online','lock'].map(n=>`ui/${n}.png`)])if(!existsSync(join(root,'assets/pnt',name)))throw new Error(`Export missing: ${name}`);
 if(out!==join(root,'dist'))throw new Error('Unsafe output path');
@@ -11,6 +11,7 @@ rmSync(out,{recursive:true,force:true});mkdirSync(out,{recursive:true});
 for(const path of inputs){const target=join(out,path);mkdirSync(dirname(target),{recursive:true});cpSync(join(root,path),target,{recursive:true,filter:source=>!source.endsWith('asset-manifest.json')&&!['idle.glb','run.glb'].includes(source.split(/[\\/]/).at(-1))});}
 if(process.env.PNT_MULTIPLAYER_URL){const url=new URL(process.env.PNT_MULTIPLAYER_URL);if(!['http:','https:'].includes(url.protocol)||url.username||url.password)throw Error('PNT_MULTIPLAYER_URL must be a public HTTP(S) server endpoint without credentials');writeFileSync(join(out,'src/pnt/network-config.js'),`export const MULTIPLAYER_URL=${JSON.stringify(url.href.replace(/\/$/,''))};\n`);}
 const release=JSON.parse(readFileSync(join(root,'package.json'),'utf8')).version;
+writeFileSync(join(out,'release.json'),JSON.stringify({version:release}));
 function stampModules(directory){for(const entry of readdirSync(directory,{withFileTypes:true})){const path=join(directory,entry.name);if(entry.isDirectory())stampModules(path);else if(/\.m?js$/.test(entry.name))writeFileSync(path,versionModule(readFileSync(path,'utf8'),release));}}
 stampModules(join(out,'src'));
 writeFileSync(join(out,'index.html'),versionHTML(readFileSync(join(out,'index.html'),'utf8'),release));
