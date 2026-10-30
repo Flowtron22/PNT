@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {assetURL} from './asset-url.js';
 
 const CAPACITY=96,CORNERS=[[0,0],[1,0],[1,1],[0,0],[1,1],[0,1]];
 const VERT=`attribute float age;attribute float kind;attribute float variant;
@@ -49,7 +50,7 @@ function maps(){
  textures.flow.wrapS=textures.flow.wrapT=THREE.RepeatWrapping;
  if(typeof document!=='undefined'){
   const loader=new THREE.TextureLoader();
-  for(const [key,path] of [['atlas','hammer-gloss-flipbook.png?v=2'],['flow','jet-energy-noise.png']])loader.load(new URL(`../../assets/pnt/vfx/${path}`,import.meta.url).href,t=>{textures[key].image=t.image;textures[key].needsUpdate=true;t.dispose();},undefined,()=>{});
+  for(const [key,path] of [['atlas','hammer-gloss-flipbook.png?v=2'],['flow','jet-energy-noise.png']])loader.load(assetURL(`../../assets/pnt/vfx/${path}`,import.meta.url),t=>{textures[key].image=t.image;textures[key].needsUpdate=true;t.dispose();},undefined,()=>{});
  }
  return textures;
 }

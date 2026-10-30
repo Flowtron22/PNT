@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {assetURL} from './asset-url.js';
 
 const CAPACITY=192,PALETTE=[0xf321ed,0xa346ff,0xff54cf,0x8cfaff];
 const VERT=`attribute vec3 color;attribute float age;attribute float kind;
@@ -37,8 +38,8 @@ function energyTextures(){
  textures.flow.wrapS=textures.flow.wrapT=THREE.RepeatWrapping;
  if(typeof document!=='undefined'){
   const loader=new THREE.TextureLoader();
-  loader.load(new URL('../../assets/pnt/vfx/jet-energy-flipbook.png',import.meta.url).href,t=>{textures.atlas.image=t.image;textures.atlas.needsUpdate=true;t.dispose();},undefined,()=>{});
-  loader.load(new URL('../../assets/pnt/vfx/jet-energy-noise.png',import.meta.url).href,t=>{textures.flow.image=t.image;textures.flow.needsUpdate=true;t.dispose();},undefined,()=>{});
+  loader.load(assetURL('../../assets/pnt/vfx/jet-energy-flipbook.png',import.meta.url),t=>{textures.atlas.image=t.image;textures.atlas.needsUpdate=true;t.dispose();},undefined,()=>{});
+  loader.load(assetURL('../../assets/pnt/vfx/jet-energy-noise.png',import.meta.url),t=>{textures.flow.image=t.image;textures.flow.needsUpdate=true;t.dispose();},undefined,()=>{});
  }
  // Keep stable texture references when the image decodes asynchronously.
  return textures;

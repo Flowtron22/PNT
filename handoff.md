@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.82**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.83**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,25 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Consistent release URLs — 30 October 2026
+
+0.9.83 addresses reports of old VFX/UI on phone. Production 0.9.82 JS/CSS and
+jet/hammer textures matched source (normalizing line endings). No mobile-only
+VFX downgrade; Reduced motion gates the added layers. User answered no to the
+Reduced motion/version question, interpreted as Reduced motion off; phone footer
+version was not supplied. Exact on-device cause remains unconfirmed.
+Build now stamps all 117 relative module references plus HTML script/style URLs
+with the package release. assetURL propagates the module release into jet/hammer
+texture URLs, retaining hammer atlas variant query. Explicit HTML/JS/CSS cache
+headers require revalidation; texture caching remains efficient. No settings or
+profile data reset. Existing open pages still need a reload/new navigation.
+12 targeted tests pass; built graph targets checked and production build starts
+in browser without errors. Fixed an existing jet age test that asserted staggered
+births before the emitter's next actual birth; runtime VFX timing is unchanged.
+Physical Safari shader/scale validation is still pending user feedback. If the
+issue persists on WEB 0.9.83, inspect device/browser, screenshot and settings rather
+than assuming cache. Client-only; no Render deploy required.
 
 ## Translucent phone and tablet controls — 30 October 2026
 

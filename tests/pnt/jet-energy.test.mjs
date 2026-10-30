@@ -51,7 +51,8 @@ test('reduced motion, capture, teleports and clear do not leave stale emitter tr
 
 test('sprite age advances through the baked atlas independently for staggered births',()=>{
  const root=new THREE.Group(),fx=new JetEnergy(root),actor=actorIn(root);
- fx.actor(actor,flying,0);fx.update(.1);fx.actor(actor,flying,.065);fx.update(.01);
+ // Energy births occur every other 65ms tick; advance to the next birth.
+ fx.actor(actor,flying,0);fx.update(.1);fx.actor(actor,flying,.065);fx.update(.065);fx.actor(actor,flying,.065);fx.update(.01);
  const ages=Array.from(fx.geometry.attributes.age.array.slice(0,fx.geometry.drawRange.count));
  assert.ok(ages.every(a=>a>=0&&a<=1));assert.ok(Math.max(...ages)-Math.min(...ages)>.2);
  fx.actor(actor,flying,NaN);fx.update(NaN);
