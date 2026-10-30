@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.85**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.86**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,26 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Costume-specific replacement palettes — 30 October 2026
+
+0.9.86 replaces Police Mint with Mall security (white shirt, black trousers/cap)
+and Violet with Khaki. Pingu Violet becomes Red; Thief Violet becomes Army camo.
+Raptor keeps its existing palette. outfitColors(id) drives UI and normalization;
+saved removed choices migrate to their replacements while skin preferences stay.
+Security uses original rest-space waist height .79 on the blue uniform mask,
+preserving the belt, gloves, boots and cap badge. Army camo layers olive/tan/dark
+noise patches over Thief hood/shirt; dark trousers and accessories remain. Rest
+position is captured before skinning, so both effects follow animation without
+swimming. No new textures, geometry copies or server changes.
+Ten tests pass, covering every palette's material path, migrations, persistence,
+capture composition and Oyen regression. Syntax/build pass. Actual browser shader
+compile/visual checks confirm Khaki, Security, Red and camo including dance;
+reserved GLSL identifier caught and corrected before release. Fresh verification
+tab has no console/shader errors. Preview choices restored.
+Captures: .local/costume-police-security.png, .local/costume-police-khaki.png,
+.local/costume-pingu-red.png and .local/costume-thief-army.png.
+Client-only; Render stays 0.9.23. Local appearance synchronization limit remains.
 
 ## Four additional costume colour controls — 30 October 2026
 

@@ -1,5 +1,5 @@
 import {menuPreviewFrame} from './viewport.js';
-import {COLOR_COSTUMES,OUTFIT_COLORS,SKIN_COLORS,loadCostumeAppearances,saveCostumeAppearances,applyCostumeAppearance} from './costume-appearance.js';
+import {COLOR_COSTUMES,outfitColors,SKIN_COLORS,loadCostumeAppearances,saveCostumeAppearances,applyCostumeAppearance} from './costume-appearance.js';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {clone} from 'three/addons/utils/SkeletonUtils.js';
@@ -323,7 +323,7 @@ function renderCostumeOptions(){
  const host=$('#oyen-options');if(!host)return;ui.menu.classList.toggle('oyen-customizing',costume==='oyen'||COLOR_COSTUMES.includes(costume));host.hidden=costume!=='oyen'&&!COLOR_COSTUMES.includes(costume);if(host.hidden){host.replaceChildren();return;}
  if(COLOR_COSTUMES.includes(costume)){
   const appearance=costumeAppearances[costume],original={thief:'#eeeeee',police:'#2465ee',pingu:'#2465ee',raptor:'#89ae3e'}[costume];
-  host.innerHTML=`<div class="oyen-variants"><h2>${costume.toUpperCase()} OUTFIT</h2><div class="oyen-coats">${OUTFIT_COLORS.map(c=>`<button class="oyen-swatch outfit-swatch" data-outfit="${c.id}" aria-pressed="${appearance.outfit===c.id}" style="--outfit-color:${c.color||original}"><i aria-hidden="true"></i><span>${c.name}</span></button>`).join('')}</div><div class="oyen-faces"><span>FACE</span>${SKIN_COLORS.map(c=>`<button class="face-swatch" data-skin="${c.id}" aria-label="${c.name}" aria-pressed="${appearance.skin===c.id}" style="--face-color:${c.color}"><i aria-hidden="true"></i></button>`).join('')}</div></div>`;
+  host.innerHTML=`<div class="oyen-variants"><h2>${costume.toUpperCase()} OUTFIT</h2><div class="oyen-coats">${outfitColors(costume).map(c=>`<button class="oyen-swatch outfit-swatch" data-outfit="${c.id}" aria-pressed="${appearance.outfit===c.id}" style="--outfit-color:${c.swatch||c.color||original}"><i aria-hidden="true"></i><span>${c.name}</span></button>`).join('')}</div><div class="oyen-faces"><span>FACE</span>${SKIN_COLORS.map(c=>`<button class="face-swatch" data-skin="${c.id}" aria-label="${c.name}" aria-pressed="${appearance.skin===c.id}" style="--face-color:${c.color}"><i aria-hidden="true"></i></button>`).join('')}</div></div>`;
   for(const button of host.querySelectorAll('button'))button.onclick=()=>{
    costumeAppearances[costume]={...costumeAppearances[costume],...(button.dataset.outfit?{outfit:button.dataset.outfit}:{skin:button.dataset.skin})};
    saveCostumeAppearances(localStorage,costumeAppearances);previewModel();renderCostumeOptions();
