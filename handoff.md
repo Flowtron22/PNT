@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.79**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.80**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,21 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Map roughness / metalness — 30 October 2026
+
+0.9.80 sets map PBR materials to roughness .7 and metalness 0 across Mall,
+Sunken and Iceberg, including the Mall menu slice and the fallback floor.
+setArenaSurface in arena-appearance.js replaces the old Mall-only matte helper;
+it clears roughness/metalness maps so textures cannot multiply the requested
+values. Colour, normal, AO and transparency maps remain. Apply on every arena
+load, before AO material clones and furniture setup. Sunken's styled material
+clones use the same exported roughness constant, including water, so the optional
+look does not force them back to 1/.85. Existing shader/lighting treatment remains.
+Existing Sunken assertion updated to .7. User asked for no further testing:
+no VFX or browser test pass and no automated suites were run for this change.
+No new environment map or planar/screen-space reflection pass is added; current
+lights provide the surface highlights. No gameplay or Render server change.
 
 ## Asymmetric masked hammer contours — 30 October 2026
 

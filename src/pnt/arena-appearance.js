@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-export function matteMall(arena){arena.traverse(object=>{if(!object.isMesh)return;for(const material of Array.isArray(object.material)?object.material:[object.material]){if(!material||material.isMeshBasicMaterial)continue;material.roughness=1;material.metalness=0;material.roughnessMap=null;material.metalnessMap=null;material.needsUpdate=true;}});}
+export const ARENA_ROUGHNESS=.7;
+export function setArenaSurface(arena){arena.traverse(object=>{if(!object.isMesh)return;for(const material of Array.isArray(object.material)?object.material:[object.material]){if(!material?.isMeshStandardMaterial)continue;material.roughness=ARENA_ROUGHNESS;material.metalness=0;material.roughnessMap=null;material.metalnessMap=null;material.needsUpdate=true;}});}
 const receivers={mall:new Set(['sm_mainfloor','sm_boutiqeuA_floor','sm_cafeA_floor','sm_cafeB_floor','SM_bridge2']),sunken:new Set(['SunkenShip']),iceberg:new Set(['sm_ib_icefloor'])};
 const contactMaps=new Map();
 export const ARENA_SATURATION=1.2;

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {ARENA_ROUGHNESS} from './arena-appearance.js';
 
 // Sunken-only material/light experiment. Every override can be restored in place.
 export function createSunkenLook({renderer,scene,sunlight,fill,hemisphere,bounds,quality='balanced',enabled=true}){
@@ -9,7 +10,7 @@ export function createSunkenLook({renderer,scene,sunlight,fill,hemisphere,bounds
   if(!source?.isMeshStandardMaterial||source.opacity<.05||/transparent/i.test(source.name))return source;
   if(materials.has(source))return materials.get(source);
   const material=source.clone(),previous=source.onBeforeCompile,key=source.customProgramCacheKey(),water=/water/i.test(source.name);
-  material.roughness=water?.85:1;material.metalness=0;material.roughnessMap=null;material.metalnessMap=null;
+  material.roughness=ARENA_ROUGHNESS;material.metalness=0;material.roughnessMap=null;material.metalnessMap=null;
   material.onBeforeCompile=function(shader,r){
    previous.call(this,shader,r);
    // Retain Three's physically based lights/shadows but soften the diffuse terminator.
