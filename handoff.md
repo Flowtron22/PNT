@@ -72,6 +72,9 @@ profile data reset. Existing open pages still need a reload/new navigation.
 12 targeted tests pass; built graph targets checked and production build starts
 in browser without errors. Fixed an existing jet age test that asserted staggered
 births before the emitter's next actual birth; runtime VFX timing is unchanged.
+Committed as 2bf1bb4 and pushed to main. Vercel confirms WEB 0.9.83, stamped
+entry/styles and exact built JS/VFX modules; live browser loads without errors.
+Capture: .local/release-cache-fix-live.png.
 Physical Safari shader/scale validation is still pending user feedback. If the
 issue persists on WEB 0.9.83, inspect device/browser, screenshot and settings rather
 than assuming cache. Client-only; no Render deploy required.
