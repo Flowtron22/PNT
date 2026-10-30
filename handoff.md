@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.74**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.75**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,21 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Three narrow green ribbons and chubby stars — 30 October 2026
+
+0.9.75 replaces the rejected thick purple bands with the original narrow ribbon
+profile. Three strands use 1x/.7x/1.25x widths and spring-green, lime and pale-mint
+shades. Two paths follow the hands; a third is offset above/perpendicular to the
+hand midpoint so the strands remain distinct. The 1.02-second history stays.
+Stars have no outline layer and use a larger inner radius (.64 vs .45) plus
+rounder corners for short points and a fat centre. Opaque varied colours/sizes
+and occasional glitch sprites remain. Removing the outline halves the sprite
+vertex-buffer allocation. Still at most two pooled draw calls for four players.
+All client checks, syntax and build pass; browser actual-costume preview has no
+shader errors. Screenshot: .local/banana-green-chubby-stars-preview.png.
+Frontend only; Render stays 0.9.23 / movementVersion 7.
+Deployment verification pending for green ribbons.
 
 ## Thick cartoon banana bands — 30 October 2026
 

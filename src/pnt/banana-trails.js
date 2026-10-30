@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {BananaSprites} from './banana-sprites.js';
 
-const PLAYERS=4,STRANDS=2,STEP=1/60,LIFE=.34*3,SAMPLES=Math.ceil(LIFE/STEP)+2;
+const PLAYERS=4,STRANDS=3,STEP=1/60,LIFE=.34*3,SAMPLES=Math.ceil(LIFE/STEP)+2;
 // Hand-mounted ribbons share one small dynamic mesh. History lives in map-local
 // space, so moving/spinning avatars leave a trail rather than dragging a ring.
 export class BananaTrails{
@@ -17,10 +17,11 @@ export class BananaTrails{
     void main(){
      float ripple=sin(vUv.x*23.0-time*19.0+vStrand*2.0)*0.13*sin(vUv.x*3.141593);
      float across=abs((vUv.y-0.5)*2.0+ripple);
-     float edge=1.0-smoothstep(0.78,1.0,across);
+     float edge=1.0-smoothstep(0.4,1.0,across);
      float core=1.0-smoothstep(0.06,0.34,across);
-     vec3 purple=mix(vec3(0.12,0.002,0.65),vec3(0.42,0.008,1.0),1.0-vUv.x);
-     vec3 color=mix(purple,vec3(0.66,0.10,1.0),core*0.9);
+     vec3 shade=vStrand<0.5?vec3(0.025,0.72,0.12):vStrand<1.5?vec3(0.25,0.95,0.10):vec3(0.50,1.0,0.68);
+     vec3 green=mix(shade*0.65,shade,1.0-vUv.x);
+     vec3 color=mix(green,mix(shade,vec3(0.78,1.0,0.65),0.55),core*0.7);
      float alpha=edge*vFade*0.95;if(alpha<0.008)discard;
      gl_FragColor=vec4(color,alpha);
      #include <colorspace_fragment>
@@ -38,7 +39,9 @@ export class BananaTrails{
   if(!active){if(slot)slot.active=false;return;}
   if(!slot){slot=this.slots.find(s=>!s.actor);if(!slot)return;slot.actor=actor;actor.model?.traverse(node=>{if(!node.isBone)return;const name=node.name.replace(/[_\- ]/g,'').toLowerCase();if(name==='bip001lhand')slot.hands[0]=node;if(name==='bip001rhand')slot.hands[1]=node;});}
   actor.group.updateWorldMatrix(true,true);this.root.updateWorldMatrix(true,false);this.inverse.copy(this.root.matrixWorld).invert();
-  for(let i=0;i<STRANDS;i++){const strand=slot.strands[i],hand=slot.hands[i];if(hand)hand.getWorldPosition(strand.current).applyMatrix4(this.inverse);else{strand.current.set(i?-.55:.55,.9,0);actor.group.localToWorld(strand.current).applyMatrix4(this.inverse);}}
+  for(let i=0;i<2;i++){const strand=slot.strands[i],hand=slot.hands[i];if(hand)hand.getWorldPosition(strand.current).applyMatrix4(this.inverse);else{strand.current.set(i?-.55:.55,.9,0);actor.group.localToWorld(strand.current).applyMatrix4(this.inverse);}}
+  // The third path sits above and perpendicular to the two hand paths.
+  const [left,right,upper]=slot.strands;upper.current.copy(left.current).add(right.current).multiplyScalar(.5);upper.current.x+=(left.current.z-right.current.z)*.5;upper.current.z-=(left.current.x-right.current.x)*.5;upper.current.y+=.25;
   const gap=!slot.active||!Number.isFinite(dt)||dt>.15||slot.strands.some(s=>s.current.distanceToSquared(s.previous)>9);
   if(gap){for(const strand of slot.strands){strand.count=0;strand.previous.copy(strand.current);this.push(strand,strand.current);}slot.next=STEP;slot.active=true;return;}
   const elapsed=Math.max(0,Math.min(.1,dt));slot.next-=elapsed;
@@ -63,9 +66,8 @@ export class BananaTrails{
      const index=Math.min(i,strand.count-1),point=pointAt(index),u=index/(strand.count-1),strength=i<strand.count?THREE.MathUtils.clamp(1-point.age/LIFE,0,1):0;
      this.tangent.subVectors(pointAt(Math.max(0,index-1)).p,pointAt(Math.min(strand.count-1,index+1)).p);this.view.subVectors(this.camera,point.p);this.side.crossVectors(this.tangent,this.view);
      if(this.side.lengthSq()<1e-10)this.side.set(0,1,0);else this.side.normalize();
-     // A broad .9-unit band reads as about half the 1.55-unit avatar height.
-     // Age fades opacity; only the final third tapers the physical thickness.
-     const width=.45*(1-THREE.MathUtils.smoothstep(u,.65,1));
+     // Restore the original narrow profile with three different strand widths.
+     const width=(k===0?1:k===1?.7:1.25)*(.055+Math.sin(u*Math.PI)*.11)*Math.pow(1-u,.55)*strength;
      for(let edge=0;edge<2;edge++){const n=(strip*SAMPLES+i)*2+edge,sign=edge?1:-1;positions.setXYZ(n,point.p.x+this.side.x*width*sign,point.p.y+this.side.y*width*sign,point.p.z+this.side.z*width*sign);uv.setXY(n,u,edge);fade.setX(n,strength);strands.setX(n,k);}
     }strip++;
    }if(!alive)this.reset(slot);

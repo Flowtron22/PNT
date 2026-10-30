@@ -20,7 +20,7 @@ test('banana spin creates tapered bright ribbons from moving hand bones, with no
  for(let i=0;i<45;i++){pose(a,i/60);fx.actor(a,state,1/60);fx.update(1/60,camera);}
  assert.equal(fx.mesh.visible,true);assert.equal(fx.geometry,geometry);assert.equal(fx.material,material);assert.equal(fx.geometry.getAttribute('position').array,positions);assert.ok([...positions].every(Number.isFinite));assert.equal(material.depthWrite,false);assert.equal(material.depthTest,true);assert.equal(material.blending,THREE.NormalBlending);
  assert.ok(geometry.getAttribute('fade').array.some(value=>value>.9));assert.ok(geometry.getAttribute('fade').array.some(value=>value>0&&value<.4));
- const band=geometry.getAttribute('position'),thickness=new THREE.Vector3().fromBufferAttribute(band,0).distanceTo(new THREE.Vector3().fromBufferAttribute(band,1));assert.ok(thickness>.75&&thickness<1,'band spans approximately half the normalized character height');
+ const band=geometry.getAttribute('position'),capacity=fx.slots[0].strands[0].points.length,widths=fx.slots[0].strands.map((_,k)=>new THREE.Vector3().fromBufferAttribute(band,k*capacity*2).distanceTo(new THREE.Vector3().fromBufferAttribute(band,k*capacity*2+1)));assert.equal(widths.length,3);assert.ok(widths.every(width=>width>.05&&width<.2),'all three strands retain the original narrow profile');assert.equal(new Set(widths.map(width=>width.toFixed(3))).size,3);
  const slot=fx.slots.find(s=>s.actor===a),head=slot.strands[0].points[slot.strands[0].head].p;root.updateMatrixWorld(true);assert.ok(head.distanceTo(root.worldToLocal(a.hands[0].getWorldPosition(new THREE.Vector3())))<.015);
  fx.actor(a,{...state,effectTime:0},1/60);for(let i=0;i<24;i++)fx.update(1/60,camera);assert.equal(fx.mesh.visible,true,'the extended tail persists beyond the previous .34-second life');for(let i=0;i<44;i++)fx.update(1/60,camera);assert.equal(fx.mesh.visible,false);assert.equal(fx.geometry.drawRange.count,0);assert.ok(fx.slots.every(s=>s.actor===null));
 });
@@ -53,7 +53,7 @@ test('30/60/144 FPS have bounded histories and four players share one mesh throu
  const counts=[];
  for(const fps of [30,60,144]){const root=new THREE.Group(),fx=new BananaTrails(root),actors=Array.from({length:4},(_,i)=>actor(root,i));
   for(let frame=0;frame<fps*2;frame++){for(const a of actors){pose(a,frame/fps);fx.actor(a,state,1/fps);}fx.update(1/fps);}
-  counts.push(fx.slots[0].strands[0].count);assert.equal(root.getObjectByName('banana-spin-vfx').children.length,1);const capacity=fx.geometry.getAttribute('position').count/(4*2*2);assert.ok(fx.geometry.drawRange.count<=4*2*(capacity-1)*6);assert.ok(fx.slots.every(s=>s.strands.every(r=>r.count<=capacity)));
+  counts.push(fx.slots[0].strands[0].count);assert.equal(root.getObjectByName('banana-spin-vfx').children.length,1);const strands=fx.slots[0].strands.length,capacity=fx.geometry.getAttribute('position').count/(4*strands*2);assert.equal(strands,3);assert.ok(fx.geometry.drawRange.count<=4*strands*(capacity-1)*6);assert.ok(fx.slots.every(s=>s.strands.every(r=>r.count<=capacity)));
   fx.clear();assert.equal(fx.mesh.visible,false);assert.ok(fx.slots.every(s=>s.actor===null));
  }assert.ok(Math.max(...counts)-Math.min(...counts)<=1);
 });
