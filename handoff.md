@@ -212,14 +212,17 @@ Embedded motion examples were not played. The ignored study PDF is saved at
 
 ## Continue here
 
-Latest completed frontend: **0.9.76**, implementation commit **a4ff03f** on main.
-Production: https://police-n-thief.vercel.app/ — WEB 0.9.76 and smoke-normals.js,
-game-fx.js and main.js verified against local source. Smoke grenade lobes now
-share continuous cloud-space normals and one grey material. Client tests, syntax
-and build pass. Comparison: .local/smoke-shared-normals-preview.png.
+Latest completed frontend: **0.9.77**, implementation commit **6a42649** on main.
+Production: https://police-n-thief.vercel.app/ — WEB 0.9.77, jet-energy.js,
+game-fx.js, main.js and both new PNGs verified against local source.
+Jetpack smoke is unchanged; a separate packed flipbook/noise shader adds vibrant
+pink/violet thrust, broken rings and pixel fragments inspired by MISFITZ Enemy 02.
+Tests, syntax and build pass. Browser checks cover real costumes, bright/dark
+floors, reduced motion and actual Mall training activation/menu cleanup without
+console errors. Original Hammer/Banana loadout restored. Preview screenshot:
+.local/jet-energy-preview.png. No local preview server left running.
 Render stays **0.9.23 / movementVersion 7**, deployed server commit **332f217**
 on codex/multiplayer-local. No server deployment needed; no pending task.
-No local preview server left running.
 
 Reference project inspected: `F:/PROJECTS/JORAN/inkwave-main/inkwave-main`.
 Its full-window renderer, shared CSS unit, anchored panels and measured free-space
