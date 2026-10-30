@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.71**, online multiplayer test release. Server source: **0.9.23**.
+Current app version: **0.9.71**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -75,15 +75,19 @@ voice overlap; countdown/verdict take priority and pause/mute/hide/menu cleanup
 clears queued lines. Existing master/SFX settings apply. Movement stays version 7.
 Client/server suites, syntax and build pass. Browser Web Audio decoded all nine
 WAVs successfully; hash checks confirm source files were copied unchanged.
-Deployment verification pending.
+Implementation commit 332f217 is pushed to main and codex/multiplayer-local.
+Vercel serves WEB 0.9.71, updated game-audio.js and all nine WAVs (remote hashes
+match local source copies). Render manual deployment succeeded; /health reports
+0.9.23 / movementVersion 7. Screenshot: .local/audio-0.9.71-deployed.png.
+No local preview server was left running.
 
 ## Continue here
 
-Latest completed frontend: **0.9.70**, implementation commit **3c6ebc7** on main.
-Production: https://police-n-thief.vercel.app/ — live HTML, updated main.js,
-responsive timer CSS and production network endpoint verified. Render is live at
-**0.9.22 / movementVersion 7**, deployed commit **3c6ebc7** on
-codex/multiplayer-local. All four code-review fixes are complete; no pending task.
+Latest completed frontend: **0.9.71**, implementation commit **332f217** on main.
+Production: https://police-n-thief.vercel.app/ — live HTML, updated game-audio.js
+and all nine supplied WAVs verified. Render is live at **0.9.23 / movementVersion 7**,
+deployed commit **332f217** on codex/multiplayer-local. The supplied announcer and
+B2B teleport audio are implemented and deployed; no pending implementation task.
 
 Reference project inspected: `F:/PROJECTS/JORAN/inkwave-main/inkwave-main`.
 Its full-window renderer, shared CSS unit, anchored panels and measured free-space
