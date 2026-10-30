@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.80**, online multiplayer test release. Server: **0.9.23**.
+Current app version: **0.9.81**, online multiplayer test release. Server: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,16 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Defeat results narration — 30 October 2026
+
+0.9.81 adds the supplied vc_narration_failure.wav to losing stats/results screens.
+The user's typed failuer maps to the actual supplied filename failure. Source
+copied unchanged from C:/Users/User/Downloads/audio. Added to narration preload
+and the existing WAV/announcer queue; results() selects congratulations for wins,
+failure for losses, deduplicated per profileId. Existing on-stage victory/defeated
+cues remain. Existing announcer regression expectations updated for the new loss
+cue and WAV preload; no VFX or browser tests. No server/Render change.
 
 ## Map roughness / metalness — 30 October 2026
 

@@ -1,6 +1,6 @@
 {
   "name": "police-n-thief-web",
-  "version": "0.9.80",
+  "version": "0.9.81",
   "private": true,
   "type": "module",
   "description": "Police N Thief browser prototype by Todak Studios.",

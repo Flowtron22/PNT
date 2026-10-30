@@ -21,11 +21,11 @@ async function fixture(t){
  update();return {audio,round,actors,sources,requests,update,finish,count};
 }
 
-test('victory/defeat occur once at verdict, congratulations only once on winning stats',async t=>{
+test('victory/defeat occur once at verdict, matching congratulations/failure occurs once on the stats screen',async t=>{
  const f=await fixture(t);f.round.phase='finished';f.audio.verdict(f.round,true);f.audio.verdict(f.round,true);f.update([0],false);
  assert.equal(f.count('vc_narration_result_victory'),1);assert.equal(f.count('vc_narration_congratulation'),0);
  f.audio.results(f.round,true);f.audio.results(f.round,true);assert.equal(f.count('vc_narration_congratulation'),0,'stats waits for the current voice');f.finish();assert.equal(f.count('vc_narration_congratulation'),1);
- f.round.profileId='lost';f.audio.verdict(f.round,false);f.audio.verdict(f.round,false);f.audio.results(f.round,false);f.finish();assert.equal(f.count('vc_narration_defeated'),1);assert.equal(f.count('vc_narration_congratulation'),1);
+ f.round.profileId='lost';f.audio.verdict(f.round,false);f.audio.verdict(f.round,false);f.audio.results(f.round,false);f.audio.results(f.round,false);assert.equal(f.count('vc_narration_failure'),0,'failure waits for defeated');f.finish();assert.equal(f.count('vc_narration_failure'),1);assert.equal(f.count('vc_narration_defeated'),1);assert.equal(f.count('vc_narration_congratulation'),1);
 });
 
 test('second personal capture and second personal rescue use the milestone lines without snapshot repeats',async t=>{
@@ -54,7 +54,7 @@ test('reconnect/new-match baselines do not replay historical achievements and pa
 
 test('B2B return uses the supplied teleport WAV and all new clips preload as PCM WAVs',async t=>{
  const f=await fixture(t);f.audio.tool('rewind',0,f.actors);assert.equal(f.count('se_assist_ghirahim_teleport'),1);assert.ok(!f.requests.some(url=>url.includes('Tool_Rewind_Teleport')));
- for(const name of ['vc_narration_result_victory','vc_narration_defeated','vc_narration_incledible','vc_menu_narration_nailedit','vc_menu_narration_nocontest','vc_narration_congratulation','vc_menu_narration_mob','vc_menu_narration_vipsmash','se_assist_ghirahim_teleport']){
+ for(const name of ['vc_narration_result_victory','vc_narration_defeated','vc_narration_incledible','vc_menu_narration_nailedit','vc_menu_narration_nocontest','vc_narration_congratulation','vc_narration_failure','vc_menu_narration_mob','vc_menu_narration_vipsmash','se_assist_ghirahim_teleport']){
   assert.ok(f.requests.includes(`assets/pnt/audio/${name}.wav`));const bytes=readFileSync(new URL(`../../assets/pnt/audio/${name}.wav`,import.meta.url));assert.equal(bytes.toString('ascii',0,4),'RIFF');assert.equal(bytes.toString('ascii',8,12),'WAVE');
  }
 });

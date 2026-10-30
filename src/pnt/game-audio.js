@@ -1,7 +1,7 @@
 import {CAPTURE_SMOKE_SECONDS} from './capture-timing.js';
 const TOOL_SOUNDS={hammer:'Tool_Hammer_Activate',banana:'Tool_Banana_Throw',smoke:'Tool_Smoke_Throw',rocket:'Tool_Jetpack_Launch',rewind:'se_assist_ghirahim_teleport'};
 const NARRATION_BEATS={ready:'vc_narration_ready',3:'vc_narration_three',2:'vc_narration_two',1:'vc_narration_one',go:'vc_narration_go'};
-const NARRATION=['vc_narration_one','vc_narration_two','vc_narration_three','vc_narration_ready','vc_narration_go','vc_narration_suddendeath','vc_narration_timeup','vc_menu_narration_waytogo','vc_menu_narration_great','vc_narration_result_victory','vc_narration_defeated','vc_narration_incledible','vc_menu_narration_nailedit','vc_menu_narration_nocontest','vc_narration_congratulation','vc_menu_narration_mob','vc_menu_narration_vipsmash'];
+const NARRATION=['vc_narration_one','vc_narration_two','vc_narration_three','vc_narration_ready','vc_narration_go','vc_narration_suddendeath','vc_narration_timeup','vc_menu_narration_waytogo','vc_menu_narration_great','vc_narration_result_victory','vc_narration_defeated','vc_narration_incledible','vc_menu_narration_nailedit','vc_menu_narration_nocontest','vc_narration_congratulation','vc_narration_failure','vc_menu_narration_mob','vc_menu_narration_vipsmash'];
 const WAV_CLIPS=new Set([...NARRATION,'Coin_GET3','Footstep_A','Footstep_B','Capture_Scuffle','se_assist_ghirahim_teleport']);
 const CLIP_EXTENSIONS={'menu-bgm':'m4a','pirate-chase-bgm':'m4a','iceberg-chase-bgm':'m4a'};
 const CLIP_VERSIONS={'iceberg-chase-bgm':'0.9.39'};
@@ -32,7 +32,7 @@ export function createGameplayAudio(getEngine){
   if(match===round.profileId)return;stopEffects();match=round.profileId;previous=round.actors.map(a=>({...a}));previousPhase=round.phase;freeRunners=round.actors.filter(a=>a.role==='runner'&&!a.caught).length;cacheRemaining=new Map(round.caches?.map(cache=>[cache.id,cache.remaining])||[]);void prepare();
  }
  function verdict(round,won){syncMatch(round);if(outcomeMatch===round.profileId)return;outcomeMatch=round.profileId;announce(won?'vc_narration_result_victory':'vc_narration_defeated',1,true);}
- function results(round,won){syncMatch(round);if(resultMatch===round.profileId)return;resultMatch=round.profileId;if(won)announce('vc_narration_congratulation');}
+ function results(round,won){syncMatch(round);if(resultMatch===round.profileId)return;resultMatch=round.profileId;announce(won?'vc_narration_congratulation':'vc_narration_failure');}
  function play(name,volume=1,cooldown=.08){if(!enabled||!context)return;const now=context.currentTime;if(now-(last.get(name)??-Infinity)<cooldown)return;last.set(name,now);if(NARRATION.includes(name))announce(name,volume);else voice(name,{volume});}
  function distanceVolume(id,actors){if(!actors[id]||!actors[0])return 0;return sharedScreen?.75:id===0?1:Math.max(0,1-actors[id].group.position.distanceTo(actors[0].group.position)/18)*.65;}
  function tool(name,id,actors){const volume=distanceVolume(id,actors);if(volume<=0)return;play(TOOL_SOUNDS[name],volume);if(name==='smoke')play('Tool_Smoke_Activate',volume*.8);}

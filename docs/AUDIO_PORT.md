@@ -76,3 +76,12 @@ and the verdict interrupt old announcements; congratulations waits for the curre
 voice. Pause, mute, page hiding, menu exit and new matches clear pending lines.
 B2B placement keeps its original deployment sound; only a successful return uses
 the supplied teleport WAV, with existing remote attenuation.
+
+## Defeat stats narration (0.9.81)
+
+The losing results/stat board plays vc_narration_failure.wav once per match,
+queued after the existing on-stage defeated cue. Winning stats retain
+vc_narration_congratulation.wav. Copied the source failure WAV unchanged from
+C:/Users/User/Downloads/audio; the user typed failuer, but the supplied filename
+is failure. The clip joins narration preload and the existing volume/mute/queue
+controls. Results refreshes cannot replay it. No server change.
