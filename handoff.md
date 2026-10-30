@@ -182,6 +182,13 @@ explicit concept notes and proposed PNT techniques. Exact timings/shaders were
 not measured. No game effects or versions changed during these studies. Continue recording future
 references with observed evidence separated from proposed implementation.
 
+Study 03 reads Riot's 37-page 2017 VFX guide in full, with rendered-page visual
+inspection, via a public mirror linked from the original release thread (the
+old Riot PDF URL redirects). Notes in docs/VFX_STUDY.md cover gameplay hierarchy,
+accurate footprints, value/colour, shapes and timing, plus derived PNT rules.
+Embedded motion examples were not played. The ignored study PDF is saved at
+.local/riot-vfx-styleguide-2017.pdf. No game changes or version bump.
+
 ## Continue here
 
 Latest completed frontend: **0.9.76**, implementation commit **a4ff03f** on main.

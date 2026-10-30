@@ -173,6 +173,87 @@ desired silhouette and measured cost, not an assumption that the reference used
 the same technique. Start with a readable primary shape, then add only supporting
 layers. Existing approved PNT effects remain unchanged by this study.
 
+## Study 03 — Riot's League of Legends VFX guide (2017)
+
+User reference: [Deck.gallery](https://www.deck.gallery/league-of-legends-2017/).
+Read 30 October 2026. The preview is limited, so the full 37-page public guide
+was obtained from the mirror linked in the
+[original release thread](https://realtimevfx.com/t/official-league-of-legends-vfx-style-guide/3392).
+The original Riot-hosted URL currently redirects to League's homepage.
+Local study copy: `.local/riot-vfx-styleguide-2017.pdf` (ignored, not shipped).
+
+### Coverage and evidence
+
+Read text from all 37 pages and visually inspected rendered pages. The document
+contains embedded motion examples; the static rendering does not play them.
+Timing conclusions below come from the written explanations, diagrams and
+illustrated stages, not measured playback. No claim of access to Riot's shaders
+or original effect source files.
+
+### Principles from the guide
+
+- **Gameplay, pp. 6-11:** distinguish the main information from supporting
+  decoration; show affected areas and hitboxes accurately. Scale visual emphasis
+  to gameplay importance. A basic attack and a major ability should not compete
+  equally for attention.
+- **Value, pp. 13-17:** use brightness contrast to establish a focal point in
+  context. A bright centre, illumination or restrained dark backing can help;
+  excessive contrast across many effects creates competition.
+- **Colour, pp. 19-26:** relate palettes to their source and distinguish opposing
+  indicators. With complementary colours, keep one subordinate. Saturation is an
+  attention control, not a setting to maximize everywhere.
+- **Shape, pp. 28-30:** concise silhouettes, controlled detail and a mixture of
+  soft/sharp shapes improve readability. Directional shape and blur can convey
+  travel more clearly than fast isolated points.
+- **Timing, pp. 32-36:** author anticipation, action and dissipation. Use changing
+  rates for emphasis and motion appropriate to the material. Reduce the visual
+  strength and linger of the outro so it yields to subsequent actions.
+
+### Particularly useful visual comparisons
+
+- Leona's boundary versus interior decoration (pp. 6-7): the important region
+  need not have the busiest interior.
+- Teemo's indicated explosion area and Sona's ground-aligned rectangle (pp. 8-9):
+  attractive effects can still fail if they misrepresent where gameplay occurs.
+- Lux basic attack versus ultimate (pp. 10-11): an effect's hierarchy must work
+  against other effects, not just within its own composition.
+- Bard versus Lulu (p. 21): a restrained complementary supporting colour enriches
+  a focal colour; equally strong opposing colours can fight for attention.
+- Painted flame shapes versus noisy photographic texture (p. 28): the guide's
+  specific texture treatment supports League's chosen art direction.
+- Ekko's curved timing graph versus a straight line (p. 35): rate of change is
+  an authored part of impact. The diagram is not a numerical easing preset.
+- Syndra linger comparison (p. 36): inspect the aftermath as carefully as the
+  peak frame, because it can obscure the next gameplay event.
+
+### PNT working rules derived from this study
+
+These are proposed project applications, not changes requested by the user and
+not universal rules attributed to Riot.
+
+1. Before implementation, define the event's gameplay meaning, the one thing a
+   player must notice, its spatial footprint and when that information expires.
+2. Give routine movement a quiet visual budget. Allocate clearer peaks to
+   captures, rescues, stuns and major state changes. Check competing events in
+   four-player play before deciding their relative emphasis.
+3. Read affected-area dimensions and active state from gameplay data. Decorative
+   smoke, sparks or squash may extend beyond them only while the true area stays
+   unambiguous. Do not present decoration as an inaccurate danger boundary.
+4. Never add a gameplay delay to make room for a visual windup. If an action is
+   instant, synchronize its visual peak to the existing event. Use anticipation
+   only where the mechanic already supplies a warning or preparation interval.
+5. Review still frames in greyscale for value hierarchy, then review colour,
+   movement and multiple-effect overlap against Mall, Sunken and Iceberg.
+6. Separate the event's active state from residual decoration. An ending hazard
+   must stop communicating active danger; a fading celebration must not obscure
+   a new capture or stun.
+7. Keep the approved 1.02-second banana trail history. If overlap becomes noisy,
+   first assess brightness, width taper and accent density in context; changing
+   a requested lifetime requires a concrete visual reason and user direction.
+8. Preserve PNT's approved chubby filled stars, narrow green strands and shared
+   smoke normals. League's precise saturation limits, spell palettes and painted
+   texture requirements are style-specific references, not automatic PNT rules.
+
 ## Approved project technique — grenade smoke
 
 Overlapping puff meshes use one cloud-space ellipsoid normal field and one grey
