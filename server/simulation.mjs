@@ -37,7 +37,7 @@ export class MatchSimulation {
   const actor=this.actors[id],state=this.round.actors[id];if(!actor||![0,1].includes(slot)||!canAct(this.round,id)||state.inSmoke)return false;const tool=actor.tools[slot],p=actor.group.position;
   if(tool==='rewind'&&!actor.mark&&state.toolCooldowns[slot]<=0){actor.mark=p.clone();this.addHazard('marker',actor,Infinity,p);return true;}
   if(!activateTool(this.round,id,slot,tool))return false;
-  if(tool==='hammer'){this.effect(state,'hammer',.48);for(const other of this.round.actors){if(other.role===state.role||other.caught||other.inSmoke)continue;const target=this.actors[other.id];if(p.distanceTo(target.group.position)<2&&this.sight(p,target.group.position,false))this.effect(other,target.grounded?'stunned':'airStunned',2);}}
+  if(tool==='hammer'){this.effect(state,'hammer',.48);for(const other of this.round.actors){if(other.role===state.role||other.caught||other.inSmoke)continue;const target=this.actors[other.id];if(p.distanceTo(target.group.position)<2&&this.sight(p,target.group.position,false)){this.effect(other,target.grounded?'stunned':'airStunned',2);state.stuns=(state.stuns||0)+1;}}}
   if(tool==='banana')this.addHazard('banana',actor,15,p.clone().add(new THREE.Vector3(-Math.sin(actor.group.rotation.y)*.7,.03,-Math.cos(actor.group.rotation.y)*.7)));
   if(tool==='smoke'){this.addHazard('smoke',actor,20,p);this.smokeCoverage();}
   if(tool==='rocket'){this.effect(state,'rocket',5);actor.velocity=4.5;actor.grounded=false;}

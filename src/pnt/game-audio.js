@@ -1,15 +1,16 @@
 import {CAPTURE_SMOKE_SECONDS} from './capture-timing.js';
-const TOOL_SOUNDS={hammer:'Tool_Hammer_Activate',banana:'Tool_Banana_Throw',smoke:'Tool_Smoke_Throw',rocket:'Tool_Jetpack_Launch',rewind:'Tool_Rewind_Teleport'};
+const TOOL_SOUNDS={hammer:'Tool_Hammer_Activate',banana:'Tool_Banana_Throw',smoke:'Tool_Smoke_Throw',rocket:'Tool_Jetpack_Launch',rewind:'se_assist_ghirahim_teleport'};
 const NARRATION_BEATS={ready:'vc_narration_ready',3:'vc_narration_three',2:'vc_narration_two',1:'vc_narration_one',go:'vc_narration_go'};
-const NARRATION=['vc_narration_one','vc_narration_two','vc_narration_three','vc_narration_ready','vc_narration_go','vc_narration_suddendeath','vc_narration_timeup','vc_menu_narration_waytogo','vc_menu_narration_great'];
-const WAV_CLIPS=new Set([...NARRATION,'Coin_GET3','Footstep_A','Footstep_B','Capture_Scuffle']);
+const NARRATION=['vc_narration_one','vc_narration_two','vc_narration_three','vc_narration_ready','vc_narration_go','vc_narration_suddendeath','vc_narration_timeup','vc_menu_narration_waytogo','vc_menu_narration_great','vc_narration_result_victory','vc_narration_defeated','vc_narration_incledible','vc_menu_narration_nailedit','vc_menu_narration_nocontest','vc_narration_congratulation','vc_menu_narration_mob','vc_menu_narration_vipsmash'];
+const WAV_CLIPS=new Set([...NARRATION,'Coin_GET3','Footstep_A','Footstep_B','Capture_Scuffle','se_assist_ghirahim_teleport']);
 const CLIP_EXTENSIONS={'menu-bgm':'m4a','pirate-chase-bgm':'m4a','iceberg-chase-bgm':'m4a'};
 const CLIP_VERSIONS={'iceberg-chase-bgm':'0.9.39'};
-const CLIPS=['Coin_GET3','Footstep_A','Footstep_B','Capture_Scuffle','menu-bgm','gameplay-bgm','Match_Countdown','Match_Start','Player_Land','Player_Launch','Player_Spin_Out','Player_Stunned','Police_Capture_Start','Thief_Escape','Thief_Loot_Stolen','Tool_Banana_Slip','Tool_Banana_Throw','Tool_Hammer_Activate','Tool_Hammer_Impact','Tool_Jetpack_Flight','Tool_Jetpack_Land','Tool_Jetpack_Launch','Tool_Rewind_Box_Deploy','Tool_Rewind_Teleport','Tool_Smoke_Activate','Tool_Smoke_Throw',...NARRATION];
+const CLIPS=['Coin_GET3','Footstep_A','Footstep_B','Capture_Scuffle','menu-bgm','gameplay-bgm','Match_Countdown','Match_Start','Player_Land','Player_Launch','Player_Spin_Out','Player_Stunned','Police_Capture_Start','Thief_Escape','Thief_Loot_Stolen','Tool_Banana_Slip','Tool_Banana_Throw','Tool_Hammer_Activate','Tool_Hammer_Impact','Tool_Jetpack_Flight','Tool_Jetpack_Land','Tool_Jetpack_Launch','Tool_Rewind_Box_Deploy','se_assist_ghirahim_teleport','Tool_Smoke_Activate','Tool_Smoke_Throw',...NARRATION];
 export function createGameplayAudio(getEngine){
  let sfxLevel=1,musicLevel=1;
  let sharedScreen=false,coinVoice=null;const footsteps=new Map();
  let context=null,sfx=null,music=null,musicVoice=null,musicTrack=null,match=null,previous=[],previousPhase=null,freeRunners=0,cacheRemaining=new Map(),suddenDeath=false,praise=0,enabled=localStorage.getItem('pnt-game-sfx')!=='off',musicEnabled=localStorage.getItem('pnt-game-music')!=='off';
+ let announcement=null,outcomeMatch=null,resultMatch=null;const announcements=[];
  const buffers=new Map(),downloads=new Map(),decoding=new Map(),last=new Map(),loops=new Map(),voices=new Set();
  function unlock(){const engine=getEngine();engine.init();context=engine.ctx;if(!context)return;engine.resume();if(!sfx){sfx=context.createGain();sfx.gain.value=enabled?.55*sfxLevel:0;sfx.connect(engine.master);music=context.createGain();music.gain.value=musicEnabled?.2*musicLevel:0;music.connect(engine.master);}}
  function bytes(name){if(downloads.has(name))return downloads.get(name);const extension=CLIP_EXTENSIONS[name]||(WAV_CLIPS.has(name)?'wav':'mp3'),version=CLIP_VERSIONS[name],request=fetch(`assets/pnt/audio/${name}.${extension}${version?`?v=${version}`:''}`).then(response=>{if(!response.ok)throw Error('audio '+response.status);return response.arrayBuffer();}).catch(()=>{downloads.delete(name);return null;});downloads.set(name,request);return request;}
@@ -17,24 +18,45 @@ export function createGameplayAudio(getEngine){
  async function decode(name){if(buffers.has(name))return;if(decoding.has(name))return decoding.get(name);const task=(async()=>{const encoded=await bytes(name);if(!encoded)return;try{buffers.set(name,await context.decodeAudioData(encoded.slice(0)));}catch{}})().finally(()=>decoding.delete(name));decoding.set(name,task);return task;}
  async function prepare(extra=[]){unlock();if(!context)return;const names=Array.isArray(extra)?extra:extra?[extra]:[];return Promise.all([...CLIPS,...names].map(decode));}
  function voice(name,{volume=1,loop=false,bus=sfx,duration=null}={}){if(!context||context.state!=='running'||!buffers.has(name)||!bus)return null;const source=context.createBufferSource(),gain=context.createGain();source.buffer=buffers.get(name);source.loop=loop;gain.gain.value=volume;source.connect(gain);gain.connect(bus);const item={source,gain,stop(){try{source.stop();}catch{}}};voices.add(item);source.onended=()=>{voices.delete(item);source.disconnect();gain.disconnect();};source.start();if(duration>0){const end=context.currentTime+duration;gain.gain.setValueAtTime?.(volume,Math.max(context.currentTime,end-.06));gain.gain.linearRampToValueAtTime?.(0,end);source.stop(end);}return item;}
- function play(name,volume=1,cooldown=.08){if(!enabled||!context)return;const now=context.currentTime;if(now-(last.get(name)??-Infinity)<cooldown)return;last.set(name,now);voice(name,{volume});}
+ function clearAnnouncements(){announcements.length=0;const old=announcement;announcement=null;old?.stop();}
+ function nextAnnouncement(){
+  if(announcement||!enabled)return;const cue=announcements.shift();if(!cue)return;
+  const item=voice(cue.name,{volume:cue.volume});if(!item){nextAnnouncement();return;}
+  announcement=item;const ended=item.source.onended;item.source.onended=()=>{ended();if(announcement===item){announcement=null;nextAnnouncement();}};
+ }
+ function announce(name,volume=1,interrupt=false){
+  if(!enabled||!context||context.state!=='running'||!buffers.has(name))return;
+  if(interrupt)clearAnnouncements();if(announcements.length<8)announcements.push({name,volume});nextAnnouncement();
+ }
+ function syncMatch(round){
+  if(match===round.profileId)return;stopEffects();match=round.profileId;previous=round.actors.map(a=>({...a}));previousPhase=round.phase;freeRunners=round.actors.filter(a=>a.role==='runner'&&!a.caught).length;cacheRemaining=new Map(round.caches?.map(cache=>[cache.id,cache.remaining])||[]);void prepare();
+ }
+ function verdict(round,won){syncMatch(round);if(outcomeMatch===round.profileId)return;outcomeMatch=round.profileId;announce(won?'vc_narration_result_victory':'vc_narration_defeated',1,true);}
+ function results(round,won){syncMatch(round);if(resultMatch===round.profileId)return;resultMatch=round.profileId;if(won)announce('vc_narration_congratulation');}
+ function play(name,volume=1,cooldown=.08){if(!enabled||!context)return;const now=context.currentTime;if(now-(last.get(name)??-Infinity)<cooldown)return;last.set(name,now);if(NARRATION.includes(name))announce(name,volume);else voice(name,{volume});}
  function distanceVolume(id,actors){if(!actors[id]||!actors[0])return 0;return sharedScreen?.75:id===0?1:Math.max(0,1-actors[id].group.position.distanceTo(actors[0].group.position)/18)*.65;}
  function tool(name,id,actors){const volume=distanceVolume(id,actors);if(volume<=0)return;play(TOOL_SOUNDS[name],volume);if(name==='smoke')play('Tool_Smoke_Activate',volume*.8);}
  function capture(id,actors){if(!enabled)return;const volume=distanceVolume(id,actors);if(volume>0)voice('Capture_Scuffle',{volume,duration:CAPTURE_SMOKE_SECONDS});}
- function narrateBeat(beat){const name=NARRATION_BEATS[beat];if(name)play(name,1,.05);}
+ function narrateBeat(beat){const name=NARRATION_BEATS[beat];if(name)announce(name,1,true);}
  function setMusicTrack(name){if(name===musicTrack&&musicVoice)return;if(musicVoice){const old=musicVoice;musicVoice=null;musicTrack=null;old.stop();}if(name){const next=voice(name,{bus:music,loop:true});if(next){musicVoice=next;musicTrack=name;}}}
- function stop(){for(const item of voices)item.stop();loops.clear();coinVoice=null;footsteps.clear();musicVoice=null;musicTrack=null;previous=[];match=null;}
- function stopEffects(){for(const item of voices)if(item!==musicVoice)item.stop();loops.clear();coinVoice=null;footsteps.clear();previous=[];previousPhase=null;freeRunners=0;cacheRemaining.clear();suddenDeath=false;praise=0;match=null;}
- function update(round,actors,active,musicActive=active,map='mall',localInteractHeld=true,shared=false){
+ function stop(){clearAnnouncements();for(const item of voices)item.stop();loops.clear();coinVoice=null;footsteps.clear();musicVoice=null;musicTrack=null;previous=[];match=null;}
+ function stopEffects(){clearAnnouncements();outcomeMatch=resultMatch=null;for(const item of voices)if(item!==musicVoice)item.stop();loops.clear();coinVoice=null;footsteps.clear();previous=[];previousPhase=null;freeRunners=0;cacheRemaining.clear();suddenDeath=false;praise=0;match=null;}
+ function update(round,actors,active,musicActive=active,map='mall',localInteractHeld=true,shared=false,localIds=[0]){
   sharedScreen=shared;
   if(!round){if(match)stopEffects();}
-  else if(match!==round.profileId){stopEffects();match=round.profileId;previous=round.actors.map(a=>({...a}));previousPhase=round.phase;freeRunners=round.actors.filter(a=>a.role==='runner'&&!a.caught).length;cacheRemaining=new Map(round.caches?.map(cache=>[cache.id,cache.remaining])||[]);void prepare();}
+  else syncMatch(round);
   const chaseTrack=map==='sunken'?'pirate-chase-bgm':map==='iceberg'?'iceberg-chase-bgm':'gameplay-bgm';setMusicTrack(musicActive&&musicEnabled?(active?chaseTrack:'menu-bgm'):null);
   if(!round)return;
+  if(!active&&!musicActive&&round.phase==='playing'&&!(round.startRemaining>0))clearAnnouncements();
   const localCollectors=Array.isArray(localInteractHeld)?localInteractHeld:localInteractHeld?[0]:[],collecting=active&&enabled&&localCollectors.some(id=>{const me=round.actors[id];return me?.role==='runner'&&!me.caught&&!me.inSmoke&&me.interacting&&round.caches?.some(c=>c.harvester===id&&c.remaining>0);});
   if(collecting){if(!coinVoice)coinVoice=voice('Coin_GET3',{loop:true,volume:.7});}else if(coinVoice){coinVoice.stop();coinVoice=null;}
   if(!active||!enabled)footsteps.clear();
   round.actors.forEach((state,id)=>{const before=previous[id]||state,volume=distanceVolume(id,actors),flying=state.effect==='rocket'&&state.effectTime>0;
+   if(active&&localIds.includes(id)){
+    if((state.captures||0)>=2&&(before.captures||0)<2)play('vc_menu_narration_nailedit');
+    if((state.rescues||0)>(before.rescues||0))play((state.rescues||0)>=2&&(before.rescues||0)<2?'vc_menu_narration_nocontest':'vc_narration_incledible');
+    if((state.stuns||0)>(before.stuns||0))play(state.role==='runner'?'vc_menu_narration_mob':'vc_menu_narration_vipsmash');
+   }
    if(active){if(!state.caught&&before.caught)play('Thief_Escape',volume);if(state.effect!==before.effect&&state.effectTime>0){if(state.effect==='banana')play('Tool_Banana_Slip',volume);if(['stunned','airStunned'].includes(state.effect))play('Player_Stunned',volume);}if(before.effect==='rocket'&&before.effectTime>0&&!flying)play('Tool_Jetpack_Land',volume);if(state.detectionProgress>0&&!before.detectionProgress&&state.role==='runner'&&round.playerRole==='chaser')play('Police_Capture_Start',volume,.8);}
    const position=actors[id]?.group?.position;
    if(active&&enabled&&position&&Number.isFinite(position.x)&&Number.isFinite(position.z)){
@@ -47,5 +69,5 @@ export function createGameplayAudio(getEngine){
   });
   const alive=round.actors.filter(a=>a.role==='runner'&&!a.caught).length;if(!suddenDeath&&freeRunners>1&&alive===1){suddenDeath=true;play('vc_narration_suddendeath',1,.1);}for(const cache of round.caches||[]){const before=cacheRemaining.get(cache.id);if(before>0&&cache.remaining<=0)play(praise++%2?'vc_menu_narration_great':'vc_menu_narration_waytogo',.9,.1);cacheRemaining.set(cache.id,cache.remaining);}if(previousPhase==='playing'&&round.phase==='finished'&&round.reason==='timeout')play('vc_narration_timeup',1,.1);freeRunners=alive;previousPhase=round.phase;previous=round.actors.map(a=>({...a}));
  }
- return {setLevels({sfx:effects=sfxLevel,music:track=musicLevel}={}){sfxLevel=Math.max(0,Math.min(1,effects));musicLevel=Math.max(0,Math.min(1,track));if(sfx)sfx.gain.value=enabled?.55*sfxLevel:0;if(music)music.gain.value=musicEnabled?.2*musicLevel:0;},unlock,preload,prepare,play,tool,capture,narrateBeat,update,stop,get enabled(){return enabled;},get musicEnabled(){return musicEnabled;},setEnabled(value){enabled=!!value;if(!enabled){coinVoice?.stop();coinVoice=null;footsteps.clear();}try{localStorage.setItem('pnt-game-sfx',enabled?'on':'off');}catch{}if(sfx)sfx.gain.value=enabled?.55*sfxLevel:0;},setMusic(value){musicEnabled=!!value;try{localStorage.setItem('pnt-game-music',musicEnabled?'on':'off');}catch{}if(music)music.gain.value=musicEnabled?.2*musicLevel:0;}};
+ return {setLevels({sfx:effects=sfxLevel,music:track=musicLevel}={}){sfxLevel=Math.max(0,Math.min(1,effects));musicLevel=Math.max(0,Math.min(1,track));if(sfx)sfx.gain.value=enabled?.55*sfxLevel:0;if(music)music.gain.value=musicEnabled?.2*musicLevel:0;},unlock,preload,prepare,play,tool,capture,narrateBeat,verdict,results,update,stop,get enabled(){return enabled;},get musicEnabled(){return musicEnabled;},setEnabled(value){enabled=!!value;if(!enabled){clearAnnouncements();coinVoice?.stop();coinVoice=null;footsteps.clear();}try{localStorage.setItem('pnt-game-sfx',enabled?'on':'off');}catch{}if(sfx)sfx.gain.value=enabled?.55*sfxLevel:0;},setMusic(value){musicEnabled=!!value;try{localStorage.setItem('pnt-game-music',musicEnabled?'on':'off');}catch{}if(music)music.gain.value=musicEnabled?.2*musicLevel:0;}};
 }

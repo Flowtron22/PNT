@@ -45,3 +45,34 @@ active cache ownership. Release stops immediately even before a network update;
 smoke, capture, empty caches, pause and leaving also stop it. Footsteps alternate
 A/B after grounded movement distance, attenuate remotely, reject teleport deltas,
 and stay silent in flight, stun, capture or pause. They use the existing SFX bus.
+
+## Player-supplied announcer and B2B return (0.9.71 / server 0.9.23)
+
+Copied these nine WAVs unchanged from C:/Users/User/Downloads/audio into
+assets/pnt/audio (48 kHz, mono, 16-bit PCM; about 1.6 MB total):
+
+| Event | WAV basename |
+| --- | --- |
+| Local player wins, on-stage verdict | vc_narration_result_victory |
+| Local player loses, on-stage verdict | vc_narration_defeated |
+| Local player completes a rescue | vc_narration_incledible |
+| Local player's second capture this match | vc_menu_narration_nailedit |
+| Local player's second rescue this match (replaces Incredible) | vc_menu_narration_nocontest |
+| Winning player's results/stat screen | vc_narration_congratulation |
+| Local thief successfully hammer-stuns police | vc_menu_narration_mob |
+| Local police successfully hammer-stuns a thief | vc_menu_narration_vipsmash |
+| B2B returns to its mark (replaces the old teleport SFX) | se_assist_ghirahim_teleport |
+
+The source spelling incledible is retained. Capture/rescue totals count successful
+actions, including recaptures/rescues after release, and reset every match. Shared
+rules increment captures/rescues; local and server hammer hits increment stuns.
+Authoritative snapshots carry these additive per-actor counters. Client seat
+remapping preserves them; initial/reconnect snapshots establish silent baselines.
+Couch cues follow all human seats, excluding bot actions; verdict/stat audio
+follows P1's outcome. Existing SFX/master volume controls apply to every clip.
+
+Announcer clips use one voice with a bounded eight-entry queue. Countdown beats
+and the verdict interrupt old announcements; congratulations waits for the current
+voice. Pause, mute, page hiding, menu exit and new matches clear pending lines.
+B2B placement keeps its original deployment sound; only a successful return uses
+the supplied teleport WAV, with existing remote attenuation.

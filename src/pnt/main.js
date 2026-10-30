@@ -460,7 +460,7 @@ function useTool(slot,id=0){if(round?.actors[id]?.inSmoke||round?.startRemaining
  const point=actor.group.position.clone();
  if(tool==='hammer'){
   setEffect(state,'hammer',.48);actor.hammerImpact=.18/ANIMATION_PLAY_RATE;gameFX.hammerSwing(actor);const visual=attachHeldHammer(actor,prop('propHammer',1.25));if(visual)hazards.push({mesh:visual,type:'visual',time:.48});
-  for(const other of round.actors){if(other.role===state.role||other.caught||other.inSmoke)continue;const a=avatars[other.id];if(point.distanceTo(a.group.position)<2&&withinSight(point,a.group.position,false))setEffect(other,a.grounded?'stunned':'airStunned',2);}
+  for(const other of round.actors){if(other.role===state.role||other.caught||other.inSmoke)continue;const a=avatars[other.id];if(point.distanceTo(a.group.position)<2&&withinSight(point,a.group.position,false)){setEffect(other,a.grounded?'stunned':'airStunned',2);state.stuns=(state.stuns||0)+1;}}
   if(id===0)say('HAMMER SWING!',.7);
  }else if(tool==='banana'){
   const mesh=prop('propBanana',.65);mesh.position.copy(point).add(new THREE.Vector3(-Math.sin(actor.group.rotation.y)*.7,.03,-Math.cos(actor.group.rotation.y)*.7));matchRoot.add(mesh);hazards.push({mesh,type:'banana',owner:id,ownerRole:state.role,time:15});gameFX.bananaDeploy(mesh.position);limitItems(id,'banana',5);if(id===0)say('PEEL DROPPED!',.7);
@@ -511,7 +511,7 @@ function clearStageVerdict(){document.body.classList.remove('round-ending');$('#
 function beginStageVerdict(){
  for(const actor of avatars)if(actor.detectionZone)actor.detectionZone.group.visible=false;round.endStarted=true;round.endElapsed=0;paused=false;clearInput();document.body.classList.add('round-ending');const won=round.winner===round.playerRole;
  $('#stage-verdict').classList.toggle('is-lose',!won);$('#stage-verdict-title').textContent=room?.mode==='couch'?(round.winner==='chaser'?'POLICE WIN!':'THIEVES WIN!'):won?'VICTORY!':'DEFEAT';$('#stage-verdict-reason').textContent=round.reason==='timeout'?'TIME UP':round.reason==='money'?'ALL MONEY STOLEN':'ALL THIEVES CAUGHT';$('#stage-verdict').hidden=false;
- uiEffects.sounds.play(won?'victory_fanfare':'defeat_jingle');$('#toast').textContent='';
+ gameAudio.verdict(round,won);uiEffects.sounds.play(won?'victory_fanfare':'defeat_jingle');$('#toast').textContent='';
  for(const a of avatars)a.anim.play(round.actors[a.id].role===round.winner?'dance':'idle');
 }
 function tickStageVerdict(elapsed){
@@ -523,7 +523,7 @@ function refreshOnlineRematch(){
 }
 function showFinalResults(){
  const won=round.winner===round.playerRole;if(!round.profileRecorded){profile=recordMatch(readProfile(localStorage),{id:round.profileId,won});saveProfile(localStorage,profile);round.profileRecorded=true;labels();}
-  const resultCostume=room?.mode==='couch'?room.players[0].costume:costume;show('results');renderResults(ui.results,{round,won,profile,costume:resultCostume,players:room?.players||[],map:mapData?.id||'mall',sounds:uiEffects.sounds,onAgain:online?()=>online.control('rematch'):room?.mode==='couch'?couchRematch:start,onMenu:menu,reduced,online:!!online,couch:room?.mode==='couch',playOutcome:false});try{resultPortrait=createResultPortrait(ui.results.querySelector('.result-character-host'),templates[resultCostume],clips,won,resultCostume==='oyen'?model=>applyOyenAppearance(model,oyenAppearance):null);}catch(error){console.warn('Character portrait could not be rendered',error);}if(room?.mode==='couch'){$('#result-title').textContent=round.winner==='chaser'?'POLICE WIN!':'THIEVES WIN!';$('#again').textContent='BACK TO COUCH LOBBY';}refreshOnlineRematch();
+  gameAudio.results(round,won);const resultCostume=room?.mode==='couch'?room.players[0].costume:costume;show('results');renderResults(ui.results,{round,won,profile,costume:resultCostume,players:room?.players||[],map:mapData?.id||'mall',sounds:uiEffects.sounds,onAgain:online?()=>online.control('rematch'):room?.mode==='couch'?couchRematch:start,onMenu:menu,reduced,online:!!online,couch:room?.mode==='couch',playOutcome:false});try{resultPortrait=createResultPortrait(ui.results.querySelector('.result-character-host'),templates[resultCostume],clips,won,resultCostume==='oyen'?model=>applyOyenAppearance(model,oyenAppearance):null);}catch(error){console.warn('Character portrait could not be rendered',error);}if(room?.mode==='couch'){$('#result-title').textContent=round.winner==='chaser'?'POLICE WIN!':'THIEVES WIN!';$('#again').textContent='BACK TO COUCH LOBBY';}refreshOnlineRematch();
 }
 
 function updateHud(){
@@ -557,7 +557,7 @@ function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed
  else if(preview){const homePreview=['home','tools','costume'].includes(activePage);preview.group.scale.setScalar(homePreview?1.5:1);preview.group.rotation.y=homePreview?-Math.PI/6:0;preview.anim.update(dt);if(previewTime>0){previewTime-=dt;if(previewTime<=0)preview.anim.play('idle');}const p=preview.group.position;if(homePreview)frameMenuCharacter(p,dt,now);else{menuCamera.clearViewOffset();menuCamera.position.set(p.x,p.y+1.45,p.z+4.6);menuCamera.lookAt(p.x,p.y+.8,p.z);previewLayout=null;}}}
 
  moneyTrail.update(round,position=>{matchRoot.updateMatrixWorld();const cache=round?.caches.find(c=>c.position===position),anchor=cacheAnchors.get(cache?.id)||new THREE.Vector3(...position);const p=matchRoot.localToWorld(anchor.clone()).project(matchCamera);return p.z>=-1&&p.z<=1&&Math.abs(p.x)<=1&&Math.abs(p.y)<=1?{x:(p.x*.5+.5)*innerWidth,y:(-p.y*.5+.5)*innerHeight}:null;},elapsed,!!round&&!ui.hud.hidden&&!paused&&!busy&&!document.hidden&&!phoneLandscape.blocked);
- const audioActive=!!round&&round.phase==='playing'&&!(round.startRemaining>0)&&!paused&&!busy&&!document.hidden&&!phoneLandscape.blocked;gameAudio.update(round,avatars,audioActive,!document.hidden&&!phoneLandscape.blocked&&!paused&&(!ui.menu.hidden||!ui.lobby.hidden||audioActive),mapData?.id,room?.mode==='couch'?room.players.flatMap((p,id)=>p&&!p.bot&&((id===0&&interactHeld)||couchInputs.get(id)?.interact)?[id]:[]):interactHeld,room?.mode==='couch');roundStart.update(round,elapsed);
+ const audioActive=!!round&&round.phase==='playing'&&!(round.startRemaining>0)&&!paused&&!busy&&!document.hidden&&!phoneLandscape.blocked;gameAudio.update(round,avatars,audioActive,!document.hidden&&!phoneLandscape.blocked&&!paused&&(!ui.menu.hidden||!ui.lobby.hidden||audioActive),mapData?.id,room?.mode==='couch'?room.players.flatMap((p,id)=>p&&!p.bot&&((id===0&&interactHeld)||couchInputs.get(id)?.interact)?[id]:[]):interactHeld,room?.mode==='couch',room?.mode==='couch'?room.players.flatMap((p,id)=>p&&!p.bot?[id]:[]):[0]);roundStart.update(round,elapsed);
  if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('#toast').textContent='';}updateMarkers();fpsCounter.hidden=!settings.showFps||ui.hud.hidden||busy;
  renderElapsed+=elapsed;
  if(renderGate(now,settings.fpsCap)){if(!ui.lobby.hidden&&!busy)renderLobbyCharacters(Math.min(renderElapsed,.1));else renderer.render(scene,round?matchCamera:menuCamera);fpsFrames++;renderElapsed=0;}

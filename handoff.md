@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.70**, online multiplayer test release. Server: **0.9.22**.
+Current app version: **0.9.71**, online multiplayer test release. Server source: **0.9.23**.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -56,6 +56,26 @@ serves WEB 0.9.70 and the corrected JS/CSS; Render manual deployment succeeded
 and /health confirms 0.9.22 / movementVersion 7. Browser training checks confirm
 timer matrices scale at both .7 and 1.3; settings restored to 1, no console errors.
 Deployment screenshot: .local/review-fixes-deploy.png. No preview server left running.
+
+## Supplied announcer audio — 30 October 2026
+
+0.9.71 / server 0.9.23 imports nine unchanged mono 48 kHz WAVs from
+C:/Users/User/Downloads/audio. See docs/AUDIO_PORT.md for the exact event/filename
+mapping. Victory/defeat voices play at the on-stage verdict; congratulations only
+on the winner's stats screen. Successful rescues play Incredible, with No Contest
+replacing it on the player's second rescue; second capture plays Nailed It.
+Thief hammer stuns play Mob, police hammer stuns VIP Smash. B2B return replaces
+its old teleport SFX with se_assist_ghirahim_teleport.wav; mark placement is unchanged.
+Shared rules count captures/rescues; local and server hammer hits count stuns.
+Counters are per actor, cumulative successes per match, and reset each new match.
+Online snapshots preserve attribution after local-seat remapping; initial and
+reconnect baselines stay silent. Couch achievement cues follow human seats,
+excluding bots; verdict/stats follow P1. An eight-entry announcer queue prevents
+voice overlap; countdown/verdict take priority and pause/mute/hide/menu cleanup
+clears queued lines. Existing master/SFX settings apply. Movement stays version 7.
+Client/server suites, syntax and build pass. Browser Web Audio decoded all nine
+WAVs successfully; hash checks confirm source files were copied unchanged.
+Deployment verification pending.
 
 ## Continue here
 
