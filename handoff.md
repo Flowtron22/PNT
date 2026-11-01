@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 1 November 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.96**, PATTYTIDE release. Server: **0.9.27**.
+Current app version: **0.9.97**, PATTYTIDE navigation fixes. Server: **0.9.27**.
 Release checks: 282 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
@@ -1518,3 +1518,5 @@ Diretide carry balance: client 0.9.94, server 0.9.27, eventVersion 4. Fixed hamm
 Client 0.9.95: removed the redundant carried-patty panel under the timer in Diretide; overhead player counts remain. Classic money HUD unchanged.
 
 Client 0.9.96: user-facing event name PATTYTIDE; removed event card tagline; Events navigation uses a calendar/star SVG. Internal diretide IDs and protocol stay the same.
+
+Client 0.9.97 fixes review findings: returning Home clears the event mode so the normal Tools catalog and equip controls work again; connection-expired/disconnected recovery preserves the room mode along with its code when opening Join. Regression tests exercise actual menu and connection handlers for event and classic modes. Server stays 0.9.27. Release validation: 287 client tests, syntax and build pass. Client deployment is authorized; server code is unchanged at 0.9.27.
