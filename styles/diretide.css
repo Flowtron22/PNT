@@ -1,0 +1,32 @@
+/* Event pages share the existing menu/lobby layout and input controls. */
+.event-nav{background:#7641a4!important;color:#fff!important}
+.diretide-card{display:block;position:relative;width:100%;padding:0;overflow:hidden;border:3px solid #f4bf5f;border-radius:24px;background:#211438;color:#fff;text-align:left;cursor:pointer}
+.diretide-card>img{display:block;width:100%;max-height:30vh;object-fit:cover}
+.diretide-card>span{display:block;padding:clamp(12px,2vw,28px)}
+.diretide-card strong{display:block;font-family:Titan,sans-serif;font-size:clamp(28px,5vw,65px);color:#ffd277}
+.diretide-card small{font-weight:bold;letter-spacing:.08em}.diretide-card p{max-width:42em;line-height:1.5}.diretide-card b{display:block;color:#e2acff}
+#event-training{margin-top:12px;width:100%}
+body[data-assets=ready] #home .main-nav{gap:calc(var(--u)*.65)}
+
+/* Candy numbers replace the rectangular labels; colour still identifies ownership. */
+.event-well-marker,.event-player-marker{position:absolute;left:0;top:0;padding:0;border:0;background:none;box-shadow:none;text-shadow:none;isolation:isolate;overflow:visible;white-space:normal}
+.event-well-marker{width:50px;height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+.event-player-marker{width:44px;height:29px}
+.candy-icon{display:block;width:100%;height:auto;overflow:visible;filter:drop-shadow(0 0 2px var(--player-color)) drop-shadow(0 2px 1px #0007)}
+.well-candy-count{display:block;min-width:28px;text-align:center;font:900 20px/1.1 Rubik,sans-serif;color:#fff;text-shadow:0 2px 2px #21142c,1px 0 #21142c,-1px 0 #21142c}
+.well-hearts{display:block;font:900 12px/1 Rubik,sans-serif;letter-spacing:1px;color:var(--player-color);text-shadow:0 1px 2px #171126}
+.player-candy-count{position:absolute;inset:0;display:grid;place-items:center;font:900 16px/1 Rubik,sans-serif;color:white;text-shadow:0 1px 2px #281033,1px 0 #281033,-1px 0 #281033}
+.event-well-marker.is-target{background:none!important;filter:drop-shadow(0 0 5px #ff385c)}
+.diretide-mode #crew-status{display:none!important}
+@media(max-height:450px){.event-well-marker{width:38px;height:51px}.event-player-marker{width:34px;height:23px}.well-candy-count{font-size:15px}.player-candy-count{font-size:13px}.well-hearts{font-size:9px}}
+/* Burger artwork is square; counts retain their well/player placement. */
+.event-well-marker{width:52px;height:88px}.event-player-marker{width:44px;height:44px}
+.candy-icon{aspect-ratio:1;object-fit:contain;flex-shrink:0}
+@media(max-height:450px){.event-well-marker{width:40px;height:67px}.event-player-marker{width:34px;height:34px}}
+
+/* Carried amounts are displayed above each player. */
+.diretide-mode #money-status{display:none!important}
+
+@media(max-height:450px){.diretide-mode .toast{font-size:16px;max-width:60vw}}
+
+.event-nav i svg{display:block;width:100%;height:100%}

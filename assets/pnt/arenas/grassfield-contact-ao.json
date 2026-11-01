@@ -1,0 +1,14 @@
+{
+  "radius": 0.4,
+  "strength": 0.65,
+  "upwardNormalThreshold": 0.8,
+  "receivers": [
+    "bgr_grassfield_top.001",
+    "bgr_island_brawl_ball_left",
+    "ground_plane.001"
+  ],
+  "resolution": 2048,
+  "samples": 24,
+  "type": "floor contact AO only",
+  "source": "grassfield.glb"
+}

@@ -13,3 +13,5 @@ export function equipTool(loadout,id,slot){
  next[slot]=id;return next;
 }
 export function normalizeCostume(id){return COSTUMES.some(c=>c.id===id)?id:'thief';}
+
+export function modeLoadout(mode,value){return mode==='diretide'?['hammer','banana']:normalizeLoadout(value);}

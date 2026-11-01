@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 export const ARENA_ROUGHNESS=.7;
 export function setArenaSurface(arena){arena.traverse(object=>{if(!object.isMesh)return;for(const material of Array.isArray(object.material)?object.material:[object.material]){if(!material?.isMeshStandardMaterial)continue;material.roughness=ARENA_ROUGHNESS;material.metalness=0;material.roughnessMap=null;material.metalnessMap=null;material.needsUpdate=true;}});}
-const receivers={mall:new Set(['sm_mainfloor','sm_boutiqeuA_floor','sm_cafeA_floor','sm_cafeB_floor','SM_bridge2']),sunken:new Set(['SunkenShip']),iceberg:new Set(['sm_ib_icefloor'])};
+const receivers={mall:new Set(['sm_mainfloor','sm_boutiqeuA_floor','sm_cafeA_floor','sm_cafeB_floor','SM_bridge2']),sunken:new Set(['SunkenShip']),iceberg:new Set(['sm_ib_icefloor']),grassfield:new Set(['bgr_grassfield_top.001','ground_plane.001','bgr_island_brawl_ball_left'])};
 const contactMaps=new Map();
 export const ARENA_SATURATION=1.2;
 function saturateArena(arena){
@@ -31,5 +31,5 @@ export async function bakedArena(arena,id){
     #include <opaque_fragment>`);};
    material.customProgramCacheKey=()=> 'arena-ground-contact-v4';materials.set(source,material);return material;};
   object.material=Array.isArray(object.material)?object.material.map(convert):convert(object.material);
- });saturateArena(arena);arena.userData.bakedLighting=true;
+ });if(id!=='grassfield')saturateArena(arena);arena.userData.bakedLighting=true;
 }

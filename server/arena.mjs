@@ -6,7 +6,7 @@ import {cellIndex} from '../src/pnt/collision.js';
 import {landingMask} from '../src/pnt/landing.js';
 const cache=new Map(),base=new URL('../assets/pnt/arenas/',import.meta.url);
 export async function loadArenaData(id){
- if(!['mall','sunken','iceberg'].includes(id))throw Error('Invalid map');
+ if(!['mall','sunken','iceberg','grassfield'].includes(id))throw Error('Invalid map');
  if(!cache.has(id))cache.set(id,(async()=>{
   const [metadata,nav,collision]=await Promise.all([`${id}.json`,`${id}.nav.json`,`${id}.collision.json`].map(async p=>JSON.parse(await readFile(new URL(p,base),'utf8'))));
   const grid={...nav,...collision,heights:Float32Array.from(collision.groundHeights||nav.heights,v=>v===null?NaN:v)};let template=null;

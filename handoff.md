@@ -1,7 +1,8 @@
 # Police N Thief web prototype — handoff
 
-Updated: 30 October 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.88**, online multiplayer test release. Server: **0.9.23**.
+Updated: 1 November 2026 (Asia/Kuala_Lumpur).
+Current app version: **0.9.96**, PATTYTIDE release. Server: **0.9.27**.
+Release checks: 282 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -1453,3 +1454,67 @@ and preview server `tools/pnt-serve.mjs`. Use these paths, not older historical 
 The preserved foundation attribution is `notices/foundation.txt`. Original external
 source locations are machine-specific; inspect export script defaults before rerunning
 exports. Do not assume the Unreal reference folder was renamed by this web cleanup.
+
+## Diretide event — 31 October 2026
+
+0.9.89 / server 0.9.24 adds EVENTS directly below PLAY, a DIRETIDE card,
+shared Solo Online/Couch Play/host/join/lobby flow and event bot training.
+Separate gameMode matchmaking and room-code validation prevent cross-mode rooms.
+Grassfield comes from the user-supplied PS_3D source folder; source FBXs stay intact.
+Blender preparation corrects the map orientation and preserves Patrics' 62-joint
+rig, with authored idle, walk, smash and celebrate actions. New rules use four
+individual wells, three hearts, enemy deposits, 60-second selection, unstoppable
+AI smashes, tied-target resolution, candy drops, elimination and last-well results.
+See docs/DIRETIDE.md for controls, tuning, asset reproduction and validation.
+Changes are local; no push or deployment was performed. Both client and server
+need deployment together for public Diretide matchmaking.
+
+## Diretide candy and lighting amendments — 31 October 2026
+
+0.9.90 / server 0.9.25 removes the top-left well summary and Patrics label.
+Native candy icons show well totals above and player totals inside. Random small,
+medium and big pickups give 1/3/5, collected on contact; three spawn every five
+seconds with a cap of 28. Hammer/banana spills use synchronized ballistic fans,
+valid landing positions, a bounce and recovery after landing. Static Grassfield
+lighting is baked to a denoised 2048px lightmap and composes Sunken's warm grade
+with 80% light intensity and exposure 1.0. Originals and normal Sunken settings
+are preserved. Event rules version 2 blocks incompatible clients/servers.
+Source and public deployment remain separate; this update is local only.
+See docs/DIRETIDE.md for reproduction and validation details.
+
+## Faster Diretide and ground-only contact AO — 31 October 2026
+
+0.9.91 / server 0.9.26 changes the event to two well hearts and 50-second
+attack cycles. All event movement is 1.3x faster across local/server/prediction.
+Hammer range is 3m and banana spin is 3.5s, scoped to the event. Candy starts
+at 24, spawns six every three seconds, and caps at 44. Cartoon launch/landing
+and local hammer jump/shake reactions are added. Event protocol is now 3.
+The full-scene irradiance bake is replaced with Mall-style floor contact AO
+(radius .4m, strength .65, upward normals > .8) on three ground meshes only.
+Scenery is rebuilt from the original map. See docs/DIRETIDE.md. Local only.
+
+## Patrics jumping-jack idle — 1 November 2026
+
+0.9.92 adds an authored 1.6-second jumping-jack loop on the existing skeleton,
+with two hops, opening/closing arms and legs, landing compensation and shadow
+response. The event view uses it between attacks and blends into walk/smash.
+Boss exports explicitly use 30 FPS, fixing clip durations to their authored
+timing. prepare-diretide.py supports -- --boss-only to preserve map bakes.
+The boss asset URL is versioned to refresh old cached animation assets.
+Client-only; server remains 0.9.26. Changes remain local.
+
+## Krabby Patty asset replacement — 1 November 2026
+
+0.9.93 converts the supplied sm_krabbypatty.fbx, retaining its embedded texture,
+and uses it for all pickup sizes, spills and well piles. The supplied PNG
+replaces the vector candy icon on wells/players and the emoji in the carried HUD.
+Sizes, 1/3/5 values, spawn/spill/shake motion and all rules stay the same.
+Shared model resources survive rematches. The reproducible conversion lives in
+tools/prepare-diretide-pickup.py. Browser desktop/phone checks show all icons
+loaded and no game/shader errors. Client-only; server remains 0.9.26. Local only.
+
+Diretide carry balance: client 0.9.94, server 0.9.27, eventVersion 4. Fixed hammer/banana kit across practice/couch/online; 4s hammer stun, 7s banana spin. Shared carry speed multiplier 1−candy/45, capped at30 (one third speed). Idle boss tracks fullest living well; well burger pile bottom raised above rim.
+
+Client 0.9.95: removed the redundant carried-patty panel under the timer in Diretide; overhead player counts remain. Classic money HUD unchanged.
+
+Client 0.9.96: user-facing event name PATTYTIDE; removed event card tagline; Events navigation uses a calendar/star SVG. Internal diretide IDs and protocol stay the same.

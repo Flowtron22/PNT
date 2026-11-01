@@ -48,7 +48,7 @@ export function createGameplayAudio(getEngine){
   const chaseTrack=map==='sunken'?'pirate-chase-bgm':map==='iceberg'?'iceberg-chase-bgm':'gameplay-bgm';setMusicTrack(musicActive&&musicEnabled?(active?chaseTrack:'menu-bgm'):null);
   if(!round)return;
   if(!active&&!musicActive&&round.phase==='playing'&&!(round.startRemaining>0))clearAnnouncements();
-  const localCollectors=Array.isArray(localInteractHeld)?localInteractHeld:localInteractHeld?[0]:[],collecting=active&&enabled&&localCollectors.some(id=>{const me=round.actors[id];return me?.role==='runner'&&!me.caught&&!me.inSmoke&&me.interacting&&round.caches?.some(c=>c.harvester===id&&c.remaining>0);});
+  const localCollectors=Array.isArray(localInteractHeld)?localInteractHeld:localInteractHeld?[0]:[],collecting=active&&enabled&&localCollectors.some(id=>{const me=round.actors[id];return me?.role==='runner'&&!me.caught&&!me.inSmoke&&me.interacting&&(round.mode==='diretide'||round.caches?.some(c=>c.harvester===id&&c.remaining>0));});
   if(collecting){if(!coinVoice)coinVoice=voice('Coin_GET3',{loop:true,volume:.7});}else if(coinVoice){coinVoice.stop();coinVoice=null;}
   if(!active||!enabled)footsteps.clear();
   round.actors.forEach((state,id)=>{const before=previous[id]||state,volume=distanceVolume(id,actors),flying=state.effect==='rocket'&&state.effectTime>0;

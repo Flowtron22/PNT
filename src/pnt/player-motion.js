@@ -1,11 +1,13 @@
+import {EVENT_SPEED_MULTIPLIER,pattySpeedMultiplier} from './diretide-rules.js';
 import {environmentVelocity} from './environment.js';
 import {sampleGround} from './motion.js';
 import {canTraverse} from './collision.js';
 import {safeLandingCell,nearestLanding} from './landing.js';
 export const MOVEMENT_VERSION=7;
-export function movementSpeed(role,map,human=true,flying=false){return (role==='chaser'?3.65:3.4)*1.15*(map==='iceberg'?1.5:1)*(human?1.08:1)*(flying?1.8:1);}
+export function movementSpeed(role,map,human=true,flying=false){return (role==='chaser'?3.65:3.4)*1.15*(map==='iceberg'?1.5:map==='grassfield'?EVENT_SPEED_MULTIPLIER:1)*(human?1.08:1)*(flying?1.8:1);}
 // Map-local movement shared by authoritative server, practice and client prediction.
 export function advanceActor(actor,state,dx,dz,dt,{grid,map,tilt=0,speed,furniture=null,respawn=null}){
+ if(map==='grassfield')speed*=pattySpeedMultiplier(state.candy);
  const p=actor.group.position,previous=p.clone(),magnitude=Math.hypot(dx,dz),flying=state.effect==='rocket'&&state.effectTime>0,locked=speed===0||state.captureLock>0||state.caught||state.captureRemaining>0||state.effectTime>0&&!['rocket','banana'].includes(state.effect);
  if(actor.wasFlying&&!flying){const landing=actor.flightLanding||nearestLanding(grid,p.x,p.z);if(landing){p.x=landing.x;p.z=landing.z;p.y=Math.max(p.y,landing.y);actor.vx=actor.vz=actor.slideX=0;}else if(respawn)p.copy(typeof respawn==='function'?respawn():respawn);actor.flightLanding=null;previous.copy(p);}
  if(flying&&!actor.wasFlying){actor.flightFloor=p.y;actor.flightLanding=null;}actor.wasFlying=flying;

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {ARENA_ROUGHNESS} from './arena-appearance.js';
 
 // Sunken-only material/light experiment. Every override can be restored in place.
-export function createSunkenLook({renderer,scene,sunlight,fill,hemisphere,bounds,quality='balanced',enabled=true}){
+export function createSunkenLook({renderer,scene,sunlight,fill,hemisphere,bounds,quality='balanced',enabled=true,lightScale=1,exposure=1.12}){
  const records=new Map(),materials=new Map();let active=false,disposed=false;
  const saved={sunColor:sunlight.color.clone(),sunPosition:sunlight.position.clone(),sunIntensity:sunlight.intensity,target:sunlight.target.position.clone(),targetParent:sunlight.target.parent,fillColor:fill.color.clone(),fillIntensity:fill.intensity,sky:hemisphere.color.clone(),ground:hemisphere.groundColor.clone(),hemiIntensity:hemisphere.intensity,exposure:renderer.toneMappingExposure,shadows:renderer.shadowMap.enabled,shadowType:renderer.shadowMap.type,cast:sunlight.castShadow,map:sunlight.shadow.map,mapSize:sunlight.shadow.mapSize.clone(),camera:sunlight.shadow.camera.clone(),bias:sunlight.shadow.bias,normalBias:sunlight.shadow.normalBias};
  const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3()),radius=Math.max(size.x,size.z)*.65+5;
@@ -35,9 +35,9 @@ export function createSunkenLook({renderer,scene,sunlight,fill,hemisphere,bounds
   if(disposed)return;active=!!value;
   renderer.shadowMap.enabled=active||saved.shadows;renderer.shadowMap.type=active?THREE.PCFSoftShadowMap:saved.shadowType;sunlight.castShadow=active||saved.cast;
   if(active){
-   sunlight.color.set('#ffe1b3');sunlight.intensity=2.35;sunlight.position.set(center.x-18,30,center.z+14);sunlight.target.position.set(center.x,0,center.z);if(!sunlight.target.parent)scene.add(sunlight.target);
+   sunlight.color.set('#ffe1b3');sunlight.intensity=2.35*lightScale;sunlight.position.set(center.x-18,30,center.z+14);sunlight.target.position.set(center.x,0,center.z);if(!sunlight.target.parent)scene.add(sunlight.target);
    const c=sunlight.shadow.camera;c.left=c.bottom=-radius;c.right=c.top=radius;c.near=1;c.far=110;c.updateProjectionMatrix();sunlight.shadow.bias=-.00025;sunlight.shadow.normalBias=.035;
-   fill.color.set('#c5e8ee');fill.intensity=.9;hemisphere.color.set('#fff1dd');hemisphere.groundColor.set('#809aa4');hemisphere.intensity=2.1;renderer.toneMappingExposure=1.12;
+   fill.color.set('#c5e8ee');fill.intensity=.9*lightScale;hemisphere.color.set('#fff1dd');hemisphere.groundColor.set('#809aa4');hemisphere.intensity=2.1*lightScale;renderer.toneMappingExposure=exposure;
   }else{
    sunlight.color.copy(saved.sunColor);sunlight.position.copy(saved.sunPosition);sunlight.intensity=saved.sunIntensity;sunlight.target.position.copy(saved.target);
    fill.color.copy(saved.fillColor);fill.intensity=saved.fillIntensity;hemisphere.color.copy(saved.sky);hemisphere.groundColor.copy(saved.ground);hemisphere.intensity=saved.hemiIntensity;renderer.toneMappingExposure=saved.exposure;

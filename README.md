@@ -160,3 +160,9 @@ cannot reset its progress. Other bots choose another task while a rescue is owne
 The Play, Join, Lobby and Results pages have dedicated mobile portrait/landscape
 layouts, dynamic viewport height, safe-area spacing and reachable scrolling content.
 Every map uses the same perspective framing function; it is widened another 10%.
+
+## Diretide event
+
+Choose **EVENTS → DIRETIDE** to play the Grassfield free-for-all with AI Patrics.
+It shares the main game's online/couch lobby flow and includes bot training.
+See [Diretide controls and asset preparation](docs/DIRETIDE.md).

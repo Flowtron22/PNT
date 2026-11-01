@@ -16,6 +16,7 @@ export function updateSmokeCoverage(round,positions,clouds){
  for(const actor of round.actors){const p=xyz(positions[actor.id]);actor.inSmoke=clouds.some(cloud=>{if(cloud.time<=0)return false;const q=xyz(cloud.position);return Math.hypot(p[0]-q[0],p[2]-q[2])<=SMOKE_RADIUS&&Math.abs(p[1]-q[1])<2.2;});if(actor.inSmoke&&['stunned','airStunned','banana'].includes(actor.effect)){actor.effect=null;actor.effectTime=0;}}
 }
 export function activateTool(round,id,slot,tool='hammer'){
+ if(round.mode==='diretide'&&!['hammer','banana'].includes(tool))return false;
  const a=round.actors[id];if(![0,1].includes(slot)||!TOOL_COOLDOWNS[tool]||!canAct(round,id)||a.inSmoke||a.toolCooldowns[slot]>0)return false;a.toolCooldowns[slot]=TOOL_COOLDOWNS[tool];return true;
 }
 export function finishRound(round,winner,reason){if(round.phase!=='playing')return false;round.phase='finished';round.winner=winner;round.reason=reason;return true;}
@@ -45,7 +46,7 @@ export function rescue(round,helperId,targetId,dt,distance,clear=true){
  if(t.rescuer!==helperId){if(t.rescuer!==null&&canAct(round,t.rescuer))return false;t.rescuer=helperId;t.rescueProgress=0;}t.rescueProgress+=Math.min(dt,.1);h.interacting=true;
  if(t.rescueProgress>=RESCUE_SECONDS-.00001){t.caught=false;t.caughtTime=0;t.rescuer=null;t.rescueProgress=0;t.immune=2;h.rescues=(h.rescues||0)+1;return true;}return false;
 }
-export function cancelInteraction(round,id){const a=round.actors[id];if(a)a.interacting=false;for(const c of round.caches)if(c.harvester===id)c.harvester=null;for(const t of round.actors)if(t.rescuer===id){t.rescuer=null;t.rescueProgress=0;}}
+export function cancelInteraction(round,id){const a=round.actors[id];if(a){a.interacting=false;if(round.mode==='diretide'){a.depositProgress=0;a.depositWell=null;}}for(const c of round.caches)if(c.harvester===id)c.harvester=null;for(const t of round.actors)if(t.rescuer===id){t.rescuer=null;t.rescueProgress=0;}}
 export function stepRound(round,dt){
  if(round.phase!=='playing'||!Number.isFinite(dt)||dt<=0)return;const step=Math.min(dt,.1);if(round.startRemaining>0){round.startRemaining=Math.max(0,round.startRemaining-step);if(round.startRemaining<1e-8)round.startRemaining=0;return;}round.remaining=Math.max(0,round.remaining-step);
  for(const a of round.actors){a.captureLock=Math.max(0,(a.captureLock||0)-step);if(a.captureLock<1e-8)a.captureLock=0;a.toolCooldowns=a.toolCooldowns.map(t=>Math.max(0,t-step));a.effectTime=Math.max(0,a.effectTime-step);a.releaseCooldown=Math.max(0,a.releaseCooldown-step);a.immune=Math.max(0,a.immune-step);if(a.caught)a.caughtTime+=step;}
