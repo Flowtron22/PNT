@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 1 November 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.101**, original background with police-light pulses. Server: **0.9.27**.
+Current app version: **0.9.102**, logo removed from loading screen. Server: **0.9.27**.
 Release checks: 282 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
@@ -1530,3 +1530,5 @@ Client 0.9.100 strengthens the title/loading light effect after the first pass w
 Client 0.9.101 restores the original 0.9.98 orange/blue background blobs and their brightness. The red/blue reflection overlay retains the 0.9.100 double-pulse pattern, 4.8-second timing, 2.4-second offset, .025/.72 opacity and reduced-motion support. Local preview only.
 
 Title-screen release 0.9.101: user authorized publishing all startup-screen changes. Validation: 292 client tests, syntax checks and static build pass. Client-only release; server remains 0.9.27. Includes original orange/blue Inkwave-style background, alternating police-light reflections and keyboard/pointer/controller start gate.
+
+Client 0.9.102 removes the Police N Thief logo from the Getting Ready loading overlay and its unused image styling. Loading text/progress remains centred; the press-any-key title screen retains its logo. User authorized deployment; static build verifies the loading logo is removed and the title logo is retained.
