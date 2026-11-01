@@ -1,3 +1,4 @@
+import {createTitleScreen} from './title-screen.js';
 import {applyDiretideGroundAO} from './diretide-lighting.js';
 import {candyMarkerMarkup} from './diretide-ui.js';
 import {createDiretideRound,stepDiretide,collectEventCandy,eventTarget,eventInteract,eventBotGoal,spillOnStun,PLAYER_COLORS,EVENT_HAMMER_RADIUS,EVENT_BANANA_SECONDS,EVENT_STUN_SECONDS} from './diretide-rules.js';
@@ -97,7 +98,8 @@ let selectedMode='classic',eventView=null,eventSmashes=0,eventStage='sleeping';
 let room=null,returnToLobby=false,lobbyDisplays=[],cacheAnchors=new Map();
 const lobbyCamera=new THREE.PerspectiveCamera(34,1,.05,30);lobbyCamera.position.set(0,1.3,3.2);lobbyCamera.lookAt(0,.8,0);
 let reduced=settings.reducedMotion;
-const uiEffects=createWonderUI({blocked:()=>busy||!$('#loading').hidden||!ui.hud.hidden,reduced:()=>reduced});
+const titleScreen=createTitleScreen($('#title-screen'),{onEnter:()=>{clearInput();void gameAudio.prepare();show('menu');openPage('home');}});
+const uiEffects=createWonderUI({blocked:()=>titleScreen.active||busy||!$('#loading').hidden||!ui.hud.hidden,reduced:()=>reduced});
 const gameAudio=createGameplayAudio(()=>uiEffects.sounds.engine);
 void gameAudio.preload();
 const roundStart=createRoundStart(ui.hud,beat=>gameAudio.narrateBeat(beat));
@@ -384,6 +386,7 @@ addEventListener('pointerup',e=>{if(e.pointerType!=='mouse')return;const code=mo
 addEventListener('click',e=>{if(e.button===capturedMouseButton&&performance.now()<capturedMouseClickUntil){capturedMouseButton=null;e.preventDefault();e.stopImmediatePropagation();}},true);
 for(const event of ['contextmenu','auxclick'])addEventListener(event,e=>{if(mouseGameplay()||bindingCapture||performance.now()<capturedMouseClickUntil)e.preventDefault();},true);
 function updateController(now,dt){
+ if(titleScreen.active){titleScreen.gamepad(controller.poll(now).pressed);return;}
  if(room?.mode==='couch'){updateCouchControllers(now,dt);return;}
  if(document.hidden){padMovement={x:0,z:0};return;}const pad=controller.poll(now),status=$('#controller-status');
  if(status){const text=pad.connected?'Controller connected · '+pad.id:'Controller ready · connect a pad and press a button';if(status.textContent!==text)status.textContent=text;}
@@ -590,7 +593,7 @@ function updateHud(){
 
 function positionMatchCamera(){const view=matchView(menuCamera.aspect,stageFrame);scene.fog.near=view.distance+20;scene.fog.far=view.distance+85;const far=view.distance+180;if(matchCamera.far!==far){matchCamera.far=far;matchCamera.updateProjectionMatrix();}matchCamera.position.copy(cameraTarget).add(new THREE.Vector3(...view.offset));const shake=reduced?{x:0,z:0}:shakeOffset(shakeTime,cameraShake*settings.cameraShake);matchCamera.position.x+=shake.x;matchCamera.position.z+=shake.z;matchCamera.lookAt(cameraTarget);}
 
-async function boot(){beginLoading('GETTING READY');try{let done=0;const names=['thief','police','mall-slice'];const items=await Promise.all(names.map(async name=>{const value=await getGLB(name,`assets/pnt/${name}.glb`);progress(++done/4*70,`Loading ${name==='mall-slice'?'Mall promenade':name}…`);return value;}));templates={thief:items[0],police:items[1]};const response=await fetch('assets/pnt/animations/clips.json?v=idle-b1');if(!response.ok)throw new Error('Animation download failed');const data=await response.json();clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));progress(75,'Preparing the walkable arena…');const arena=items[2].scene;menuArena=arena;arena.updateMatrixWorld(true);const initial=new THREE.Box3().setFromObject(arena),center=initial.getCenter(new THREE.Vector3());arena.position.add(new THREE.Vector3(-center.x,-initial.min.y,-center.z));scene.add(arena);arena.updateMatrixWorld(true);setArenaSurface(arena);arena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){if(m.map)m.map.anisotropy=2;}}});bounds=new THREE.Box3().setFromObject(arena);buildGround();menuNavigation={ground,bounds,grid};await ensureCostume();progress(90,'Warming up characters and fonts…');previewModel();await document.fonts.ready;await renderer.compileAsync(scene,menuCamera);progress(100,'All set. Let’s play.');ready=true;document.body.dataset.assets='ready';show('menu');endLoading();openPage('home');}catch(e){document.body.dataset.assets='error';loadError(e,()=>location.reload());}}
+async function boot(){beginLoading('GETTING READY');try{let done=0;const names=['thief','police','mall-slice'];const items=await Promise.all(names.map(async name=>{const value=await getGLB(name,`assets/pnt/${name}.glb`);progress(++done/4*70,`Loading ${name==='mall-slice'?'Mall promenade':name}…`);return value;}));templates={thief:items[0],police:items[1]};const response=await fetch('assets/pnt/animations/clips.json?v=idle-b1');if(!response.ok)throw new Error('Animation download failed');const data=await response.json();clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));progress(75,'Preparing the walkable arena…');const arena=items[2].scene;menuArena=arena;arena.updateMatrixWorld(true);const initial=new THREE.Box3().setFromObject(arena),center=initial.getCenter(new THREE.Vector3());arena.position.add(new THREE.Vector3(-center.x,-initial.min.y,-center.z));scene.add(arena);arena.updateMatrixWorld(true);setArenaSurface(arena);arena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){if(m.map)m.map.anisotropy=2;}}});bounds=new THREE.Box3().setFromObject(arena);buildGround();menuNavigation={ground,bounds,grid};await ensureCostume();progress(90,'Warming up characters and fonts…');previewModel();await document.fonts.ready;await renderer.compileAsync(scene,menuCamera);progress(100,'All set. Let’s play.');ready=true;document.body.dataset.assets='ready';ui.menu.hidden=true;endLoading();titleScreen.show();}catch(e){document.body.dataset.assets='error';loadError(e,()=>location.reload());}}
 let previewLayout=null,previewLayoutTarget=null,previewLayoutKey='',previewLayoutNext=0;
 function frameMenuCharacter(p,dt,now){
  const key=activePage+':'+innerWidth+':'+innerHeight;

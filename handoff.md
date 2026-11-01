@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
 Updated: 1 November 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.97**, PATTYTIDE navigation fixes. Server: **0.9.27**.
+Current app version: **0.9.101**, original background with police-light pulses. Server: **0.9.27**.
 Release checks: 282 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
@@ -1520,3 +1520,13 @@ Client 0.9.95: removed the redundant carried-patty panel under the timer in Dire
 Client 0.9.96: user-facing event name PATTYTIDE; removed event card tagline; Events navigation uses a calendar/star SVG. Internal diretide IDs and protocol stay the same.
 
 Client 0.9.97 fixes review findings: returning Home clears the event mode so the normal Tools catalog and equip controls work again; connection-expired/disconnected recovery preserves the room mode along with its code when opening Join. Regression tests exercise actual menu and connection handlers for event and classic modes. Server stays 0.9.27. Release validation: 287 client tests, syntax and build pass. Client deployment is authorized; server code is unchanged at 0.9.27.
+
+Client 0.9.98: initial asset loading now stops on a Police N Thief title screen until a fresh key, click/tap or controller button. Background adapts the referenced Inkwave loading screen (dark purple gradient, six blurred orange/blue floating shapes and dotted overlay); both loading and title share it. Existing Wonder Wave MIT notice covers the adaptation. src/pnt/title-screen.js consumes start input and its follow-up click to avoid accidental menu actions, ignores held-key repeats/modifiers, and enters only once per boot. Returning to the menu after matches bypasses this startup gate. Verified desktop keyboard and phone-size click flow; 292 client tests, syntax/build pass. Local preview only; live client remains 0.9.97, server 0.9.27.
+
+Client 0.9.99: startup/loading background uses subdued red/blue edge reflections instead of orange/blue blobs. Broad radial washes gently crossfade over 12 seconds, offset by six seconds, with low opacity; no strobing or abrupt colour cuts. Both OS and in-game reduced-motion settings stop the animation. Local preview only.
+
+Client 0.9.100 strengthens the title/loading light effect after the first pass was too subtle: two smooth red edge pulses, then two blue edge pulses, in a 4.8-second cycle with a 2.4-second offset. Peak overlay opacity .72, trough .025; radial masks constrain brightness changes toward the edges. Reduced-motion overrides remain static. Local preview only.
+
+Client 0.9.101 restores the original 0.9.98 orange/blue background blobs and their brightness. The red/blue reflection overlay retains the 0.9.100 double-pulse pattern, 4.8-second timing, 2.4-second offset, .025/.72 opacity and reduced-motion support. Local preview only.
+
+Title-screen release 0.9.101: user authorized publishing all startup-screen changes. Validation: 292 client tests, syntax checks and static build pass. Client-only release; server remains 0.9.27. Includes original orange/blue Inkwave-style background, alternating police-light reflections and keyboard/pointer/controller start gate.

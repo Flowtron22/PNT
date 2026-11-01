@@ -1,0 +1,32 @@
+/* Loading backdrop adapted from Inkwave's iw-loading; attribution: notices/wonder-wave-mit.txt. */
+.entry-screen{isolation:isolate;overflow:hidden;background:radial-gradient(120% 90% at 50% 40%,#2b2050 0%,#161029 58%,#0b0814 100%)}
+.entry-screen:after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(#ffffff10 1.2px,transparent 1.6px) 0 0/12px 12px;mask-image:radial-gradient(ellipse at center,transparent 30%,#000 90%)}
+.entry-background{position:absolute;inset:0;z-index:-2;overflow:hidden;pointer-events:none}
+.entry-background i{position:absolute;border-radius:50%;filter:blur(clamp(28px,5vw,85px));opacity:.5;animation:entry-float 14s ease-in-out infinite alternate}
+.entry-background i:nth-child(odd){background:#ff8a14}.entry-background i:nth-child(even){background:#2f5bff}
+.entry-background i:nth-child(1){width:42vw;height:42vw;left:-12vw;top:-14vw}
+.entry-background i:nth-child(2){width:46vw;height:46vw;right:-14vw;bottom:-20vw;animation-delay:-4s}
+.entry-background i:nth-child(3){width:18vw;height:18vw;right:12vw;top:6vh;opacity:.3;animation-delay:-7s}
+.entry-background i:nth-child(4){width:22vw;height:22vw;left:10vw;bottom:2vh;opacity:.28;animation-delay:-2s}
+.entry-background i:nth-child(5){width:10vw;height:10vw;left:44vw;top:4vh;opacity:.22;animation-delay:-9s}
+.entry-background i:nth-child(6){width:12vw;height:12vw;left:60vw;bottom:8vh;opacity:.22;animation-delay:-5s}
+.title-screen{position:fixed;inset:0;z-index:49;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5vh 5vw}
+.title-logo{position:absolute;top:9vh;left:50%;transform:translateX(-50%);width:min(66vw,800px);height:54vh;object-fit:contain;filter:drop-shadow(0 14px 0 #08061288)}
+.title-start{position:absolute;bottom:max(13vh,env(safe-area-inset-bottom));border:0;background:none;box-shadow:none;text-align:center;padding:18px 22px;animation:entry-prompt 2.4s ease-in-out infinite}
+.title-start strong{display:block;font:clamp(25px,4vw,52px)/1.2 Titan,sans-serif;letter-spacing:.025em;text-shadow:0 4px 0 #0b0814,-2px -2px 0 #0b0814,2px -2px 0 #0b0814,-2px 2px 0 #0b0814,2px 2px 0 #0b0814}
+.title-start small{display:block;margin-top:9px;font:800 clamp(10px,1.1vw,15px)/1.4 Rubik,sans-serif;letter-spacing:.12em;color:#d4cce5}
+.title-start:focus-visible{outline:none;filter:drop-shadow(0 0 10px #ffffff33)}
+.entry-version{position:absolute;bottom:max(18px,env(safe-area-inset-bottom));right:max(24px,env(safe-area-inset-right));font:800 10px Rubik,sans-serif;letter-spacing:.1em;color:#a398b6}
+@keyframes entry-float{to{translate:4vw 3vh;scale:1.12}}
+@keyframes entry-prompt{50%{opacity:.7;transform:translateY(3px)}}
+.reduced-motion .entry-background i,.reduced-motion .title-start{animation:none}
+@media(prefers-reduced-motion:reduce){.entry-background i,.title-start{animation:none}}
+@media(max-height:450px){.title-logo{top:5vh;height:53vh;width:min(61vw,580px)}.title-start{bottom:9vh;padding:10px}.title-start strong{font-size:clamp(24px,4vw,36px)}.title-start small{margin-top:6px}}
+
+/* Distant police-light reflections: two soft red pulses followed by two blue pulses. */
+.entry-background:before,.entry-background:after{content:'';position:absolute;inset:-12%;pointer-events:none;will-change:opacity,transform;animation:entry-siren-reflection 4.8s ease-in-out infinite}
+.entry-background:before{background:radial-gradient(ellipse at 0% 42%,#e52e5399 0%,#ba254955 28%,transparent 65%)}
+.entry-background:after{background:radial-gradient(ellipse at 100% 58%,#3974ee99 0%,#245ac855 28%,transparent 65%);animation-delay:-2.4s}
+@keyframes entry-siren-reflection{0%,24%,48%,100%{opacity:.025;transform:translate3d(-2%,0,0)}12%,36%{opacity:.72;transform:translate3d(2%,1%,0)}}
+.reduced-motion .entry-background:before,.reduced-motion .entry-background:after{animation:none;opacity:.14;will-change:auto}
+@media(prefers-reduced-motion:reduce){.entry-background:before,.entry-background:after{animation:none;opacity:.14;will-change:auto}}
