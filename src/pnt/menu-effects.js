@@ -47,6 +47,7 @@ export function createWonderUI({blocked=()=>false,reduced=()=>false}={}){
  const release=()=>{for(const el of document.querySelectorAll('.is-down'))el.classList.remove('is-down');};document.addEventListener('pointerup',release,true);document.addEventListener('pointercancel',release,true);
  document.addEventListener('change',event=>{if(!blocked()&&event.target.matches('#menu select,#lobby select'))sounds.play('ui_toggle');});
  document.addEventListener('focusin',event=>{if(mode==='keyboard')setFocus(event.target.closest('button'),true);});
+ document.addEventListener('controllerfocus',event=>{const el=event.target.closest?.('button');if(!eligible(el))return;mode='keyboard';point=null;el.style.setProperty('--mx','50%');el.style.setProperty('--my','50%');setFocus(el,true);});
  document.addEventListener('click',event=>{
   const el=event.target.closest('button');if(!eligible(el)||blocked())return;
   let sound='ui_click';if(el.matches('.back-button,#quit-lobby,#leave,#result-menu,#cancel-countdown,#cancel-profile-name'))sound='ui_back';else if(el.matches('[data-page="play"],#training,.primary,#host-lobby,#start-lobby,.wardrobe-grid .choice,[id^="equip-slot"]'))sound='ui_confirm';else if(el.matches('#role-preference,#add-bot,#remove-bot'))sound='ui_toggle';

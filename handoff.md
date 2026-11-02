@@ -1,7 +1,7 @@
 # Police N Thief web prototype — handoff
 
-Updated: 1 November 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.104**, controller on-screen text keyboard. Server: **0.9.27**.
+Updated: 2 November 2026 (Asia/Kuala_Lumpur).
+Current app version: **0.9.105**, synchronized controller and mouse menu focus. Server: **0.9.27**.
 Release checks: 297 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
@@ -1553,3 +1553,12 @@ six-character limit. Keyboard input still works while the modal is open. The new
 module and CSS are included in static builds. Pure editing and integration tests
 cover selection replacement, length limits, filtering and controller routing.
 Client-only; server remains 0.9.27.
+
+Client 0.9.105 synchronizes controller navigation with the main menu's Inkwave
+mouse-hover state. Spatial navigation dispatches a controller-focus event, which
+moves the shared `is-focus` state to the selected button and clears stale pointer
+focus. Controller-selected buttons now receive the same animated orange blob,
+dark label/icon, tilt, scale, hover sound and custom cursor treatment as mouse
+hover. A `.pad-focus` CSS fallback keeps the fill visible if animation setup is
+late. Controller regressions cover the event bridge and animated blob. Client-only;
+server remains 0.9.27.

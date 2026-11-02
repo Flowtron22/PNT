@@ -1,6 +1,6 @@
 # Player input
 
-Version 0.9.104 supports keyboard, mouse buttons, touch and a browser-standard
+Version 0.9.105 supports keyboard, mouse buttons, touch and a browser-standard
 controller. All send the same movement and actions to practice and multiplayer.
 
 ## Controller
@@ -25,9 +25,9 @@ status; HUD action labels follow the device being used. Vibration is optional an
 depends on the device and browser. Browser audio may require an initial click/tap
 or keyboard gesture even when playing with a pad.
 
-Menu and matchmaking navigation gives the active control an explicit orange fill,
-outline and glow instead of relying on browser keyboard-focus detection. Directional
-movement smoothly scrolls the focused control into view. Lobby rerenders preserve
+Menu and matchmaking navigation gives the active control the same animated orange
+hover treatment as the mouse, including its fill, label/icon colour, outline and glow.
+Directional movement smoothly scrolls the focused control into view. Lobby rerenders preserve
 the focused control by stable ID, so adding bots, changing stages or preferences no
 longer resets navigation to the first lobby button.
 
