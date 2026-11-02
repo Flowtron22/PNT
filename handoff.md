@@ -1,8 +1,8 @@
 # Police N Thief web prototype — handoff
 
 Updated: 1 November 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.103**, visible and persistent controller menu focus. Server: **0.9.27**.
-Release checks: 294 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
+Current app version: **0.9.104**, controller on-screen text keyboard. Server: **0.9.27**.
+Release checks: 297 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -1542,3 +1542,14 @@ so adding/removing bots, changing stage/preference and countdown updates no long
 reset navigation to Quit Lobby. Mouse/touch input clears the controller highlight.
 Controller regressions cover replacement focus, scrolling and styling. Client-only;
 server remains 0.9.27.
+
+Client 0.9.104 adds a controller-operated QWERTY keyboard for player-name and
+room-code fields. Selecting a text input with A opens a bottom modal with a live
+value preview and explicit orange controller focus. Stick/D-pad moves, A types,
+X backspaces, Y inserts a space where allowed, B restores the original value and
+cancels, and Start accepts. Player names support case toggle, apostrophe, hyphen
+and spaces; room codes expose uppercase alphanumeric keys only and retain the
+six-character limit. Keyboard input still works while the modal is open. The new
+module and CSS are included in static builds. Pure editing and integration tests
+cover selection replacement, length limits, filtering and controller routing.
+Client-only; server remains 0.9.27.

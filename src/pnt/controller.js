@@ -37,7 +37,7 @@ export function createController(device,index=null){
 }
 
 const menuFocus=new WeakMap();
-function menuScope(doc){const modal=doc.querySelector('#room-help:not([hidden])');return modal||['pause','results','lobby','menu'].map(id=>doc.getElementById(id)).find(el=>el&&!el.hidden)||null;}
+function menuScope(doc){const modal=doc.querySelector('#virtual-keyboard:not([hidden]),#room-help:not([hidden])');return modal||['pause','results','lobby','menu'].map(id=>doc.getElementById(id)).find(el=>el&&!el.hidden)||null;}
 function menuItems(scope){return [...scope.querySelectorAll('button,input,select,a[href]')].filter(el=>!el.disabled&&!el.closest('[hidden]')&&el.getClientRects().length);}
 function focusKey(el,index){
  if(el.id)return 'id:'+el.id;
@@ -59,7 +59,7 @@ export function controllerMenu(doc,command){
  if(!current){focus(items[0]);return;}
  if(command==='accept'){
   if(current.matches('input[type=range],select'))return;
-  if(current.matches('input:not([type=checkbox])'))return;
+  if(current.matches('input:not([type=checkbox])')){current.dispatchEvent(new Event('controllertext',{bubbles:true}));if(menuScope(doc)!==scope)controllerMenu(doc,'down');return;}
   const key=keyFor(current);current.click();
   const nextScope=menuScope(doc);if(!nextScope)return;const nextItems=menuItems(nextScope),nextKey=menuFocus.get(nextScope),nextKeyFor=el=>focusKey(el,nextItems.indexOf(el));
   const active=nextItems.includes(doc.activeElement)?doc.activeElement:null,remembered=nextItems.find(el=>nextKeyFor(el)===(nextScope===scope?key:nextKey));

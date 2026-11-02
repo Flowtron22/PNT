@@ -31,6 +31,7 @@ import {renderHomeWidgets} from './home-widgets.js';
 import {loadSettings,saveSettings,DEFAULT_SETTINGS,createRenderGate} from './settings.js';
 import {mountSettings} from './settings-ui.js';
 import {createController,createControllerPool,controllerMenu} from './controller.js';
+import {createVirtualKeyboard} from './virtual-keyboard.js';
 import {bindGameControls} from './touch-controls.js';
 import {configureFullscreen} from './fullscreen.js';
 import {configureLandscape} from './landscape.js';
@@ -66,6 +67,7 @@ const renderGate=createRenderGate();let fpsSince=performance.now(),fpsFrames=0,r
 const fpsCounter=document.createElement('div');fpsCounter.id='fps-counter';fpsCounter.hidden=true;document.body.append(fpsCounter);
 const couchControllers=createControllerPool(navigator),couchInputs=new Map();let couchRosterSignature='';
 const controller=createController(navigator),interactionSources=new Set();let padMovement={x:0,z:0},controllerActive=false;
+const virtualKeyboard=createVirtualKeyboard(document);
 const haptics=createHaptics(navigator,{enabled:localStorage.getItem('pnt-haptics')!=='off'});
 let touchControls,interactHeld=false,menuArena=null,gameArena=null,mapData=null,menuNavigation=null;
 let profile=readProfile(localStorage);
@@ -353,7 +355,7 @@ function refreshCostumeSelection(){
 async function selectCostume(id){if(id===costume)return;const previous=costume;costume=id;beginLoading('DRESSING FOR TROUBLE');try{await ensureCostume();progress(90,'Preparing your character…');previewModel();await renderer.compileAsync(scene,menuCamera);localStorage.setItem('pnt-costume',costume);endLoading();refreshCostumeSelection();}catch(error){costume=previous;loadError(error,()=>selectCostume(id));}}
 for(const b of document.querySelectorAll('[data-page]'))b.onclick=()=>{if(b.dataset.page==='play')selectedMode='classic';openPage(b.dataset.page);};
 $('#training').onclick=()=>{selectedMode='classic';hostLobby();};
-$('#profile-name-edit').onclick=()=>{$('#profile-name-form').hidden=false;$('#profile-name-edit').setAttribute('aria-expanded','true');$('#profile-name-input').value=profile.name;$('#profile-name-input').focus();$('#profile-name-input').select();};
+$('#profile-name-edit').onclick=()=>{$('#profile-name-form').hidden=false;$('#profile-name-edit').setAttribute('aria-expanded','true');$('#profile-name-input').value=profile.name;$('#profile-name-input').focus();$('#profile-name-input').select();if(controllerActive)virtualKeyboard.open($('#profile-name-input'));};
 function closeNameForm(){$('#profile-name-form').hidden=true;$('#profile-name-edit').setAttribute('aria-expanded','false');$('#profile-name-edit').focus();}
 $('#cancel-profile-name').onclick=closeNameForm;
 $('#profile-name-input').onkeydown=e=>{if(e.code==='Escape'){e.stopPropagation();closeNameForm();}};
@@ -392,6 +394,7 @@ function updateController(now,dt){
  if(document.hidden){padMovement={x:0,z:0};return;}const pad=controller.poll(now),status=$('#controller-status');
  if(status){const text=pad.connected?'Controller connected · '+pad.id:'Controller ready · connect a pad and press a button';if(status.textContent!==text)status.textContent=text;}
  if(!pad.connected)setControlDevice(false);else if(pad.pressed.size||pad.x||pad.z)setControlDevice(true);
+ if(virtualKeyboard.active){if(pad.direction)controllerMenu(document,pad.direction);if(pad.pressed.has(0))controllerMenu(document,'accept');if(pad.pressed.has(1))virtualKeyboard.cancel();if(pad.pressed.has(2))virtualKeyboard.backspace();if(pad.pressed.has(3))virtualKeyboard.space();if(pad.pressed.has(9))virtualKeyboard.done();return;}
  const game=mouseGameplay()&&round.phase==='playing'&&!(round.startRemaining>0);padMovement=game?{x:pad.x,z:pad.z}:{x:0,z:0};
  controller.rumble(round?.actors[0]?.effect,dt,game&&controllerActive&&round.actors[0].effectTime>0,settings.haptics);
  if(!pad.connected||!game||!pad.held.has(0)){if(interactionSources.has('controller'))stopInteract('controller');}
@@ -403,6 +406,8 @@ function updateController(now,dt){
  if(pad.direction)controllerMenu(document,pad.direction);
  if(pad.pressed.has(4))controllerMenu(document,'tabLeft');if(pad.pressed.has(5))controllerMenu(document,'tabRight');if(pad.pressed.has(0))controllerMenu(document,'accept');
 }
+
+document.addEventListener('controllertext',e=>{if(e.target instanceof HTMLInputElement)virtualKeyboard.open(e.target);});
 
 touchControls=bindGameControls({root:document,sensitivity:()=>settings.joystickSensitivity,joystick:$('#joystick'),knob:$('#stick'),isActive:()=>!ui.hud.hidden&&!busy&&!paused&&!phoneLandscape.blocked&&round?.phase==='playing'&&!(round.startRemaining>0),onMove:(x,z)=>{input.x=x;input.z=z;},actions:[[$('#interact'),interact,stopInteract],[$('#tool-action1'),()=>useTool(0)],[$('#tool-action2'),()=>useTool(1)],[$('#pause-button'),pauseGame]]});
 $('#pause-button').onclick=null;

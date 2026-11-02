@@ -1,6 +1,6 @@
 # Player input
 
-Version 0.9.103 supports keyboard, mouse buttons, touch and a browser-standard
+Version 0.9.104 supports keyboard, mouse buttons, touch and a browser-standard
 controller. All send the same movement and actions to practice and multiplayer.
 
 ## Controller
@@ -30,6 +30,12 @@ outline and glow instead of relying on browser keyboard-focus detection. Directi
 movement smoothly scrolls the focused control into view. Lobby rerenders preserve
 the focused control by stable ID, so adding bots, changing stages or preferences no
 longer resets navigation to the first lobby button.
+
+Selecting a text field with the controller opens the on-screen QWERTY keyboard.
+Use the stick/D-pad to move, A/Cross to type, X/Square to backspace, Y/Triangle
+for a space, B/Circle to cancel and Start/Options to finish. Player-name mode
+includes case, apostrophe, hyphen and space controls. Room-code mode accepts only
+six uppercase letters or digits. Physical keyboard entry continues to work.
 
 The radial dead zone is 0.14 with full deflection at 0.96. Direction repeats start
 at 330 ms then every 130 ms. Tool presses are edges; interaction is held. Pads
