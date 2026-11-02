@@ -1,6 +1,6 @@
 # Player input
 
-Version 0.9.105 supports keyboard, mouse buttons, touch and a browser-standard
+Version 0.9.106 supports keyboard, mouse buttons, touch and a browser-standard
 controller. All send the same movement and actions to practice and multiplayer.
 
 ## Controller
@@ -40,6 +40,11 @@ six uppercase letters or digits. Physical keyboard entry continues to work.
 The radial dead zone is 0.14 with full deflection at 0.96. Direction repeats start
 at 330 ms then every 130 ms. Tool presses are edges; interaction is held. Pads
 must return to rest after reconnecting or clearing input (pause, blur, etc.).
+
+In Couch Crew, entering with keyboard or mouse reserves P1 for keyboard; pressing
+Start on a controller then joins the next open player lane. Entering with a
+controller assigns that pad to P1. The controller host uses D-pad left/right to
+change maps and Start/Options to begin once every human player is ready.
 
 ## Keyboard and mouse
 

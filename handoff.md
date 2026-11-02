@@ -1,8 +1,8 @@
 # Police N Thief web prototype — handoff
 
 Updated: 2 November 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.105**, synchronized controller and mouse menu focus. Server: **0.9.27**.
-Release checks: 297 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
+Current app version: **0.9.106**, corrected Couch Crew controller ownership and host controls. Server: **0.9.27**.
+Release checks: 298 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -1562,3 +1562,12 @@ dark label/icon, tilt, scale, hover sound and custom cursor treatment as mouse
 hover. A `.pad-focus` CSS fallback keeps the fill visible if animation setup is
 late. Controller regressions cover the event bridge and animated blob. Client-only;
 server remains 0.9.27.
+
+Client 0.9.106 fixes Couch Crew controller ownership and host controls. Opening
+the lobby through keyboard/mouse now reserves P1 for keyboard, so an unassigned
+controller's first Start press joins P2 instead of silently taking P1. Opening
+through controller still allows that controller to claim P1. The P1 controller
+can change maps with D-pad left/right outside a picker and start a fully ready
+crew with Start/Options; LB/RB map shortcuts remain. A pure host-routing test
+covers map authority, picker isolation and start eligibility. Client-only; server
+remains 0.9.27.

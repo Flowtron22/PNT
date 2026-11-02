@@ -15,7 +15,7 @@ import {makeAnimator,animationFor,ANIMATION_PLAY_RATE} from './animation.js';
 import {COSTUMES,TOOLS} from './catalog.js';
 import {lobbyMaps,createLobby,addBot,removeBot,beginCountdown,cancelCountdown,stepLobby,cycleMap,resolveRole,validateRoomCode,PREFERENCES,BOTS} from './lobby-state.js';
 import {renderLobby} from './lobby-ui.js';
-import {createCouchLobby,joinCouch,syncCouchConnections,canStartCouch,prepareCouchMatch,couchCommand,couchHuman,couchInputFor} from './couch-state.js';
+import {createCouchLobby,joinCouch,syncCouchConnections,canStartCouch,couchHostLobbyAction,prepareCouchMatch,couchCommand,couchHuman,couchInputFor} from './couch-state.js';
 import {renderCouchLobby,updateCouchHud} from './couch-ui.js';
 import {createWonderUI} from './menu-effects.js';
 import {createGameplayAudio} from './game-audio.js';
@@ -172,7 +172,7 @@ function refreshLobby(){if(room?.mode==='couch'){refreshCouchLobby();return;}if(
 }
 async function hostCouchLobby(){
  if(!ready||busy)return;beginLoading('GATHERING THE COUCH CREW');await nextFrame();
- try{let loaded=0;await Promise.all(COSTUMES.map(async c=>{if(!templates[c.id]&&c.file)templates[c.id]=await getGLB(c.id,`assets/pnt/costumes/${c.file}.glb`);progress(++loaded/COSTUMES.length*85,'Preparing costumes for the crew…');}));room=createCouchLobby(costume,loadout,profile.name);room.gameMode=selectedMode;couchRosterSignature='';returnToLobby=false;show('lobby');refreshLobby();for(const display of lobbyDisplays)await renderer.compileAsync(display.scene,lobbyCamera);endLoading();}catch(error){room=null;loadError(error,hostCouchLobby);}
+ try{let loaded=0;await Promise.all(COSTUMES.map(async c=>{if(!templates[c.id]&&c.file)templates[c.id]=await getGLB(c.id,`assets/pnt/costumes/${c.file}.glb`);progress(++loaded/COSTUMES.length*85,'Preparing costumes for the crew…');}));room=createCouchLobby(costume,loadout,profile.name,!controllerActive);room.gameMode=selectedMode;couchRosterSignature='';returnToLobby=false;show('lobby');refreshLobby();for(const display of lobbyDisplays)await renderer.compileAsync(display.scene,lobbyCamera);endLoading();}catch(error){room=null;loadError(error,hostCouchLobby);}
 }
 function refreshCouchLobby(){
  const signature=room.players.map(p=>p?`${p.costume}/${p.bot}`:'empty').join('|');if(signature!==couchRosterSignature){couchRosterSignature=signature;buildLobbyDisplays();}
@@ -188,7 +188,7 @@ function updateCouchControllers(now,dt){
   if(!pad.connected)continue;let id=room.players.findIndex(p=>p&&!p.bot&&p.controller===pad.index);
   if(id<0){if((!ui.lobby.hidden||paused||!ui.results.hidden)&&pad.pressed.size){id=joinCouch(room,pad.index);if(id>=0){void gameAudio.prepare();if(!ui.lobby.hidden)refreshLobby();}}continue;}
   if(pad.pressed.size)void gameAudio.prepare();
-  if(!ui.lobby.hidden){if(pad.direction)couchLobbyCommand(id,pad.direction);if(room?.mode!=='couch')return;if(pad.pressed.has(1)){couchLobbyCommand(id,'back');if(room?.mode!=='couch')return;}if(!room.players[id]||room.players[id].bot)continue;if(pad.pressed.has(0))couchLobbyCommand(id,'accept');if(pad.pressed.has(2))couchLobbyCommand(id,'ready');if(id===0){if(pad.pressed.has(4)||pad.pressed.has(5)){cycleMap(room,pad.pressed.has(5)?1:-1);refreshLobby();}if(pad.pressed.has(9))startCouchCountdown();}continue;}
+  if(!ui.lobby.hidden){const hostAction=couchHostLobbyAction(room,id,pad.pressed.has(9)?'start':pad.direction);if(hostAction?.map){cycleMap(room,hostAction.map);refreshLobby();}else if(pad.direction)couchLobbyCommand(id,pad.direction);if(room?.mode!=='couch')return;if(pad.pressed.has(1)){couchLobbyCommand(id,'back');if(room?.mode!=='couch')return;}if(!room.players[id]||room.players[id].bot)continue;if(pad.pressed.has(0))couchLobbyCommand(id,'accept');if(pad.pressed.has(2))couchLobbyCommand(id,'ready');if(id===0){if(pad.pressed.has(4)||pad.pressed.has(5)){cycleMap(room,pad.pressed.has(5)?1:-1);refreshLobby();}if(hostAction?.start)startCouchCountdown();}continue;}
   if(pad.pressed.has(9)){if(paused)resume();else if(round&&!ui.hud.hidden)pauseGame();return;}
   if(paused||!ui.results.hidden){if(id===0){if(pad.direction)controllerMenu(document,pad.direction);if(pad.pressed.has(0)){controllerMenu(document,'accept');return;}if(pad.pressed.has(1)&&paused){resume();return;}}continue;}
   const active=round?.phase==='playing'&&!(round.startRemaining>0)&&!phoneLandscape.blocked;

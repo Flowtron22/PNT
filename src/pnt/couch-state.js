@@ -1,8 +1,8 @@
 import {createLobby,BOTS,lobbyMaps} from './lobby-state.js';
 import {normalizeCostume,normalizeLoadout,equipTool,modeLoadout} from './loadout.js';
 import {COSTUMES,TOOLS} from './catalog.js';
-export function createCouchLobby(costume,loadout,name='Player 1'){
- const room=createLobby(costume);return {...room,mode:'couch',keyboardHost:false,players:[{name,costume:normalizeCostume(costume),loadout:normalizeLoadout(loadout),bot:false,controller:null,connected:true,ready:false,cursor:0,picker:null},null,null,null]};
+export function createCouchLobby(costume,loadout,name='Player 1',keyboardHost=false){
+ const room=createLobby(costume);return {...room,mode:'couch',keyboardHost:!!keyboardHost,players:[{name,costume:normalizeCostume(costume),loadout:normalizeLoadout(loadout),bot:false,controller:null,connected:true,ready:false,cursor:0,picker:null},null,null,null]};
 }
 export function joinCouch(room,index){
  const assigned=room.players.findIndex(p=>p&&!p.bot&&p.controller===index);if(assigned>=0)return assigned;
@@ -12,6 +12,12 @@ export function joinCouch(room,index){
 }
 export function syncCouchConnections(room,pads){let lost=false,changed=false;for(const p of room.players){if(!p||p.bot||p.controller===null)continue;const connected=!!pads.find(pad=>pad.index===p.controller&&pad.connected);if(p.connected!==connected){changed=true;p.connected=connected;p.ready=false;if(!connected)lost=true;}}if(lost&&room.phase==='countdown'){room.phase='waiting';room.countdown=0;}return {lost,changed};}
 export function canStartCouch(room){const humans=room.players.filter(p=>p&&!p.bot);return room.phase==='waiting'&&humans.length>=2&&humans.every(p=>p.connected&&p.ready&&!p.picker)&&!!lobbyMaps(room)[room.map]?.available;}
+export function couchHostLobbyAction(room,slot,command){
+ const player=room?.players?.[slot];if(slot!==0||!player||player.bot||!player.connected||player.picker||room.phase!=='waiting')return null;
+ if(command==='left'||command==='right')return {map:command==='right'?1:-1};
+ if(command==='start')return {start:canStartCouch(room)};
+ return null;
+}
 export function prepareCouchMatch(room){if(!canStartCouch(room))return false;room.players=room.players.map((p,i)=>p||{...BOTS[Math.max(0,i-1)],bot:true,loadout:['hammer','banana'],ready:true});return true;}
 export function couchCommand(room,slot,command){
  const p=room.players[slot];if(room.gameMode==='diretide'&&p){p.loadout=modeLoadout(room.gameMode,p.loadout);if(p.picker?.type!=='costume')p.picker=null;if(command==='accept'&&[1,2].includes(p.cursor))return false;}if(!p||p.bot||!p.connected||room.phase!=='waiting')return false;
