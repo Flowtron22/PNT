@@ -35,6 +35,13 @@ test('controller focus survives a lobby rebuild and scrolls the replacement into
  controllerMenu(doc,'down');controllerMenu(doc,'down');assert.equal(focused,second);controllerMenu(doc,'accept');assert.equal(focused,replacement);assert.equal(replacement.classList.contains('pad-focus'),true);assert.deepEqual(lastScroll,{block:'nearest',inline:'nearest',behavior:'smooth'});
  controllerMenu(doc,'up');assert.equal(focused.id,'quit-lobby');
 });
+test('controller focus moves to the nearest surviving control when its lobby button disappears',()=>{
+ let items=[],focused=null;const classes=()=>{const values=new Set();return {add:v=>values.add(v),remove:v=>values.delete(v),contains:v=>values.has(v)};};
+ const make=(id,y,click=()=>{})=>({id,disabled:false,classList:classes(),getClientRects:()=>[{}],closest:()=>null,getBoundingClientRect:()=>({left:0,top:y,width:100,height:40}),matches:()=>false,focus(){focused=this;doc.activeElement=this;},scrollIntoView(){},click});
+ const scope={hidden:false,querySelectorAll:selector=>selector==='[role=tab]'?[]:items},doc={activeElement:null,body:{classList:classes()},querySelector:()=>null,getElementById:id=>id==='lobby'?scope:null,querySelectorAll:selector=>selector==='.pad-focus'?items.filter(item=>item.classList.contains('pad-focus')):[]};
+ const back=make('quit-lobby',0),addP2=make('',100,()=>{doc.activeElement=null;items=[back,make('',130)];});addP2.dataset={emptySlot:'1'};items=[back,addP2];items[1].dataset={emptySlot:'1'};
+ controllerMenu(doc,'down');controllerMenu(doc,'down');controllerMenu(doc,'accept');assert.equal(focused,items[1]);
+});
 test('programmatic controller focus has the orange hover treatment in menus and lobbies',()=>{
  const css=readFileSync(new URL('../../styles/settings.css',import.meta.url),'utf8'),effects=readFileSync(new URL('../../src/pnt/menu-effects.js',import.meta.url),'utf8');assert.match(css,/\.pad-focus\{[^}]*#ff8a14/);assert.match(css,/\.nav-button\.pad-focus:before\{[^}]*scale\(1\)/);assert.match(css,/\.iw-btn\.pad-focus \.iw-btn__blob\{[^}]*scale\(1\)/);assert.match(css,/\.lobby-screen button\.pad-focus\{[^}]*background:#ffad2f/);assert.match(effects,/addEventListener\('controllerfocus'[^]*setFocus\(el,true\)/);
 });

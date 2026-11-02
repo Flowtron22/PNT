@@ -1,8 +1,8 @@
 # Police N Thief web prototype — handoff
 
 Updated: 2 November 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.106**, corrected Couch Crew controller ownership and host controls. Server: **0.9.27**.
-Release checks: 298 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
+Current app version: **0.9.107**, persistent controller focus across lobby and tool rerenders. Server: **0.9.27**.
+Release checks: 299 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -1571,3 +1571,12 @@ can change maps with D-pad left/right outside a picker and start a fully ready
 crew with Start/Options; LB/RB map shortcuts remain. A pure host-routing test
 covers map authority, picker isolation and start eligibility. Client-only; server
 remains 0.9.27.
+
+Client 0.9.107 keeps controller focus stable through dynamic lobby and Tools page
+rerenders. Focus memory now stores both a stable control identity and its screen
+position. Existing controls restore by identity; when a selected control disappears
+(for example, a filled open-player `+` slot), the nearest surviving control receives
+focus rather than Quit/Back. Selecting a tool card with controller explicitly moves
+focus to Equip Slot 1, falling back to Slot 2 only when Slot 1 is unavailable, so
+the next A/Cross confirms the equip destination. Regression coverage includes the
+disappearing-control fallback. Client-only; server remains 0.9.27.

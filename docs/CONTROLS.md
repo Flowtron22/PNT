@@ -1,6 +1,6 @@
 # Player input
 
-Version 0.9.106 supports keyboard, mouse buttons, touch and a browser-standard
+Version 0.9.107 supports keyboard, mouse buttons, touch and a browser-standard
 controller. All send the same movement and actions to practice and multiplayer.
 
 ## Controller
@@ -27,9 +27,12 @@ or keyboard gesture even when playing with a pad.
 
 Menu and matchmaking navigation gives the active control the same animated orange
 hover treatment as the mouse, including its fill, label/icon colour, outline and glow.
-Directional movement smoothly scrolls the focused control into view. Lobby rerenders preserve
-the focused control by stable ID, so adding bots, changing stages or preferences no
-longer resets navigation to the first lobby button.
+Directional movement smoothly scrolls the focused control into view. Lobby rerenders
+preserve the focused control by stable ID, so adding bots, changing stages or
+preferences no longer resets navigation to the first lobby button. If a selected
+control disappears, focus moves to the nearest remaining control instead of Back.
+Selecting a tool card moves controller focus to Equip Slot 1, or Slot 2 when Slot 1
+is unavailable.
 
 Selecting a text field with the controller opens the on-screen QWERTY keyboard.
 Use the stick/D-pad to move, A/Cross to type, X/Square to backspace, Y/Triangle

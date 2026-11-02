@@ -36,7 +36,7 @@ export function createController(device,index=null){
  return {poll,reset,rumble,get supported(){return typeof device.getGamepads==='function';}};
 }
 
-const menuFocus=new WeakMap();
+const menuFocus=new WeakMap(),menuFocusPosition=new WeakMap();
 function menuScope(doc){const modal=doc.querySelector('#virtual-keyboard:not([hidden]),#room-help:not([hidden])');return modal||['pause','results','lobby','menu'].map(id=>doc.getElementById(id)).find(el=>el&&!el.hidden)||null;}
 function menuItems(scope){return [...scope.querySelectorAll('button,input,select,a[href]')].filter(el=>!el.disabled&&!el.closest('[hidden]')&&el.getClientRects().length);}
 function focusKey(el,index){
@@ -48,12 +48,14 @@ function focusKey(el,index){
 // Menu navigation uses real focus/click and native form values; no synthetic keys.
 // A stable key keeps controller focus on the same control when a lobby render
 // replaces its DOM node after a click.
-export function controllerMenu(doc,command){
+export function controllerMenu(doc,command,target=null){
  const scope=menuScope(doc);if(!scope)return;
  const items=menuItems(scope),keyFor=el=>focusKey(el,items.indexOf(el));
  let current=items.includes(doc.activeElement)?doc.activeElement:null;
  if(!current&&menuFocus.has(scope)){const key=menuFocus.get(scope);current=items.find(el=>keyFor(el)===key)||null;}
- const focus=el=>{if(!el)return;for(const old of doc.querySelectorAll?.('.pad-focus')||[])old.classList.remove('pad-focus');el.classList?.add('pad-focus');el?.focus({preventScroll:true});el?.dispatchEvent?.(new (doc.defaultView?.Event||Event)('controllerfocus',{bubbles:true}));menuFocus.set(scope,keyFor(el));const reduced=doc.body?.classList?.contains?.('reduced-motion');el?.scrollIntoView({block:'nearest',inline:'nearest',behavior:reduced?'auto':'smooth'});};
+ if(!current&&menuFocusPosition.has(scope)){const point=menuFocusPosition.get(scope);current=items.reduce((best,el)=>{const r=el.getBoundingClientRect(),distance=(r.left+r.width/2-point.x)**2+(r.top+r.height/2-point.y)**2;return !best||distance<best.distance?{el,distance}:best;},null)?.el||null;}
+ const focus=el=>{if(!el)return;for(const old of doc.querySelectorAll?.('.pad-focus')||[])old.classList.remove('pad-focus');el.classList?.add('pad-focus');el?.focus({preventScroll:true});el?.dispatchEvent?.(new (doc.defaultView?.Event||Event)('controllerfocus',{bubbles:true}));menuFocus.set(scope,keyFor(el));const r=el.getBoundingClientRect();menuFocusPosition.set(scope,{x:r.left+r.width/2,y:r.top+r.height/2});const reduced=doc.body?.classList?.contains?.('reduced-motion');el?.scrollIntoView({block:'nearest',inline:'nearest',behavior:reduced?'auto':'smooth'});};
+ if(command==='focus'){if(items.includes(target))focus(target);return;}
  if(command==='restore'){focus(current);return;}
  if(command==='tabLeft'||command==='tabRight'){const tabs=[...scope.querySelectorAll('[role=tab]')];if(!tabs.length)return;const index=tabs.findIndex(el=>el.getAttribute('aria-selected')==='true'),next=tabs[(index+(command==='tabRight'?1:-1)+tabs.length)%tabs.length];next.click();focus(next);return;}
  if(!current){focus(items[0]);return;}
