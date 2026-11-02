@@ -1,8 +1,8 @@
 # Police N Thief web prototype — handoff
 
 Updated: 1 November 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.102**, logo removed from loading screen. Server: **0.9.27**.
-Release checks: 282 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
+Current app version: **0.9.103**, visible and persistent controller menu focus. Server: **0.9.27**.
+Release checks: 294 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
 
 **Current state: the requested Inkwave-style responsive layout is complete and live.**
 The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
@@ -1532,3 +1532,13 @@ Client 0.9.101 restores the original 0.9.98 orange/blue background blobs and the
 Title-screen release 0.9.101: user authorized publishing all startup-screen changes. Validation: 292 client tests, syntax checks and static build pass. Client-only release; server remains 0.9.27. Includes original orange/blue Inkwave-style background, alternating police-light reflections and keyboard/pointer/controller start gate.
 
 Client 0.9.102 removes the Police N Thief logo from the Getting Ready loading overlay and its unused image styling. Loading text/progress remains centred; the press-any-key title screen retains its logo. User authorized deployment; static build verifies the loading logo is removed and the title logo is retained.
+
+Client 0.9.103 makes controller menu navigation visible and stable. Programmatic
+gamepad focus now uses an explicit orange fill, outline and glow on main-menu and
+lobby controls, including the same orange sweep/transform as mouse hover on main
+navigation. Direction changes smoothly scroll the selected control into view.
+Stable IDs preserve focus when training or online lobby renders replace their DOM,
+so adding/removing bots, changing stage/preference and countdown updates no longer
+reset navigation to Quit Lobby. Mouse/touch input clears the controller highlight.
+Controller regressions cover replacement focus, scrolling and styling. Client-only;
+server remains 0.9.27.

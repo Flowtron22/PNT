@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {padStick,createController,controllerMenu} from '../../src/pnt/controller.js';
 function fixture(){const pad={index:0,id:'Test standard pad',connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:17},()=>({pressed:false,value:0}))};let pads=[pad];const controller=createController({getGamepads:()=>pads});controller.poll(0);return {pad,controller,setPads:v=>pads=v,button:(i,on)=>{pad.buttons[i]={pressed:on,value:on?1:0};}};}
 test('radial dead zone preserves analog direction and caps diagonal movement',()=>{
@@ -24,4 +25,16 @@ test('menu navigation adjusts native sliders/selects, focuses controls and activ
  const make=(kind,x,y)=>({disabled:false,kind,value:'0.5',min:'0',max:'1',step:'.05',selectedIndex:0,options:[{},{}],getClientRects:()=>[{}],closest:()=>null,getBoundingClientRect:()=>({left:x,top:y,width:40,height:20}),matches(s){return s.split(',').some(k=>k==='select'&&kind==='select'||k==='input[type=range]'&&kind==='range'||k==='input:not([type=checkbox])'&&kind==='range');},focus(){focused=this;doc.activeElement=this;},scrollIntoView(){},click(){clicked++;},dispatchEvent:e=>events.push(e.type)});
  const button=make('button',0,0),slider=make('range',0,50),select=make('select',0,100),scope={hidden:false,querySelectorAll:()=>[button,slider,select]},doc={activeElement:null,querySelector:()=>null,getElementById:id=>id==='menu'?scope:null};
  controllerMenu(doc,'down');assert.equal(focused,button);controllerMenu(doc,'accept');assert.equal(clicked,1);controllerMenu(doc,'down');assert.equal(focused,slider);controllerMenu(doc,'right');assert.equal(+slider.value,.55);assert.deepEqual(events,['input']);controllerMenu(doc,'accept');assert.equal(clicked,1);controllerMenu(doc,'down');controllerMenu(doc,'right');assert.equal(select.selectedIndex,1);assert.deepEqual(events,['input','change']);
+});
+test('controller focus survives a lobby rebuild and scrolls the replacement into view',()=>{
+ let items=[],focused=null,lastScroll=null;const classes=()=>{const values=new Set();return {add:v=>values.add(v),remove:v=>values.delete(v),contains:v=>values.has(v)};};
+ const make=(id,y,click=()=>{})=>({id,disabled:false,classList:classes(),getClientRects:()=>[{}],closest:()=>null,getBoundingClientRect:()=>({left:0,top:y,width:100,height:40}),matches:()=>false,focus(){focused=this;doc.activeElement=this;},scrollIntoView(options){lastScroll=options;},click});
+ const scope={hidden:false,querySelectorAll:selector=>selector==='[role=tab]'?[]:items};
+ const doc={activeElement:null,body:{classList:classes()},querySelector:()=>null,getElementById:id=>id==='lobby'?scope:null,querySelectorAll:selector=>selector==='.pad-focus'?items.filter(item=>item.classList.contains('pad-focus')):[]};
+ let replacement;const first=make('quit-lobby',0),second=make('add-bot',100,()=>{replacement=make('add-bot',100);items=[make('quit-lobby',0),replacement];});items=[first,second];
+ controllerMenu(doc,'down');controllerMenu(doc,'down');assert.equal(focused,second);controllerMenu(doc,'accept');assert.equal(focused,replacement);assert.equal(replacement.classList.contains('pad-focus'),true);assert.deepEqual(lastScroll,{block:'nearest',inline:'nearest',behavior:'smooth'});
+ controllerMenu(doc,'up');assert.equal(focused.id,'quit-lobby');
+});
+test('programmatic controller focus has the orange hover treatment in menus and lobbies',()=>{
+ const css=readFileSync(new URL('../../styles/settings.css',import.meta.url),'utf8');assert.match(css,/\.pad-focus\{[^}]*#ff8a14/);assert.match(css,/\.nav-button\.pad-focus:before\{[^}]*scale\(1\)/);assert.match(css,/\.lobby-screen button\.pad-focus\{[^}]*background:#ffad2f/);
 });

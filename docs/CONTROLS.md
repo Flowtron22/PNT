@@ -1,6 +1,6 @@
 # Player input
 
-Version 0.9.41 supports keyboard, mouse buttons, touch and a browser-standard
+Version 0.9.103 supports keyboard, mouse buttons, touch and a browser-standard
 controller. All send the same movement and actions to practice and multiplayer.
 
 ## Controller
@@ -24,6 +24,12 @@ Left/right adjusts focused sliders and select controls. Controls shows connectio
 status; HUD action labels follow the device being used. Vibration is optional and
 depends on the device and browser. Browser audio may require an initial click/tap
 or keyboard gesture even when playing with a pad.
+
+Menu and matchmaking navigation gives the active control an explicit orange fill,
+outline and glow instead of relying on browser keyboard-focus detection. Directional
+movement smoothly scrolls the focused control into view. Lobby rerenders preserve
+the focused control by stable ID, so adding bots, changing stages or preferences no
+longer resets navigation to the first lobby button.
 
 The radial dead zone is 0.14 with full deflection at 0.96. Direction repeats start
 at 330 ms then every 130 ms. Tool presses are edges; interaction is held. Pads

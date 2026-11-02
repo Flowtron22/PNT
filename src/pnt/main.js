@@ -166,6 +166,7 @@ function refreshLobby(){if(room?.mode==='couch'){refreshCouchLobby();return;}if(
   start:()=>{if(beginCountdown(room)){lastFrame=performance.now();refreshLobby();}},cancel:()=>{cancelCountdown(room);refreshLobby();},
   edit:page=>{cancelCountdown(room);returnToLobby=true;previewModel();show('menu');openPage(page);},
  });
+ if(controllerActive)controllerMenu(document,'restore');
 }
 async function hostCouchLobby(){
  if(!ready||busy)return;beginLoading('GATHERING THE COUCH CREW');await nextFrame();
@@ -219,7 +220,7 @@ async function connectOnline(mode,code){
  try{await online.connect(mode,onlineProfile(),code);}catch(error){online?.leave();online=null;endLoading();onlineNotice(error.message||'Could not connect to the game server.');}
 }
 function refreshOnlineLobby(){
- if(!room)return;renderLobby(ui.lobby,room,loadout,costume,{quit:quitLobby,addBot:()=>online.control('add-bot'),removeBot:()=>online.control('remove-bot'),map:direction=>online.control('map',direction),preference:()=>online.send('profile',{...onlineProfile(),preference:PREFERENCES[(PREFERENCES.indexOf(room.preference)+1)%PREFERENCES.length]}),start:()=>online.control('start'),cancel:()=>online.control('cancel'),edit:page=>{if(room.phase!=='waiting')return;returnToLobby=true;previewModel();show('menu');openPage(page);}});
+ if(!room)return;renderLobby(ui.lobby,room,loadout,costume,{quit:quitLobby,addBot:()=>online.control('add-bot'),removeBot:()=>online.control('remove-bot'),map:direction=>online.control('map',direction),preference:()=>online.send('profile',{...onlineProfile(),preference:PREFERENCES[(PREFERENCES.indexOf(room.preference)+1)%PREFERENCES.length]}),start:()=>online.control('start'),cancel:()=>online.control('cancel'),edit:page=>{if(room.phase!=='waiting')return;returnToLobby=true;previewModel();show('menu');openPage(page);}});if(controllerActive)controllerMenu(document,'restore');
 }
 async function receiveOnlineLobby(data){
  if(!online)return;room=data;selectedMode=data.gameMode||'classic';

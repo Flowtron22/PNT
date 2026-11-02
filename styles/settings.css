@@ -33,4 +33,6 @@
 
 .controller-status{font:10px/1.5 Rubik;color:#9cddff;margin:2px 6px 10px;overflow-wrap:anywhere}.settings-demo:has(.preview-keys)+p{min-height:110px}
 
-.pad-focus{outline:3px solid #91d9ff!important;outline-offset:4px!important}
+.pad-focus{outline:4px solid #ff8a14!important;outline-offset:5px!important;filter:drop-shadow(0 0 2px #171329) drop-shadow(0 0 8px #ff8a14)}
+.nav-button.pad-focus:before{transform:translate(-50%,-50%) scale(1)}.nav-button.pad-focus{transform:rotate(0) translateX(8px) scale(1.035);color:var(--ink)}.nav-button.pad-focus i img{filter:brightness(.12)}
+.lobby-screen button.pad-focus{outline:5px solid #ff8a14!important;outline-offset:4px!important;background:#ffad2f!important;color:#171329!important;box-shadow:0 0 0 2px #09154b,0 0 20px #ff8a14!important}.lobby-screen button.pad-focus strong,.lobby-screen button.pad-focus small{color:inherit!important}
