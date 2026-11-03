@@ -1,10 +1,11 @@
 import {sampleGround} from './motion.js';
-import {cellIndex,canCross} from './collision.js';
+import {cellIndex,canCross,icebergGroundPathClear} from './collision.js';
 // Landing cells must belong to the authored walkable floor, with capsule
 // clearance and at least one usable exit. Isolated roofs are excluded.
 export function safeLandingCell(grid,x,z){
  const i=cellIndex(grid,x,z);if(i<0||grid.blocked?.[i]||!Number.isFinite(grid.heights[i])||!Number.isFinite(sampleGround(grid,x,z)))return false;
  if(grid.landingMask&&!grid.landingMask[i])return false;
+ if(!icebergGroundPathClear(grid,x,z,x,z))return false;
  const ix=i%grid.nx,iz=Math.floor(i/grid.nx);
  return [[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dz])=>{const xx=ix+dx,zz=iz+dz;if(xx<0||zz<0||xx>=grid.nx||zz>=grid.nz)return false;const j=zz*grid.nx+xx;return Number.isFinite(grid.heights[j])&&Math.abs(grid.heights[j]-grid.heights[i])<.6&&canCross(grid,i,j);});
 }

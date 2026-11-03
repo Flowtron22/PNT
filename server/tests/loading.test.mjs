@@ -2,12 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {registerHooks} from 'node:module';
 registerHooks({resolve(s,c,next){return s==='three'?{url:new URL('../../vendor/three/build/three.module.js',import.meta.url).href,shortCircuit:true}:next(s,c);}});
-const {GameRoom}=await import('../game-room.mjs');
+const {MatchRoom}=await import('../match-room.mjs');
 const {MatchSimulation}=await import('../simulation.mjs');
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};};
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 function fixture(){
- const published=[],room=Object.create(GameRoom.prototype);
+ const published=[],room=Object.create(MatchRoom.prototype);
  Object.assign(room,{phase:'countdown',map:0,loadRevision:0,sim:null,players:[{bot:false,ready:false}],lock:async()=>{},unlock(){},broadcast(){},sendLobby(){published.push(this.sim);}});
  return {room,published};
 }

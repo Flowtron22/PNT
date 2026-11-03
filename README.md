@@ -1,13 +1,14 @@
 # Police N Thief Web
 
+The Steam release uses one Windows x64 package for desktop PCs and Steam Deck
+via Proton. See the [Steam build guide](docs/STEAM.md) for build and test steps.
+
 A browser practice prototype developed by Todak Studios, using PNT characters,
 role-specific running and action animations, logo and all three Unreal arenas.
 The animated menu has Play, Tools, Costume, Setting and Credit pages.
 
-Version 0.9.9 also includes **local-network multiplayer using Colyseus**. Install
-the server once with `npm run server:install`, then run `npm run dev:online`.
-Open the printed LAN address on each device and use Host/Join room codes.
-See [the multiplayer guide](docs/MULTIPLAYER.md). Public hosting is not enabled yet.
+Online play uses Steam lobbies and peer networking. The host runs the match
+simulation locally. See the [Steam playtest guide](docs/STEAM.md).
 
 ## Play locally
 
@@ -44,11 +45,10 @@ clips continue to leave actor movement to the gameplay controller.
 
 ## PLAY and lobby flow
 
-PLAY opens Host / Join, following the Unreal HostJoin screen. Join opens public
-matchmaking and six-character room-code choices. Online search/join is not connected;
-these controls validate input and report that limitation without creating fake rooms.
+In the Steam build, PLAY opens online and couch options. Online players can host,
+join by room code, accept a Steam invite, or find a public lobby.
 
-Host opens a local practice lobby. Add three bots to fill the four podiums, browse
+Training opens a local practice lobby. Add three bots to fill the four podiums, browse
 the map cards, change role preference, or edit tools/costumes and return to the same
 room. Start Match requires four players and runs a cancelable three-second countdown.
 Mall, Sunken and Iceberg load their own arena geometry, spawns and money caches. The lobby's bot
@@ -68,7 +68,8 @@ No environment variables or backend service are required for this prototype.
 
 ## Current limits
 
-Online multiplayer, Steam, native dynamic map physics and gameplay audio are not ported.
+This section describes the original browser prototype. Native dynamic map physics
+from the Unreal project are outside this port.
 The browser uses local bots, sampled geometry and grid routes. Original Unreal map art,
 cache placements, skill-table cooldowns and five-minute timer are reused. Core money,
 capture and teammate-rescue rules are implemented; see `docs/GAMEPLAY_PORT.md` for

@@ -2,6 +2,9 @@
 
 Updated: 3 November 2026 (Asia/Kuala_Lumpur).
 
+Online playtests now use the [Steam desktop build](docs/STEAM.md). The hosting
+details below describe the earlier browser prototype.
+
 ## Current release and deployment
 
 Client **0.9.107** is live on [Vercel](https://police-n-thief.vercel.app/?v=0.9.107).

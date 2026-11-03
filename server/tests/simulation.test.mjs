@@ -4,6 +4,7 @@ const {MatchSimulation}=await import('../simulation.mjs');
 const {groundSpot}=await import('../arena.mjs');
 const {LocalPrediction}=await import('../../src/pnt/netcode.js');
 const {safeLandingCell}=await import('../../src/pnt/landing.js');
+const {icebergGroundPathClear,cellIndex}=await import('../../src/pnt/collision.js');
 const {startCountdown}=await import('../../src/pnt/rules.js');
 const players=()=>Array.from({length:4},(_,i)=>({sessionId:`player${i}`,name:`Player ${i}`,costume:'thief',preference:i===0?'chaser':'runner',loadout:['hammer','rocket'],bot:false}));
 
@@ -48,6 +49,19 @@ test('server capture accumulates 1.6 seconds and escape decays rather than reset
 });
 test('authoritative jetpack landing rejects blocked spots on all three authored maps',async()=>{
  for(const map of ['mall','sunken','iceberg']){const sim=await MatchSimulation.create(map,players());try{assert.ok(sim.grid.landingMask.some(Boolean));const actor=sim.actors[1],state=sim.round.actors[1],blocked=sim.grid.blocked.findIndex(Boolean);actor.group.position.set(sim.grid.minX+blocked%sim.grid.nx*sim.grid.step,2,sim.grid.minZ+Math.floor(blocked/sim.grid.nx)*sim.grid.step);actor.wasFlying=true;state.effectTime=0;state.effect=null;sim.step();assert.ok(safeLandingCell(sim.grid,actor.group.position.x,actor.group.position.z),map+' safe landing');assert.ok(actor.group.position.toArray().every(Number.isFinite));}finally{sim.dispose();}}
+});
+test('Iceberg ice blocks exclude walking and jetpack landings',async()=>{
+ const sim=await MatchSimulation.create('iceberg',players());
+ try{
+  for(const [x,z] of sim.data.metadata.iceBlockFootprints){
+   const i=cellIndex(sim.grid,x,z);
+   if(i<0)continue;
+   assert.equal(sim.grid.blocked[i],1);
+   assert.equal(safeLandingCell(sim.grid,x,z),false);
+   assert.equal(icebergGroundPathClear(sim.grid,x-2,z,x+2,z),false);
+  }
+  for(const actor of sim.actors)assert.ok(safeLandingCell(sim.grid,actor.spawn.x,actor.spawn.z));
+ }finally{sim.dispose();}
 });
 test('a complete jetpack flight descends to the main floor on Sunken and Iceberg without a fall/reset',async()=>{
  for(const map of ['sunken','iceberg']){const sim=await MatchSimulation.create(map,players());try{const a=sim.actors[0],state=sim.round.actors[0],spawn=a.group.position.clone();assert.ok(sim.grid.landingMask.reduce((sum,n)=>sum+n,0)>1000);state.effect='rocket';state.effectTime=5;let largestStep=0,lowest=Infinity;for(let i=0;i<390;i++){sim.input(0,{seq:i+1,x:0,z:1});const before=a.group.position.clone();sim.step();largestStep=Math.max(largestStep,a.group.position.distanceTo(before));lowest=Math.min(lowest,a.group.position.y);}assert.ok(safeLandingCell(sim.grid,a.group.position.x,a.group.position.z));assert.equal(a.grounded,true);assert.ok(a.group.position.y<-.9,map+' returned to floor');assert.ok(lowest>-5);assert.ok(largestStep<1.5,map+' no teleport: '+largestStep);assert.equal(a.warp||0,0);assert.ok(a.group.position.distanceTo(spawn)>.5);}finally{sim.dispose();}}

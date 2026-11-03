@@ -1,0 +1,62 @@
+# Police N Thief on Steam
+
+Online matches use Steam lobbies and Steam peer networking. The lobby host runs
+the authoritative match simulation. If the host leaves, Steam assigns a remaining
+player as the new host. An active match resumes from the latest received state
+and the departed host's character becomes a bot. If the match was counting down
+or loading, the players return to the same lobby and can start it again.
+PC and Steam Deck use the same Windows x64 package, with Proton on Deck.
+
+## Private development playtest
+
+Build on Windows with x64 Node.js 22.12 or newer. Run Steam and sign in.
+
+```powershell
+npm ci
+npm run build:steam -- --dev-playtest
+& ".\dist-steam\win64-dev-playtest-$(npm pkg get version | ConvertFrom-Json)\Police N Thief.exe"
+```
+
+Share the entire `win64-dev-playtest-<version>` folder privately. This build uses Valve's
+Spacewar App ID (480) via its own `steam_appid.txt` and has a separate save
+directory. Each player needs a different signed-in Steam account. Use the same
+PNT build on every machine.
+
+1. The host selects **Play → Solo Online → Host Lobby**.
+2. Choose **Public** or **Private** under **Room Setting**. Public rooms appear
+   in PNT matchmaking. Private rooms are available by room code or invitation.
+3. Share the seven-character **Room Code**, or select **Invite Steam Friends**.
+   Testers can enter the code in **Join Lobby** or accept the Steam invite.
+4. Fill empty seats with bots and start the match.
+
+For PattyTide, start from **Events → PattyTide → Solo Online**. Room codes and
+Steam invites can also take a player directly into a PattyTide lobby.
+
+**Find Public Match** searches Steam for a lobby with the same PNT build and
+game mode and creates a public lobby when the search finds none.
+See Valve's [Spacewar example](https://partner.steamgames.com/doc/sdk/api/example)
+and [lobby documentation](https://partner.steamgames.com/doc/features/multiplayer/matchmaking).
+
+## Steam distribution
+
+```powershell
+$env:PNT_STEAM_APP_ID = 'YOUR_STEAM_APP_ID'
+npm run build:steam
+```
+
+Use the assigned game App ID for release or the assigned
+[Steam Playtest App ID](https://partner.steamgames.com/doc/features/playtest)
+for a Steam-distributed playtest. Upload the contents of `dist-steam/win64`
+to the Windows depot and set the launch executable to `Police N Thief.exe`.
+The pinned `steamworks.js` package supplies the native binding and
+`steam_api64.dll`. The [full Steamworks SDK](https://partner.steamgames.com/doc/sdk)
+includes SteamPipe upload tools.
+
+For an offline packaging check, run `npm run build:steam -- --smoke-test`.
+
+## Device checks
+
+- Test a host and a guest on separate Steam accounts and internet connections.
+- Check the invite overlay, join by room code, and host transfer in the lobby and in a match.
+- In Deck Gaming Mode, check gamepad navigation, fullscreen at 1280 × 800,
+  HUD readability, and suspend and resume.

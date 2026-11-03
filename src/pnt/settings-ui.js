@@ -24,7 +24,7 @@ export const SETTINGS_TABS=[
   {key:'hudScale',label:'HUD size',min:.7,max:1.3,step:.05,format:percent,help:'Resize the timer, money counter and crew portraits. Action buttons keep their touch size.'}
  ]}
 ];
-export function mountSettings(root,{getSettings,onChange,onReset,bindingsMarkup,onBindings,onCloseBindings=()=>{},hapticsSupported,onFullscreen}){
+export function mountSettings(root,{getSettings,onChange,onReset,bindingsMarkup,onBindings,onCloseBindings=()=>{},hapticsSupported,onFullscreen,desktop=false}){
  const doc=root.ownerDocument;let tab=0,resetArmed=false;
  root.innerHTML=`<div class="settings-shell"><div class="settings-panel"><div class="settings-tabs" role="tablist" aria-label="Settings categories"></div><div class="settings-rows" role="tabpanel" id="settings-options"></div><div class="settings-foot"><span id="settings-saved" role="status">Changes save automatically</span><button type="button" id="settings-reset">RESET TO DEFAULTS</button></div></div><aside class="settings-preview"><div class="settings-preview-top"><span>LIVE PREVIEW</span><output></output></div><h2></h2><div class="settings-demo" aria-hidden="true"></div><p></p></aside></div>`;
  const tabs=root.querySelector('.settings-tabs'),rows=root.querySelector('.settings-rows'),card=root.querySelector('.settings-preview'),demo=card.querySelector('.settings-demo'),saved=root.querySelector('#settings-saved');
@@ -34,7 +34,12 @@ export function mountSettings(root,{getSettings,onChange,onReset,bindingsMarkup,
   demo.innerHTML=joystick?'<div class="preview-joystick"><i></i></div><small>LEFT THUMB · DRAG TO MOVE</small>':hud?`<div class="preview-hud"><b>2:45</b><span>💰 1,250</span><small>${s.showFps?'60 FPS':'THIEF · FREE'}</small></div>`:audio?'<div class="preview-audio"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><small>MUSIC & SOUND</small>':r.key==='quality'?`<img class="preview-map ${v==='battery'?'battery':''}" src="assets/pnt/maps/mall.webp" alt=""><small>${valueLabel(r,v).toUpperCase()}</small>`:r.key==='bindings'?'<div class="preview-keys"><kbd>↑</kbd><span><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span></div>':r.key==='haptics'?'<div class="preview-symbol">⌁</div><small>VIBRATION FEEDBACK</small>':r.key==='fullscreen'?'<div class="preview-symbol">⛶</div>':'<div class="preview-impact">★</div><small>IMPACT & MOTION</small>';
  }
  function build(){const t=SETTINGS_TABS[tab];rows.replaceChildren();rows.setAttribute('aria-labelledby','settings-tab-'+t.id);
-  for(const r of t.rows){const row=doc.createElement('div');row.className='settings-option';row.innerHTML=`<label>${r.label}</label><div class="settings-control"></div>`;const host=row.lastElementChild,label=row.firstElementChild;let control;
+  const visibleRows=desktop?t.rows.filter(r=>!['joystickSize','joystickSensitivity'].includes(r.key)).map(r=>{
+   if(r.key==='haptics')return {...r,help:'Controller vibration for rocket and banana effects, when supported.'};
+   if(r.key==='hudScale')return {...r,help:'Resize the timer, money counter and crew portraits.'};
+   return r;
+  }):t.rows;
+  for(const r of visibleRows){const row=doc.createElement('div');row.className='settings-option';row.innerHTML=`<label>${r.label}</label><div class="settings-control"></div>`;const host=row.lastElementChild,label=row.firstElementChild;let control;
    if(r.action){control=doc.createElement('button');control.type='button';control.textContent=r.key==='bindings'?'EDIT KEYS':'ENTER';control.onclick=()=>{preview(r);if(r.key==='bindings'){const section=rows.querySelector('.settings-bindings');section.hidden=!section.hidden;if(section.hidden)onCloseBindings();control.setAttribute('aria-expanded',String(!section.hidden));}else onFullscreen(control,rows.querySelector('#fullscreen-status'));};if(r.key==='bindings'){control.setAttribute('aria-expanded','false');control.setAttribute('aria-controls','settings-bindings');}}
    else if(r.options){control=doc.createElement('select');for(const [v,text]of r.options){const o=doc.createElement('option');o.value=v;o.textContent=text;control.append(o);}control.value=String(getSettings()[r.key]);}
    else{control=doc.createElement('input');control.type=r.toggle?'checkbox':'range';if(r.toggle){control.checked=getSettings()[r.key];control.setAttribute('role','switch');}else{control.min=r.min;control.max=r.max;control.step=r.step;control.value=getSettings()[r.key];const output=doc.createElement('output');output.textContent=valueLabel(r,+control.value);host.append(output);}}
@@ -45,7 +50,7 @@ export function mountSettings(root,{getSettings,onChange,onReset,bindingsMarkup,
   }
   if(t.id==='controls'){const status=doc.createElement('p');status.id='controller-status';status.className='controller-status';status.setAttribute('role','status');status.textContent='Controller ready · connect a pad and press a button';rows.prepend(status);const section=doc.createElement('section');section.className='settings-bindings key-mapping';section.id='settings-bindings';section.hidden=true;section.innerHTML=bindingsMarkup;rows.append(section);onBindings();}
   if(t.id==='video'){const status=doc.createElement('p');status.id='fullscreen-status';status.className='fullscreen-help';status.setAttribute('role','status');rows.append(status);onFullscreen(rows.querySelector('#setting-fullscreen'),status);}
-  preview(t.rows[0]);
+  preview(visibleRows[0]);
  }
  SETTINGS_TABS.forEach((t,i)=>{const b=doc.createElement('button');b.id='settings-tab-'+t.id;b.type='button';b.setAttribute('role','tab');b.setAttribute('aria-controls','settings-options');b.innerHTML=`<i aria-hidden="true">${t.icon}</i>${t.label}`;b.onclick=()=>{tab=i;select();};b.onkeydown=e=>{let n=i;if(e.key==='ArrowRight')n=(i+1)%4;else if(e.key==='ArrowLeft')n=(i+3)%4;else if(e.key==='Home')n=0;else if(e.key==='End')n=3;else return;e.preventDefault();e.stopPropagation();tab=n;select();tabs.children[n].focus();};tabs.append(b);});
  function select(){onCloseBindings();[...tabs.children].forEach((b,i)=>{b.setAttribute('aria-selected',String(i===tab));b.tabIndex=i===tab?0:-1;});root.querySelector('#settings-reset').textContent='RESET TO DEFAULTS';resetArmed=false;build();}

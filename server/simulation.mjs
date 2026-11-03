@@ -3,6 +3,7 @@ import {randomUUID,randomInt} from 'node:crypto';
 import * as THREE from '../vendor/three/build/three.module.js';
 import {createRound,stepRound,canAct,activateTool,detectThiefAt,harvest,rescue,cancelInteraction,INTERACT_RADIUS,updateSmokeCoverage} from '../src/pnt/rules.js';
 import {advanceActor,movementSpeed,MOVEMENT_VERSION} from '../src/pnt/player-motion.js';
+import {applyPose} from '../src/pnt/netcode.js';
 import {shipTilt} from '../src/pnt/environment.js';
 import {findPath} from '../src/pnt/navigation.js';
 import {hasSight} from '../src/pnt/sight.js';
@@ -12,6 +13,41 @@ import {loadArenaData,groundSpot} from './arena.mjs';
 import {createDiretideRound,stepDiretide,collectEventCandy,eventTarget,eventInteract,eventBotGoal,spillOnStun,EVENT_HAMMER_RADIUS,EVENT_BANANA_SECONDS,EVENT_STUN_SECONDS} from '../src/pnt/diretide-rules.js';
 export class MatchSimulation {
  static async create(map,players){const instance=new MatchSimulation(map,players,await loadArenaData(map));if(map==='mall'){const arena=instance.data.template.clone(true);instance.root.add(arena);instance.root.updateMatrixWorld(true);instance.physics=await createMallPhysics(arena,instance.root,instance.grid);}return instance;}
+ static async restore(snapshot,players){
+  const simulation=await MatchSimulation.create(snapshot.map,players);
+  try{
+   const round={...snapshot.round};
+   // PattyTide keeps its static spawn candidates out of network snapshots.
+   if(simulation.round.spawnPoints){
+    Object.defineProperty(round,'spawnPoints',{value:simulation.round.spawnPoints});
+   }
+   Object.assign(simulation,{round,time:snapshot.time,tick:snapshot.tick,events:snapshot.events,
+    eventId:snapshot.events.at(-1)?.id||0,hazardId:snapshot.hazardId});
+   simulation.hazards=snapshot.hazards.map(h=>({...h,time:h.time===-1?Infinity:h.time,position:new THREE.Vector3(...h.position)}));
+   for(const pose of snapshot.poses){
+    const actor=simulation.actors[pose.id];
+    applyPose(actor,pose);
+    actor.warp=pose.warp;
+    actor.processedInput=pose.ack;
+    actor.input.seq=pose.received;
+    const marker=simulation.hazards.find(h=>h.type==='marker'&&h.owner===pose.id&&h.time>0);
+    actor.mark=marker?.position.clone()||null;
+   }
+   for(const item of snapshot.furniture){
+    const furniture=simulation.physics?.furniture.find(f=>f.mesh.name===item.name);
+    if(!furniture)continue;
+    const {body,mesh,offset}=furniture;
+    mesh.position.fromArray(item.position);
+    mesh.quaternion.fromArray(item.rotation);
+    body.setTranslation(offset.clone().applyQuaternion(mesh.quaternion).add(mesh.position),true);
+    body.setRotation(mesh.quaternion,true);
+    body.setLinvel(item.linearVelocity,true);
+    body.setAngvel(item.angularVelocity,true);
+   }
+   simulation.physics?.world.propagateModifiedBodyPositionsToColliders();
+   return simulation;
+  }catch(error){simulation.dispose();throw error;}
+ }
  constructor(map,players,data){
   this.map=map;this.players=players;this.data=data;this.grid=data.grid;this.root=new THREE.Group();this.physics=null;this.round=createRound('runner',data.metadata.caches);if(map==='grassfield')this.round=createDiretideRound(this.round,data.metadata);this.round.profileId=randomUUID();this.time=0;this.tick=0;this.eventId=0;this.hazardId=0;this.events=[];this.hazards=[];
   const preferred=players.map((p,i)=>p.preference==='chaser'?i:-1).filter(i=>i>=0),neutral=players.map((p,i)=>p.preference!=='runner'?i:-1).filter(i=>i>=0),pool=preferred.length?preferred:neutral.length?neutral:[0,1,2,3],cop=pool[randomInt(pool.length)];
@@ -38,7 +74,7 @@ export class MatchSimulation {
   this.smokeCoverage();
   const actor=this.actors[id],state=this.round.actors[id];if(!actor||![0,1].includes(slot)||!canAct(this.round,id)||state.inSmoke)return false;const tool=actor.tools[slot],p=actor.group.position;
   if(this.round.mode==='diretide'&&!['hammer','banana'].includes(tool))return false;
-  if(tool==='rewind'&&!actor.mark&&state.toolCooldowns[slot]<=0){actor.mark=p.clone();this.addHazard('marker',actor,Infinity,p);return true;}
+  if(tool==='rewind'&&!actor.mark&&state.toolCooldowns[slot]<=0){actor.mark=p.clone();this.addHazard('marker',actor,Infinity,p);this.event('tool',{actor:id,tool:'rewind-mark',position:p.toArray()});return true;}
   if(!activateTool(this.round,id,slot,tool))return false;
   if(tool==='hammer'){this.effect(state,'hammer',.48);for(const other of this.round.actors){if((this.round.mode==='diretide'?other.id===state.id:other.role===state.role)||other.caught||other.inSmoke)continue;const target=this.actors[other.id];if(p.distanceTo(target.group.position)<(this.round.mode==='diretide'?EVENT_HAMMER_RADIUS:2)&&this.sight(p,target.group.position,false)){this.effect(other,target.grounded?'stunned':'airStunned',this.round.mode==='diretide'?EVENT_STUN_SECONDS:2);state.stuns=(state.stuns||0)+1;}}}
   if(tool==='banana')this.addHazard('banana',actor,15,p.clone().add(new THREE.Vector3(-Math.sin(actor.group.rotation.y)*.7,.03,-Math.cos(actor.group.rotation.y)*.7)));
@@ -90,6 +126,6 @@ export class MatchSimulation {
   for(const cache of this.round.caches)cache.harvester=null;for(const wish of wishes){const target=wish.wants?this.interaction(wish.id):null,actor=this.actors[wish.id],key=target?`${target.type}:${target.id}`:null;if(actor.interactionKey!==key||!target)cancelInteraction(this.round,wish.id);actor.interactionKey=key;if(this.round.mode==='diretide'&&target)eventInteract(this.round,wish.id,target,dt,target.d);if(target?.type==='cache')harvest(this.round,wish.id,target.id,dt,target.d);if(target?.type==='rescue')rescue(this.round,wish.id,target.id,dt,target.d);}
   if(this.round.mode==='diretide')collectEventCandy(this.round,this.actors.map(a=>a.group.position),(p,q)=>this.sight(p,new THREE.Vector3(...q),false,1.1));
  }
- snapshot(){return {movementVersion:MOVEMENT_VERSION,inputFrames:true,tick:this.tick,time:this.time,worldTime:this.round.elapsed??300-this.round.remaining,map:this.map,round:this.round,poses:this.actors.map(a=>({id:a.id,position:a.group.position.toArray(),angle:a.group.rotation.y,vx:a.vx,vz:a.vz,slideX:a.slideX||0,velocity:a.velocity,grounded:a.grounded,flightFloor:a.flightFloor||0,wasFlying:!!a.wasFlying,flightLanding:a.flightLanding||null,speed:a.speed,ack:a.processedInput,warp:a.warp||0,received:a.input.seq})),hazards:this.hazards.map(h=>({...h,position:h.position.toArray(),time:Number.isFinite(h.time)?h.time:-1})),furniture:this.physics?.furniture.map(f=>({name:f.mesh.name,position:f.mesh.position.toArray(),rotation:f.mesh.quaternion.toArray()}))||[],events:this.events};}
+ snapshot(){return {movementVersion:MOVEMENT_VERSION,inputFrames:true,tick:this.tick,time:this.time,worldTime:this.round.elapsed??300-this.round.remaining,map:this.map,round:this.round,poses:this.actors.map(a=>({id:a.id,position:a.group.position.toArray(),angle:a.group.rotation.y,vx:a.vx,vz:a.vz,slideX:a.slideX||0,velocity:a.velocity,grounded:a.grounded,flightFloor:a.flightFloor||0,wasFlying:!!a.wasFlying,flightLanding:a.flightLanding||null,speed:a.speed,ack:a.processedInput,warp:a.warp||0,received:a.input.seq})),hazardId:this.hazardId,hazards:this.hazards.map(h=>({...h,position:h.position.toArray(),time:Number.isFinite(h.time)?h.time:-1})),furniture:this.physics?.furniture.map(f=>({name:f.mesh.name,position:f.mesh.position.toArray(),rotation:f.mesh.quaternion.toArray(),linearVelocity:f.body.linvel(),angularVelocity:f.body.angvel()}))||[],events:this.events};}
  dispose(){this.physics?.dispose();this.physics=null;}
 }

@@ -11,7 +11,7 @@ export function presentOnlineEvent(event,{actors,root,hazards,prop,fx,audio}){
  if(event.tool==='rocket'){const mesh=attachHeldJetpack(actor,prop('propJet',.8));if(mesh)hazards.push({mesh,type:'visual',time:5});}
  if(event.tool==='banana')fx?.bananaDeploy(point);
  if(event.tool==='smoke')fx?.smokeDeploy(point);
- if(event.tool==='rewind')fx?.rewind(point);
+ if(event.tool==='rewind'||event.tool==='rewind-mark')fx?.rewind(point);
 }
 export function syncOnlineHazards(snapshot,{root,hazards,prop,dispose,actors=[]}){
  const ids=new Set(snapshot.map(h=>h.id));for(let i=hazards.length-1;i>=0;i--)if(hazards[i].networkId&&!ids.has(hazards[i].networkId)){dispose(hazards[i]);hazards.splice(i,1);}

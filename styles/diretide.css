@@ -14,11 +14,13 @@ body[data-assets=ready] #home .main-nav{gap:calc(var(--u)*.65)}
 .event-player-marker{width:44px;height:29px}
 .candy-icon{display:block;width:100%;height:auto;overflow:visible;filter:drop-shadow(0 0 2px var(--player-color)) drop-shadow(0 2px 1px #0007)}
 .well-candy-count{display:block;min-width:28px;text-align:center;font:900 20px/1.1 Rubik,sans-serif;color:#fff;text-shadow:0 2px 2px #21142c,1px 0 #21142c,-1px 0 #21142c}
-.well-hearts{display:block;font:900 12px/1 Rubik,sans-serif;letter-spacing:1px;color:var(--player-color);text-shadow:0 1px 2px #171126}
+.well-health{position:relative;flex:none;width:66px;height:19px;overflow:hidden;isolation:isolate;border:2px solid #fff9;border-radius:7px;background:#21142c;box-shadow:0 2px 3px #0007}
+.well-health .money-bar-fill{background:repeating-linear-gradient(115deg,var(--player-color) 0 7px,color-mix(in srgb,var(--player-color),white 32%) 7px 12px)}
+.well-health .money-bar-label{font-size:10px}
 .player-candy-count{position:absolute;inset:0;display:grid;place-items:center;font:900 16px/1 Rubik,sans-serif;color:white;text-shadow:0 1px 2px #281033,1px 0 #281033,-1px 0 #281033}
 .event-well-marker.is-target{background:none!important;filter:drop-shadow(0 0 5px #ff385c)}
 .diretide-mode #crew-status{display:none!important}
-@media(max-height:450px){.event-well-marker{width:38px;height:51px}.event-player-marker{width:34px;height:23px}.well-candy-count{font-size:15px}.player-candy-count{font-size:13px}.well-hearts{font-size:9px}}
+@media(max-height:450px){.event-well-marker{width:38px;height:51px}.event-player-marker{width:34px;height:23px}.well-candy-count{font-size:15px}.player-candy-count{font-size:13px}.well-health{width:53px;height:16px}.well-health .money-bar-label{font-size:8px}}
 /* Burger artwork is square; counts retain their well/player placement. */
 .event-well-marker{width:52px;height:88px}.event-player-marker{width:44px;height:44px}
 .candy-icon{aspect-ratio:1;object-fit:contain;flex-shrink:0}

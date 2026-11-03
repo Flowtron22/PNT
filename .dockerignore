@@ -1,6 +1,0 @@
-.git
-.local
-dist
-**/node_modules
-shots
-.env*

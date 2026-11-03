@@ -7,8 +7,8 @@ export function createPlayerMirage(actor){
  const root=new THREE.Group();root.name='B2B_PlayerMirage';
  root.quaternion.copy(actor.group.quaternion);root.scale.copy(actor.group.scale);
  const material=new THREE.ShaderMaterial({
-  name:'B2B_Hologram',transparent:true,depthWrite:false,side:THREE.DoubleSide,
-  uniforms:{time:{value:0},tint:{value:new THREE.Color(0x47dfff)}},
+  name:'B2B_Hologram',transparent:true,depthWrite:false,toneMapped:false,side:THREE.DoubleSide,
+  uniforms:{time:{value:0},tint:{value:new THREE.Color(0xff38ba)}},
   vertexShader:`varying vec3 vNormal;varying vec3 vView;varying float vHeight;
    void main(){vec4 view=modelViewMatrix*vec4(position,1.0);vNormal=normalize(normalMatrix*normal);
     vView=-view.xyz;vHeight=(modelMatrix*vec4(position,1.0)).y;gl_Position=projectionMatrix*view;}`,
@@ -16,7 +16,7 @@ export function createPlayerMirage(actor){
    void main(){float rim=pow(1.0-abs(dot(normalize(vNormal),normalize(vView))),1.6);
     float scan=smoothstep(-.4,.6,sin(vHeight*75.0-time*4.0));
     float pulse=.96+.04*sin(time*2.5);
-    gl_FragColor=vec4(mix(tint,vec3(.78,.98,1.0),rim*.75)*pulse,(.18+scan*.2+rim*.35)*pulse);
+    gl_FragColor=vec4(mix(tint,vec3(1.0,.83,.96),rim*.82)*pulse,(.45+scan*.15+rim*.36)*pulse);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
    }`

@@ -1,6 +1,6 @@
 // Shared authoritative event rules. World positions are Y-up metres.
-export const DIRETIDE_VERSION=4;
-export const DIRETIDE_SECONDS=50, WELL_HEARTS=2, CARRY_LIMIT=30, DEPOSIT_RATE=12;
+export const DIRETIDE_VERSION=5;
+export const DIRETIDE_SECONDS=30, WELL_HEARTS=2, CARRY_LIMIT=30, DEPOSIT_RATE=12;
 export const EVENT_SPEED_MULTIPLIER=1.3,EVENT_HAMMER_RADIUS=3,EVENT_BANANA_SECONDS=7,EVENT_STUN_SECONDS=4,CANDY_SPAWN_FLIGHT=.85;
 export const PLAYER_COLORS=['#4f97ff','#ffb331','#4bd58a','#ef78ba'];
 export const CANDY_SIZES={small:{amount:1,radius:.22},medium:{amount:3,radius:.36},big:{amount:5,radius:.52}};
@@ -80,7 +80,7 @@ export function collectEventCandy(round,positions,clear=()=>true){
 export function spillOnStun(round,id,effect,position){const a=round.actors[id],stuns=['stunned','airStunned','banana'];if(round.mode==='diretide'&&a&&stuns.includes(effect)&&!(stuns.includes(a.effect)&&a.effectTime>0))return dropCandy(round,id,position);return 0;}
 function finish(round){const alive=round.actors.filter(a=>!a.eliminated);if(alive.length>1)return;round.phase='finished';round.winnerId=alive[0]?.id??null;round.winner=alive.length?'runner':null;round.reason=alive.length?'last-well':'draw';}
 function nextTarget(round){const b=round.boss;b.target=b.targets.shift()??null;b.stage=b.target===null?'returning':'walking';b.clock=0;b.hit=false;}
-function walk(b,target,dt){const dx=target[0]-b.position[0],dz=target[2]-b.position[2],d=Math.hypot(dx,dz),step=Math.min(d,3.2*dt);if(d>.01){b.position[0]+=dx/d*step;b.position[2]+=dz/d*step;}b.position[1]=target[1];return d<=.15;}
+function walk(b,target,dt){const dx=target[0]-b.position[0],dz=target[2]-b.position[2],d=Math.hypot(dx,dz),step=Math.min(d,4.4*dt);if(d>.01){b.position[0]+=dx/d*step;b.position[2]+=dz/d*step;}b.position[1]=target[1];return d<=.15;}
 export function stepDiretide(round,dt){
  if(round.phase!=='playing'||!Number.isFinite(dt)||dt<=0)return;dt=Math.min(dt,.1);
  if(round.startRemaining>0){round.startRemaining=Math.max(0,round.startRemaining-dt);if(round.startRemaining<1e-8)round.startRemaining=0;return;}
