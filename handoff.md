@@ -1,17 +1,156 @@
 # Police N Thief web prototype — handoff
 
-Updated: 2 November 2026 (Asia/Kuala_Lumpur).
-Current app version: **0.9.107**, persistent controller focus across lobby and tool rerenders. Server: **0.9.27**.
-Release checks: 299 client tests and 31 server tests pass, syntax and static build pass. Publishing this event to Vercel and Render is authorized.
+Updated: 3 November 2026 (Asia/Kuala_Lumpur).
 
-**Current state: the requested Inkwave-style responsive layout is complete and live.**
-The user rejected the fixed 16:9 frame; do not restore letterboxing unless asked.
-Multiplayer remains hosted for a free online test on Render.
-Render service `pnt-multiplayer` uses the Free plan in Singapore, branch
-`codex/multiplayer-local`, endpoint `https://pnt-multiplayer.onrender.com`.
-Vercel's build command injects that public endpoint; local development still
-discovers the LAN server. Free hosting sleeps when idle and can take about a
-minute to wake. No paid upgrade is authorized.
+## Current release and deployment
+
+Client **0.9.107** is live on [Vercel](https://police-n-thief.vercel.app/?v=0.9.107).
+Server **0.9.27** runs on [Render](https://pnt-multiplayer.onrender.com/health),
+with movement protocol **7** and PATTYTIDE event rules **4**. The loading-screen
+logo removal was verified in the production HTML; the title-screen logo remains.
+
+Both remote branches, `main` and `codex/multiplayer-local`, point to release
+commit `390f1f49115c62f7a356784e84efa1baf70ac2af` at this handoff update.
+The repository is https://github.com/Flowtron22/PNT. Vercel deploys `main`.
+Render service `pnt-multiplayer` (`srv-dbg9g4vb9u1s73cleivg`) uses
+`codex/multiplayer-local`, the Free plan, and Singapore. Its last application
+update was PATTYTIDE release `d42c0a7`; subsequent releases changed only the client.
+Do not redeploy the server merely to match a client version number.
+
+| Commit | Released change |
+| --- | --- |
+| `d42c0a7` | PATTYTIDE event, client 0.9.96 / server 0.9.27 |
+| `5431bfb` | Event navigation and connection recovery fixes, client 0.9.97 |
+| `1c9c6e9` | Startup title gate and police-light background, client 0.9.101 |
+| `390f1f4` | Remove logo from loading overlay, client 0.9.102 |
+
+All requested gameplay and presentation changes through 0.9.102 are deployed.
+This documentation refresh itself is local until separately committed/pushed.
+
+## Current startup and presentation
+
+Initial assets load on the **GETTING READY** overlay with progress text/bar and
+**no Police N Thief logo**. The shared loading overlay also omits the logo when
+loading matches. Once initial loading completes, wait on a separate title screen
+with the large Police N Thief logo, **PRESS ANY KEY**, and **OR CLICK OR TAP TO START**.
+A fresh keyboard, pointer/touch, or controller button enters the main menu once
+per page boot. Returning from a match goes directly to the menu. Start input and
+its follow-up click are consumed to prevent accidental menu actions; held-key
+repeats and modifier-only keys do not enter. Controller input uses existing button edges.
+
+Both screens use the original 0.9.98 Inkwave-style orange/blue blurred blobs,
+purple gradient, and dotted texture. Over these, two red reflection pulses then
+two blue pulses repeat every **4.8 seconds**, with a **2.4-second** offset and
+smooth fades (overlay opacity .025 to .72). Keep the original background colours;
+the subdued replacement from 0.9.99 was rejected as too subtle. OS and in-game
+Reduced Motion disable the background and prompt animations. Do not claim a
+medical safety guarantee for the effect.
+
+Files: `src/pnt/title-screen.js`, startup/controller integration in
+`src/pnt/main.js`, `styles/title-screen.css`, loading markup in `index.html`.
+The build explicitly includes the title stylesheet. Reference project:
+`F:/PROJECTS/JORAN/inkwave-main/inkwave-main`; preserve the existing
+`notices/wonder-wave-mit.txt` attribution.
+
+The responsive Inkwave-style main layout remains live. The user rejected a fixed
+16:9 frame: do not restore letterboxing unless asked.
+
+## Current PATTYTIDE mode
+
+Public UI name is **PATTYTIDE**. Internal mode IDs, filenames and protocol names
+remain `diretide`; do not rename these casually. EVENTS is directly below PLAY
+and uses a calendar/star icon. The event card has no small tagline. Shared Solo
+Online, Couch Play, lobby, host/join, public matchmaking, loadout/costume display,
+countdown, results and rematch flow remain available; matchmaking is isolated by
+mode. Event training supports one player plus three bots. Couch requires two humans.
+
+- Four-player free-for-all; each player owns a well with **two hearts**.
+- Every **50 seconds**, the AI Patrics selects the fullest living well. Ties queue
+  all tied wells before resolving victory/draw; empty cycles restart without attack.
+  Smashes cannot be interrupted. Deposits pause while walking to attack/smashing,
+  then reopen during the return home. Well contents clear after the queued attacks.
+- A destroyed well permanently eliminates its owner for that match. Their avatar
+  disappears and they remain spectators until results/rematch. Last well wins;
+  destruction of all remaining wells in the same tied cycle is a draw.
+- Supplied Krabby Patty FBX/PNG replace world pickups, spills, well piles and icons.
+  Well counts are above the icon, player counts inside it; hearts remain under
+  well icons. No extra carried-total panel beneath the timer, top-left well list,
+  or floating Patrics label. Patty piles sit above the well rim.
+- Small/medium/big pickups give **1/3/5**; carry limit **30**. Start with **24**,
+  spawn **six every three seconds**, cap **44**, and expire after **35 seconds**.
+  Pickups launch from the ground and become collectible after **.85 seconds**.
+- Hold Interact at an enemy well to deposit **12 whole patties/second**. Releasing
+  cancels partial transfer progress. New hammer/banana stuns spill half the carry,
+  rounded up, in curved fan trajectories with a bounce; extensions do not repeat
+  the spill. Drops expire after **20 seconds**. Nearby patties react to hammer impact.
+- Fixed **Hammer / Banana Split** kit for humans and bots in every event flow.
+  Hammer radius **3m**, stun **4 seconds**, banana spin **7 seconds**. Other tools
+  are rejected by the server. Classic kits and tuning are preserved.
+- Event base speed is **1.3x**; carrying scales it by `1 - carried / 45` for
+  0–30 patties. At 5/10/15/20/25/30, unloaded-speed percentages are
+  **88.89/77.78/66.67/55.56/44.44/33.33**. Local, server and prediction share this.
+- Idle Patrics loops authored jumping jacks and faces the fullest living well.
+  Existing 62-joint rig is retained; actions include idle, jumpingJack, walk, smash
+  and celebrate. Boss-only export uses `prepare-diretide.py -- --boss-only`.
+- Grassfield uses Mall-style **ground-only contact AO**, radius .4m, strength .65,
+  upward mask >.8, on three receivers. Preserve flat face normals: imported custom
+  normals caused white scenery triangles. No full-scene irradiance lightmap.
+  Sunken grading uses .8 light scale and exposure 1; classic Sunken is unchanged.
+
+Main references: `docs/DIRETIDE.md`, `src/pnt/diretide-rules.js`,
+`src/pnt/diretide-view.js`, `src/pnt/diretide-motion.js`,
+`src/pnt/diretide-lighting.js`, `src/pnt/diretide-ui.js`, `styles/diretide.css`,
+`server/simulation.mjs`, `server/game-room.mjs` and `src/pnt/player-motion.js`.
+Source assets remain untouched under
+`F:/PROJECTS/PS_3D/Assets/3D/01_Maps/Diretide`. Runtime assets are checked in;
+Vercel and Render need no Blender or source FBXs.
+
+Review fixes shipped in 0.9.97: returning Home resets the selected event mode so
+normal Tools are editable; expired/disconnected recovery preserves both room mode
+and room code when reopening Join. Tests exercise the actual handlers for classic
+and event flows. Keep these behaviours intact.
+
+## Validation and local operation
+
+Last complete client suite: **299 tests, 0 failures**, on 0.9.107.
+Last complete server suite: **31 tests, 0 failures**, for unchanged server 0.9.27.
+Syntax and static build checks passed. The 0.9.102 loading-only change passed
+build checks and production HTML verification; no new full-suite run was needed.
+A hosted four-SDK-client PATTYTIDE smoke check confirmed shared Grassfield match,
+fixed tools, movement acknowledgement, replicated hammer use, two-heart wells,
+and event rules version 4. Desktop keyboard entry and phone-sized click entry were
+visually verified. Physical phone and gamepad testing remains unverified.
+
+Commands from `F:/PROJECTS/PNT`:
+
+~~~powershell
+npm run dev:online
+npm run check
+npm test
+npm run test:multiplayer
+npm run build
+~~~
+
+The local launcher runs website port **8491** and game-server port **2567**.
+Use http://localhost:8491 or the LAN address printed by the launcher. Check for
+existing listeners before starting another launcher; duplicate ports cause exit.
+An idle/stopped local process causes localhost connection failures: restart the
+launcher rather than editing game code. Managed terminal sessions can be used.
+
+Vercel's build injects `https://pnt-multiplayer.onrender.com`; development uses the
+local/LAN server. Render Free may sleep and need about a minute to wake. No paid
+upgrade is authorized. If updated backend code does not auto-deploy, use Manual
+Deploy → Deploy latest commit and verify `/health`. Publish only when authorized.
+Preserve `notices/` and dependency licences. Build-generated `dist/`, local logs,
+screenshots and browser test profiles under `.local/` stay ignored.
+
+## Historical implementation log
+
+Entries below describe their versions at the time, including older test counts,
+parameters and “local only” status. They are preserved as history; the current
+release summary above takes precedence. PATTYTIDE's early 60-second/three-heart
+rules, older candy meshes, full-scene lightmap and slow light fade are superseded.
+
 0.9.10 fixes the background-app timeout: initial seat reservation is 60 seconds,
 reconnection reservation is 120 seconds, and expired reconnections return to Join
 with the previous room code instead of a raw error over a stale lobby.
