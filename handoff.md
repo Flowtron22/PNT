@@ -1,11 +1,70 @@
-# Police N Thief web prototype — handoff
+# Police N Thief Steam playtest handoff
 
-Updated: 3 November 2026 (Asia/Kuala_Lumpur).
+Updated 4 November 2026 (Asia/Kuala_Lumpur).
 
-Online playtests now use the [Steam desktop build](docs/STEAM.md). The hosting
-details below describe the earlier browser prototype.
+## Current build
 
-## Current release and deployment
+The Windows x64 Steam playtest is **0.9.116** on `main`, introduced in
+[commit b33c66a](https://github.com/Flowtron22/PNT/commit/b33c66a). The same
+Windows package targets Steam Deck via Proton. The desktop client uses Steam
+lobbies and peer networking, with match authority on the lobby host's PC.
+
+On Windows with x64 Node.js 22.12 or newer:
+
+```powershell
+npm ci
+npm run build:steam -- --dev-playtest
+```
+
+Share the entire `dist-steam/win64-dev-playtest-0.9.116` folder, including
+`steam_appid.txt`. Testers sign in to the Steam desktop client with separate
+accounts and run `Police N Thief.exe`. The development build uses Spacewar
+App ID 480. Steam distribution uses the assigned game or Playtest App ID.
+Build archives stay outside Git. See the [Steam build guide](docs/STEAM.md).
+
+For Classic, use **Play → Solo Online → Host Lobby**. For PattyTide, start at
+**Events → PattyTide → Solo Online**. The host can change visibility under
+**Room Setting** while waiting. Share the seven-character room code to join a
+specific lobby, or invite Steam friends. Public matchmaking searches the selected mode.
+
+## Latest playtest changes
+
+- Guests see the host's lobby seat order and platform colors. Costume choices
+  and variants sync in the lobby and match.
+- Movement updates can arrive out of order. The receiver keeps a bounded window
+  of snapshot fragments. Confirmed tool feedback travels separately as a reliable
+  event. Public matchmaking skips lobbies that fill or become private during discovery.
+- When the host leaves, Steam assigns a successor and the room code stays the
+  same. Active matches resume from the latest received state, with a bot taking
+  over the departed host's character. Countdown or loading returns to the lobby.
+- PattyTide uses 30-second collection phases, faster Patrics movement, and striped
+  well health bars. Candy keeps spawning after a handoff, and restored live
+  players become visible again.
+- All modes show rounded, seat-colored P1–P4 markers at players' feet. B2B uses
+  a brighter magenta hologram. Iceberg uses tighter wall clearance when walking
+  or landing. The jetpack passes through obstacles while airborne.
+- The Windows executable and game window use the PNT thief-head icon.
+
+## Verification and next playtest
+
+Version 0.9.116 passed syntax checks and **332 automated tests** (302 client,
+30 multiplayer). Simulated Steam peers covered host transfer in Classic and
+PattyTide, interleaved packets, and matchmaking fallback. Earlier packaged
+builds started live Steam lobbies and bot matches. The 0.9.116 live launch
+check was blocked by an older instance already running.
+
+Close older copies and use 0.9.116 on every machine. Retest guest movement,
+tool timing, costume and seat sync, and host transfer with two Steam accounts
+on separate connections. Retest the reported Iceberg wall spot and check the
+Windows build in Steam Deck Gaming Mode.
+
+## Historical browser prototype notes
+
+The sections below record earlier implementation and verification. Their
+deployment URLs, build numbers, and multiplayer instructions describe the
+browser prototype. Follow the Steam instructions above for current playtests.
+
+### Previous browser release and deployment
 
 Client **0.9.107** is live on [Vercel](https://police-n-thief.vercel.app/?v=0.9.107).
 Server **0.9.27** runs on [Render](https://pnt-multiplayer.onrender.com/health),
