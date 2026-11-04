@@ -1,5 +1,5 @@
 // Shared authoritative event rules. World positions are Y-up metres.
-export const DIRETIDE_VERSION=5;
+export const DIRETIDE_VERSION=6;
 export const DIRETIDE_SECONDS=30, WELL_HEARTS=2, CARRY_LIMIT=30, DEPOSIT_RATE=12;
 export const EVENT_SPEED_MULTIPLIER=1.3,EVENT_HAMMER_RADIUS=3,EVENT_BANANA_SECONDS=7,EVENT_STUN_SECONDS=4,CANDY_SPAWN_FLIGHT=.85;
 export const PLAYER_COLORS=['#4f97ff','#ffb331','#4bd58a','#ef78ba'];
@@ -14,9 +14,9 @@ export function createDiretideRound(base,metadata,{seed=Math.floor(Math.random()
  // Static navigation candidates stay out of 20 Hz snapshots. Online clients consume
  // authoritative pickups/landing positions and never simulate their own spawns.
  Object.defineProperty(round,'spawnPoints',{value:metadata.candySpawns||metadata.caches.map(c=>c.position)});
- spawnCandy(round,24);return round;
+ spawnCandy(round,16);return round;
 }
-export function spawnCandy(round,count=6){
+export function spawnCandy(round,count=4){
  if(!round.spawnPoints?.length)return;
  for(let n=0;n<count&&round.pickups.length<CANDY_LIMIT;n++){
   const start=Math.floor(random(round)*round.spawnPoints.length);let position=null;
@@ -88,7 +88,18 @@ export function stepDiretide(round,dt){
  for(const a of round.actors){a.interacting=false;a.toolCooldowns=a.toolCooldowns.map(t=>Math.max(0,t-dt));for(const key of ['effectTime','immune','captureLock','releaseCooldown'])a[key]=Math.max(0,(a[key]||0)-dt);}
  for(const c of [...round.pickups,...round.drops])c.time-=dt;
  round.pickups=round.pickups.filter(c=>c.time>0&&c.amount>.001);round.drops=round.drops.filter(d=>d.time>0&&d.amount>.001);
- round.spawnClock-=dt;if(round.spawnClock<=0){round.spawnClock+=CANDY_SPAWN_SECONDS;spawnCandy(round);}
+ round.spawnClock-=dt;
+ if(round.spawnClock<=0){
+  round.spawnClock+=CANDY_SPAWN_SECONDS;
+  round.spawnWave=(round.spawnWave||0)+1;
+  if(round.spawnWave%2===0&&round.pickups.length<CANDY_LIMIT){
+   const position=landedPosition(round,[0,0,0],0,0);
+   if(!round.pickups.some(c=>Math.hypot(c.position[0]-position[0],c.position[2]-position[2])<1.25)){
+    round.pickups.push({id:++round.pickupId,position,size:'big',amount:CANDY_SIZES.big.amount,born:round.elapsed,time:12});
+   }
+  }
+  spawnCandy(round);
+ }
  const b=round.boss;
  if(b.stage==='sleeping'){
   round.remaining=Math.max(0,round.remaining-dt);

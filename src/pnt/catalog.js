@@ -10,7 +10,7 @@ export const COSTUMES=[
  {id:'raptor',name:'Raptor',tag:'Tiny arms. Big escape.',file:'raptor'},
 ];
 export const TOOLS=[
- {id:'hammer',name:'Hammer',key:'SMASH',icon:'hammer',clip:'hammer',cooldown:10,type:'STUN',description:'Stun opponents within 2 metres for 2 seconds. 10 second cooldown.'},
+ {id:'hammer',name:'Hammer',key:'SMASH',icon:'hammer',clip:'hammer',cooldown:10,type:'STUN',description:'Stun opponents within 3 metres for 2 seconds. 10 second cooldown.'},
  {id:'banana',name:'Banana Skin',key:'DROP',icon:'banana',clip:'banana',cooldown:5,type:'TRAP',description:'Drop a peel that spins an opponent for 2 seconds. Peels last 15 seconds; maximum 5. 5 second cooldown.'},
  {id:'rocket',name:'Jetpack',key:'BOOST',icon:'rocket',clip:'rocket',cooldown:15,type:'MOVEMENT',description:'Launch and fly for 5 seconds. Steer with movement. 15 second cooldown.'},
  {id:'smoke',name:'Smoke Bomb',key:'SMOKE',icon:'smoke',clip:'idle',cooldown:30,type:'COVER',description:'Deploy a smoke cloud that blocks sight and capture through it for 20 seconds. Maximum 3 clouds. 30 second cooldown.'},

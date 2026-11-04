@@ -11,7 +11,7 @@ import {rollSpinDirection} from '../src/pnt/action-state.js';
 import {createMallPhysics} from '../src/pnt/mall-physics.js';
 import {loadArenaData,groundSpot} from './arena.mjs';
 import {createDiretideRound,stepDiretide,collectEventCandy,eventTarget,eventInteract,eventBotGoal,spillOnStun,EVENT_HAMMER_RADIUS,EVENT_BANANA_SECONDS,EVENT_STUN_SECONDS} from '../src/pnt/diretide-rules.js';
-import {createTiletideRound,stepTiletide,tileBotGoal,tileStageContains,TILE_SPAWNS,TILE_STUN_SECONDS} from '../src/pnt/tiletide-rules.js';
+import {createTiletideRound,stepTiletide,tileBotGoal,tileStageContains,TILE_SPAWNS,TILE_STUN_SECONDS,TILE_BANANA_SECONDS} from '../src/pnt/tiletide-rules.js';
 export class MatchSimulation {
  static async create(map,players,gameMode){const instance=new MatchSimulation(map,players,await loadArenaData(map),gameMode);if(map==='mall'){const arena=instance.data.template.clone(true);instance.root.add(arena);instance.root.updateMatrixWorld(true);instance.physics=await createMallPhysics(arena,instance.root,instance.grid);}return instance;}
  static async restore(snapshot,players){
@@ -77,7 +77,7 @@ export class MatchSimulation {
   if(['diretide','tiletide'].includes(this.round.mode)&&!['hammer','banana'].includes(tool))return false;
   if(tool==='rewind'&&!actor.mark&&state.toolCooldowns[slot]<=0){actor.mark=p.clone();this.addHazard('marker',actor,Infinity,p);this.event('tool',{actor:id,tool:'rewind-mark',position:p.toArray()});return true;}
   if(!activateTool(this.round,id,slot,tool))return false;
-  if(tool==='hammer'){this.effect(state,'hammer',.48);for(const other of this.round.actors){const event=['diretide','tiletide'].includes(this.round.mode);if((event?other.id===state.id:other.role===state.role)||other.caught||other.inSmoke)continue;const target=this.actors[other.id];if(p.distanceTo(target.group.position)<(event?EVENT_HAMMER_RADIUS:2)&&this.sight(p,target.group.position,false)){this.effect(other,target.grounded?'stunned':'airStunned',this.round.mode==='tiletide'?TILE_STUN_SECONDS:event?EVENT_STUN_SECONDS:2);state.stuns=(state.stuns||0)+1;}}}
+  if(tool==='hammer'){this.effect(state,'hammer',.48);state.hammerWindup=.18/1.3;}
   if(tool==='banana')this.addHazard('banana',actor,15,p.clone().add(new THREE.Vector3(-Math.sin(actor.group.rotation.y)*.7,.03,-Math.cos(actor.group.rotation.y)*.7)));
   if(tool==='smoke'){this.addHazard('smoke',actor,20,p);this.smokeCoverage();}
   if(tool==='rocket'){this.effect(state,'rocket',5);actor.velocity=4.5;actor.grounded=false;}
@@ -117,8 +117,17 @@ export class MatchSimulation {
   if(state.inSmoke)return null;const caches=this.round.caches.filter(c=>c.remaining>0).sort((a,b)=>p.distanceToSquared(new THREE.Vector3(...a.position))-p.distanceToSquared(new THREE.Vector3(...b.position)));
   for(const cache of caches){const q=new THREE.Vector3(...cache.position),d=Math.hypot(q.x-p.x,q.z-p.z);if(d<INTERACT_RADIUS&&Math.abs(p.y-q.y)<2&&this.sight(p,q,false,1.1))return {type:'cache',id:cache.id,d};}return null;
  }
+ resolveHammer(state){
+  const p=this.actors[state.id].group.position;
+  for(const other of this.round.actors){const event=['diretide','tiletide'].includes(this.round.mode);if((event?other.id===state.id:other.role===state.role)||other.caught||other.inSmoke)continue;const target=this.actors[other.id];if(p.distanceTo(target.group.position)<EVENT_HAMMER_RADIUS&&this.sight(p,target.group.position,false)){this.effect(other,target.grounded?'stunned':'airStunned',this.round.mode==='tiletide'?TILE_STUN_SECONDS:event?EVENT_STUN_SECONDS:2);state.stuns=(state.stuns||0)+1;}}
+ }
  step(dt=1/60){
   if(this.round.phase!=='playing')return;this.time+=dt;this.tick++;const starting=this.round.startRemaining>0;if(this.round.mode==='diretide')stepDiretide(this.round,dt);else if(this.round.mode==='tiletide')stepTiletide(this.round,dt,this.actors.map(a=>a.group.position));else stepRound(this.round,dt);if(this.round.phase!=='playing')return;if(starting){for(const actor of this.actors){actor.inputQueue.length=0;actor.processedInput=actor.input.seq;actor.input={seq:actor.input.seq,x:0,z:0,interact:false};}return;}this.smokeCoverage();const tilt=this.map==='sunken'?shipTilt(300-this.round.remaining):0,wishes=[];
+  for(const state of this.round.actors){
+   if(!(state.hammerWindup>0))continue;
+   state.hammerWindup=Math.max(0,state.hammerWindup-dt);
+   if(!state.hammerWindup&&state.effect==='hammer'&&state.effectTime>0&&!state.caught&&!state.inSmoke)this.resolveHammer(state);
+  }
   for(const actor of this.actors){const state=this.round.actors[actor.id];state.interacting=false;let input=this.players[actor.id].bot?this.botInput(actor,dt):actor.framed?(actor.inputQueue.shift()||{x:0,z:0,interact:false}):this.time-actor.lastInput<.4?actor.input:{x:0,z:0,interact:false};if(input.seq)actor.processedInput=input.seq;let {x,z}=input;
    if(state.caught){x=z=0;actor.mark=null;for(const h of this.hazards)if(h.owner===actor.id&&h.type==='marker')h.time=0;}
    if(state.effect==='banana'&&state.effectTime>0){state.spinTurn-=dt;if(state.spinTurn<=0){state.spinDirection=rollSpinDirection();state.spinTurn=.35;}x=state.spinDirection.x;z=state.spinDirection.z;}
@@ -127,7 +136,7 @@ export class MatchSimulation {
    wishes.push({id:actor.id,wants:input.interact===true});
   }
   this.physics?.step(dt,this.actors);
-  for(const hazard of this.hazards)hazard.time-=dt;this.smokeCoverage();for(const hazard of this.hazards){if(hazard.type==='banana'&&hazard.time>0)for(const state of this.round.actors){const event=['diretide','tiletide'].includes(this.round.mode);if((event?state.id===hazard.owner:state.role===hazard.role)||state.caught||state.inSmoke||state.effectTime>0)continue;if(this.actors[state.id].group.position.distanceTo(hazard.position)<.8){this.effect(state,'banana',event?EVENT_BANANA_SECONDS:2);hazard.time=0;break;}}}this.hazards=this.hazards.filter(h=>h.time>0);
+  for(const hazard of this.hazards)hazard.time-=dt;this.smokeCoverage();for(const hazard of this.hazards){if(hazard.type==='banana'&&hazard.time>0)for(const state of this.round.actors){const event=['diretide','tiletide'].includes(this.round.mode);if((event?state.id===hazard.owner:state.role===hazard.role)||state.caught||state.inSmoke||state.effectTime>0)continue;if(this.actors[state.id].group.position.distanceTo(hazard.position)<.8){this.effect(state,'banana',this.round.mode==='tiletide'?TILE_BANANA_SECONDS:event?EVENT_BANANA_SECONDS:2);hazard.time=0;break;}}}this.hazards=this.hazards.filter(h=>h.time>0);
   this.smokeCoverage();const cop=this.actors.find(a=>this.round.actors[a.id].role==='chaser');for(const state of this.round.actors.filter(a=>!['diretide','tiletide'].includes(this.round.mode)&&a.role==='runner')){const p=cop.group.position,q=this.actors[state.id].group.position;if(detectThiefAt(this.round,cop.id,state.id,dt,p,q,this.sight(p,q))){cop.vx=cop.vz=cop.slideX=cop.speed=0;this.event('capture',{actor:state.id,position:q.toArray(),policePosition:p.toArray()});this.actors[state.id].mark=null;}}
   for(const cache of this.round.caches)cache.harvester=null;for(const wish of wishes){const target=wish.wants?this.interaction(wish.id):null,actor=this.actors[wish.id],key=target?`${target.type}:${target.id}`:null;if(actor.interactionKey!==key||!target)cancelInteraction(this.round,wish.id);actor.interactionKey=key;if(this.round.mode==='diretide'&&target)eventInteract(this.round,wish.id,target,dt,target.d);if(target?.type==='cache')harvest(this.round,wish.id,target.id,dt,target.d);if(target?.type==='rescue')rescue(this.round,wish.id,target.id,dt,target.d);}
   if(this.round.mode==='diretide')collectEventCandy(this.round,this.actors.map(a=>a.group.position),(p,q)=>this.sight(p,new THREE.Vector3(...q),false,1.1));

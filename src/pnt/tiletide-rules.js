@@ -1,5 +1,6 @@
 // Shared authoritative rules for the Tile Tumble event. Positions are Y-up metres.
-export const TILETIDE_VERSION=1;
+export const TILETIDE_VERSION=2;
+export const TILE_BANANA_SECONDS=1;
 export const TILE_RUN_SECONDS=3,TILE_REVEAL_SECONDS=2,TILE_RETURN_SECONDS=1,TILE_IDLE_SECONDS=4,TILE_STUN_SECONDS=2;
 export const TILE_RADIUS=2.45;
 export const TILE_COLORS=[

@@ -110,7 +110,10 @@ function launch() {
       if (!fromGame(event) || !multiplayer) throw new Error('Steam multiplayer requires a Steam build and a signed-in Steam client.');
       return multiplayer.connect(...args);
     });
-    for (const method of ['send', 'leave', 'invite']) {
+    ipcMain.handle('steam:leave', (event, key) => {
+      if (fromGame(event)) return multiplayer?.leave(key);
+    });
+    for (const method of ['send', 'invite']) {
       ipcMain.on('steam:' + method, (event, ...args) => {
         if (fromGame(event)) multiplayer?.[method](...args);
       });

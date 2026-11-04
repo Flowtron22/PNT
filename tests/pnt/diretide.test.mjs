@@ -30,7 +30,7 @@ test('stuns scatter half the carried candy in collectible arcs, with delayed lan
  const p={x:first.position[0],y:first.position[1],z:first.position[2]};collectEventCandy(r,[p]);assert.equal(r.actors[0].candy,0);r.elapsed=1.5;collectEventCandy(r,[p]);assert.ok(r.actors[0].candy>0);ticks(r,201);assert.equal(r.drops.length,0);
 });
 test('random small, medium and big pickups spawn periodically at safe locations with a hard population cap',()=>{
- const r=round();assert.equal(r.caches.length,0);assert.equal(r.pickups.length,24);assert.deepEqual(new Set(r.pickups.map(c=>c.size)),new Set(['small','medium','big']));
+ const r=round();assert.equal(r.caches.length,0);assert.equal(r.pickups.length,16);assert.deepEqual(new Set(r.pickups.map(c=>c.size)),new Set(['small','medium','big']));
  for(const c of r.pickups){assert.equal(c.amount,CANDY_SIZES[c.size].amount);assert.ok(data.candySpawns.some(p=>p.every((v,i)=>v===c.position[i])));assert.ok(r.wells.every(w=>Math.hypot(w.position[0]-c.position[0],w.position[2]-c.position[2])>=2));}
  const before=new Set(r.pickups.map(c=>c.id));ticks(r,51);assert.ok(r.pickups.some(c=>!before.has(c.id)));for(let i=0;i<30;i++)spawnCandy(r);assert.ok(r.pickups.length<=CANDY_LIMIT);assert.equal(JSON.parse(JSON.stringify(r)).spawnPoints,undefined);
 });

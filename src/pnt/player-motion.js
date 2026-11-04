@@ -11,6 +11,7 @@ export function advanceActor(actor,state,dx,dz,dt,{grid,map,tilt=0,speed,furnitu
  const p=actor.group.position,previous=p.clone(),magnitude=Math.hypot(dx,dz),flying=state.effect==='rocket'&&state.effectTime>0,locked=speed===0||state.captureLock>0||state.caught||state.captureRemaining>0||state.effectTime>0&&!['rocket','banana'].includes(state.effect);
  if(actor.wasFlying&&!flying){const landing=actor.flightLanding||nearestLanding(grid,p.x,p.z);if(landing){p.x=landing.x;p.z=landing.z;p.y=Math.max(p.y,landing.y);actor.vx=actor.vz=actor.slideX=0;}else if(respawn)p.copy(typeof respawn==='function'?respawn():respawn);actor.flightLanding=null;previous.copy(p);}
  if(flying&&!actor.wasFlying){actor.flightFloor=p.y;actor.flightLanding=null;}actor.wasFlying=flying;
+ if(state.effectTime>0&&['stunned','airStunned'].includes(state.effect))actor.vx=actor.vz=actor.slideX=0;
  environmentVelocity(actor,dx,dz,speed,dt,{map,grounded:actor.grounded,flying,locked,tilt});const nx=p.x+(actor.vx+(actor.slideX||0))*dt,nz=p.z+actor.vz*dt;
  const at=(x,z)=>sampleGround(grid,x,z),ground=at(p.x,p.z),walkY=Number.isFinite(ground)?ground:p.y,walkable=(x,z)=>{const h=at(x,z);return Number.isFinite(h)&&h-walkY<.5&&walkY-h<1.2;};let moved=false;
  const canMove=(x,z)=>flying||icebergGroundPathClear(grid,p.x,p.z,x,z)&&walkable(x,z)&&canTraverse(grid,p.x,p.z,x,z);

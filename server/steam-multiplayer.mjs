@@ -133,15 +133,18 @@ class HostedRoom extends MatchRoom {
 export function steamMultiplayer(steam, version, emit, invite) {
   const self = String(steam.localplayer.getSteamId().steamId64);
   const protocol = CHANNEL_VERSION + ':' + version;
-  let active, attempt = 0, opening = false;
+  let active, attempt = 0, opening = false, openingKey, openingDone;
 
   function close(notify = false) {
     attempt++;
     const session = active;
     active = null;
     if (!session) return;
-    session.hosted?.dispose();
-    session.lobby.leave();
+    try {
+      session.hosted?.dispose();
+    } finally {
+      session.lobby.leave();
+    }
     if (notify) emit({key: session.key, type: 'disconnect'});
   }
 
@@ -298,9 +301,14 @@ export function steamMultiplayer(steam, version, emit, invite) {
       }
       session.members = members;
       const owner = String(session.lobby.getOwner().steamId64);
-      if (members.size && !members.has(self)) {
-        close(true);
-      } else if (members.has(owner) && owner !== session.owner) {
+      if (!members.has(self)) {
+        // Steam membership can lag behind an ownership change.
+        session.missingSince ??= now;
+        if (now - session.missingSince >= 3000) close(true);
+        return;
+      }
+      session.missingSince = null;
+      if (members.has(owner) && owner !== session.owner) {
         session.hosted?.dispose();
         session.hosted = null;
         session.owner = owner;
@@ -365,6 +373,9 @@ export function steamMultiplayer(steam, version, emit, invite) {
       const gameMode = ['diretide','tiletide'].includes(profile?.gameMode) ? profile.gameMode : 'classic';
       const current = ++attempt;
       opening = true;
+      openingKey = key;
+      let finishOpening;
+      openingDone = new Promise(resolve => { finishOpening = resolve; });
       let lobby, session;
       try {
         let host = mode === 'host';
@@ -416,6 +427,8 @@ export function steamMultiplayer(steam, version, emit, invite) {
         throw error;
       } finally {
         opening = false;
+        openingKey = null;
+        finishOpening();
       }
     },
     send(key, type, data) {
@@ -435,8 +448,12 @@ export function steamMultiplayer(steam, version, emit, invite) {
         send(session, session.owner, type, data);
       }
     },
-    leave(key) {
-      if (!active || active.key === key) close();
+    async leave(key) {
+      if (active?.key === key) close();
+      else if (openingKey === key) {
+        close();
+        await openingDone;
+      }
     },
     invite(key) {
       if (active?.key === key) active.lobby.openInviteDialog();

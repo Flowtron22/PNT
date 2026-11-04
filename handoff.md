@@ -4,7 +4,7 @@ Updated 4 November 2026 (Asia/Kuala_Lumpur).
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.117**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.118**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -15,7 +15,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.117` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.118` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -27,6 +27,13 @@ For Classic, use **Play → Solo Online → Host Lobby**. For PattyTide, start a
 specific lobby, or invite Steam friends. Public matchmaking searches the selected mode.
 
 ## Latest playtest changes
+
+- Hammer reach is 3 metres in every mode. Hits resolve at the swing's impact
+  beat, and confirmed stuns clear movement drift.
+- Steam allows a brief membership gap during host migration and waits for
+  leave cleanup before joining another lobby. Retest both with room-code guests.
+- PattyTide has fewer scattered patties and a chance for a large central drop
+  every six seconds. Tile Tumble banana spin lasts one second.
 
 - Guests see the host's lobby seat order and platform colors. Costume choices
   and variants sync in the lobby and match.
@@ -49,13 +56,13 @@ specific lobby, or invite Steam friends. Public matchmaking searches the selecte
 
 ## Verification and next playtest
 
-Version 0.9.117 passed syntax checks and **345 automated tests** (313 client,
+Version 0.9.118 passed syntax checks and **345 automated tests** (313 client,
 32 multiplayer). Simulated Steam peers covered host transfer in Classic and
 PattyTide, interleaved packets, and matchmaking fallback. Earlier packaged
 builds started live Steam lobbies and bot matches. Visual Steam and Steam Deck
-QA for 0.9.117 remains with the tester.
+QA for 0.9.118 remains with the tester.
 
-Close older copies and use 0.9.117 on every machine. Retest guest movement,
+Close older copies and use 0.9.118 on every machine. Retest guest movement,
 tool timing, costume and seat sync, and host transfer with two Steam accounts
 on separate connections. Retest the reported Iceberg wall spot and check the
 Windows build in Steam Deck Gaming Mode.

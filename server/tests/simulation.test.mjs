@@ -85,10 +85,10 @@ function flatMatch(){const grid={minX:-10,minZ:-10,nx:21,nz:21,step:1,heights:ne
 
 test('authoritative successful hammer stuns credit the attacker, not misses, cooldown failures or smoke',()=>{
  const sim=flatMatch();try{
-  assert.equal(sim.tool(0,0),true);assert.equal(sim.round.actors[0].stuns,1);assert.equal(sim.round.actors[1].stuns,0);assert.equal(sim.snapshot().round.actors[0].stuns,1);
+  assert.equal(sim.tool(0,0),true);for(let i=0;i<9;i++)sim.step();assert.equal(sim.round.actors[0].stuns,1);assert.equal(sim.round.actors[1].stuns,0);assert.equal(sim.snapshot().round.actors[0].stuns,1);
   assert.equal(sim.tool(0,0),false);assert.equal(sim.round.actors[0].stuns,1);
-  sim.round.actors[0].effectTime=sim.round.actors[1].effectTime=0;assert.equal(sim.tool(1,0),true);assert.equal(sim.round.actors[1].stuns,1);
-  sim.round.actors[0].effectTime=sim.round.actors[1].effectTime=0;sim.round.actors[1].toolCooldowns[0]=0;sim.actors[0].group.position.set(8,0,-8);assert.equal(sim.tool(1,0),true);assert.equal(sim.round.actors[1].stuns,1);
+  sim.round.actors[0].effectTime=sim.round.actors[1].effectTime=0;assert.equal(sim.tool(1,0),true);for(let i=0;i<9;i++)sim.step();assert.equal(sim.round.actors[1].stuns,1);
+  sim.round.actors[0].effectTime=sim.round.actors[1].effectTime=0;sim.round.actors[1].toolCooldowns[0]=0;sim.actors[0].group.position.set(8,0,-8);assert.equal(sim.tool(1,0),true);for(let i=0;i<9;i++)sim.step();assert.equal(sim.round.actors[1].stuns,1);
   sim.round.actors[1].effectTime=0;sim.round.actors[1].toolCooldowns[0]=0;sim.actors[0].group.position.set(0,0,0);sim.addHazard('smoke',sim.actors[2],10,sim.actors[0].group.position);assert.equal(sim.tool(1,0),false);assert.equal(sim.round.actors[1].stuns,1);
  }finally{sim.dispose();}
 });

@@ -5,7 +5,7 @@ contextBridge.exposeInMainWorld('pntDesktop', {
   steam: {
     connect: (...args) => ipcRenderer.invoke('steam:connect', ...args),
     send: (...args) => ipcRenderer.send('steam:send', ...args),
-    leave: key => ipcRenderer.send('steam:leave', key),
+    leave: key => ipcRenderer.invoke('steam:leave', key),
     invite: key => ipcRenderer.send('steam:invite', key),
     takeInvite: () => ipcRenderer.invoke('steam:take-invite'),
     onInvite: fn => { ipcRenderer.on('steam:invite', () => fn()); },

@@ -71,9 +71,9 @@ test('shared rules credit only completed captures and rescues to the acting play
 test('local hammer credits actual hits and B2B placement does not play the return sound',()=>{
  const source=readFileSync(new URL('../../src/pnt/main.js',import.meta.url),'utf8'),round=createRound('runner'),calls=[];
  const avatars=round.actors.map((_,id)=>({id,tools:['hammer','rewind'],group:{position:new THREE.Vector3(id===1?1:id*5,0,0),rotation:{y:0}},grounded:true}));
- const context=vm.createContext({round,avatars,THREE,online:null,room:null,paused:false,busy:false,loadout:['hammer','rewind'],hazards:[],ANIMATION_PLAY_RATE:1.3,smokeCoverage(){},canActRule:canAct,activateTool,withinSight:()=>true,setEffect(state,name,time){state.effect=name;state.effectTime=time;},gameAudio:{tool:name=>calls.push(name),play:name=>calls.push(name)},gameFX:{hammerSwing(){},rewind(){}},attachHeldHammer:()=>null,prop:()=>null,say(){},createPlayerMirage:()=>({position:new THREE.Vector3()}),attachHazardTelegraph(){},matchRoot:{add(){}}});
+ const context=vm.createContext({round,avatars,THREE,online:null,room:null,paused:false,busy:false,loadout:['hammer','rewind'],hazards:[],ANIMATION_PLAY_RATE:1.3,EVENT_HAMMER_RADIUS:3,smokeCoverage(){},canActRule:canAct,activateTool,withinSight:()=>true,setEffect(state,name,time){state.effect=name;state.effectTime=time;},gameAudio:{tool:name=>calls.push(name),play:name=>calls.push(name)},gameFX:{hammerSwing(){},rewind(){}},attachHeldHammer:()=>null,prop:()=>null,say(){},createPlayerMirage:()=>({position:new THREE.Vector3()}),attachHazardTelegraph(){},matchRoot:{add(){}}});
  vm.runInContext(source.slice(source.indexOf('function useTool('),source.indexOf('function limitItems(')),context);
- context.useTool(0);assert.equal(round.actors[0].stuns,1);context.useTool(0);assert.equal(round.actors[0].stuns,1);
+ context.useTool(0);assert.equal(round.actors[0].stuns,0);context.resolveLocalHammer(avatars[0],round.actors[0]);assert.equal(round.actors[0].stuns,1);context.useTool(0);assert.equal(round.actors[0].stuns,1);
  round.actors[0].effectTime=0;context.useTool(1);assert.ok(avatars[0].mark);assert.ok(calls.includes('Tool_Rewind_Box_Deploy'));assert.ok(!calls.includes('rewind'));
  context.spot=()=>new THREE.Vector3();context.useTool(1);assert.equal(avatars[0].mark,null);assert.equal(calls.filter(name=>name==='rewind').length,1);
 });

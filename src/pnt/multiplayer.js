@@ -1,16 +1,23 @@
 import {DIRETIDE_VERSION} from './diretide-rules.js';
 import {TILETIDE_VERSION} from './tiletide-rules.js';
 export function deadline(promise,ms,message){let timer;return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(message)),ms);})]).finally(()=>clearTimeout(timer));}
+let steamLeave=Promise.resolve();
 async function connectSteamRoom(steam,mode,profile,code){
+ await steamLeave;
  const key=crypto.randomUUID(),handlers=new Map();
  let open=true,sessionId;
- const leave=()=>{open=false;unsubscribe();steam.leave(key);};
+ const leave=()=>{
+  if(!open)return steamLeave;
+  open=false;unsubscribe();
+  steamLeave=Promise.resolve().then(()=>steam.leave(key)).catch(error=>console.warn('Steam lobby cleanup failed:',error));
+  return steamLeave;
+ };
  const unsubscribe=steam.onRoomEvent(message=>{
   if(open&&message.key===key)handlers.get(message.type)?.(message.data);
  });
  try{
   sessionId=await deadline(steam.connect(key,mode,profile,code),30000,'Steam did not respond. Check that Steam is online and try again.');
- }catch(error){leave();throw error;}
+ }catch(error){await leave();throw error;}
  return {
   sessionId,leave,invite:()=>steam.invite(key),connection:{get isOpen(){return open;}},
   send:(type,data)=>steam.send(key,type,data),
