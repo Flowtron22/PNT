@@ -4,6 +4,7 @@ export function resultSummary(round){return {stolen:Math.floor(round.collected),
 // Adapted the menu foundation results: star title, animated team bar, score rows, XP and staggered reveal.
 export function renderResults(root,{round,won,profile,costume,players,map,sounds,onAgain,onMenu,reduced=false,online=false,couch=false,playOutcome=true}){
  if(round.mode==='diretide')return renderEventResults(root,{round,won,profile,players,map,onAgain,onMenu,online,couch});
+ if(round.mode==='tiletide')return renderTileResults(root,{round,won,profile,players,map,onAgain,onMenu,online,couch});
  const stats=resultSummary(round),share=stats.total?stats.stolen/stats.total:0,reason=round.reason==='money'?'EVERY CACHE EMPTIED':round.reason==='captured'?'ALL THIEVES CAUGHT':'TIME UP · MONEY PROTECTED';
  root.className='dialog-screen iw-results '+(won?'is-win':'is-lose')+(reduced?'':' is-intro');
  root.style.setProperty('--ta','#ff9c27');root.style.setProperty('--tb','#5487ff');
@@ -13,6 +14,13 @@ export function renderResults(root,{round,won,profile,costume,players,map,sounds
  const active=()=>!root.hidden&&root.dataset.round===id;root.dataset.round=id;
  setTimeout(()=>{if(active()&&playOutcome)sounds.play(won?'victory_fanfare':'defeat_jingle');},reduced?0:380);
  setTimeout(()=>{if(active()){root.classList.remove('is-intro');sounds.play('xp_tick');}},reduced?0:900);
+}
+
+function renderTileResults(root,{round,won,profile,players,map,onAgain,onMenu,online,couch}){
+ const draw=round.winnerId===null,winner=round.winnerId,seatFor=actor=>(actor.seat??actor.id)+1,winnerSeat=draw?null:seatFor(round.actors[winner]);
+ root.className='dialog-screen iw-results '+(won?'is-win':'is-lose');
+ root.innerHTML=`<div class="iw-res__scrim"></div><header class="iw-res__head"><div id="result-title" class="iw-res__title">${draw?'DRAW':couch?'P'+winnerSeat+' WINS!':won?'VICTORY!':'DEFEAT'}</div><div class="iw-res__meta">TILE TUMBLE · ${esc(map.toUpperCase())}</div><div class="result-reason">${draw?'NO PLAYER SURVIVED':'P'+winnerSeat+' · LAST PLAYER STANDING'}</div></header><div class="result-hero"><div class="result-character-host"></div><span>${won?'YOU RULED THE TILES!':'THE FLOOR HAD OTHER PLANS.'}</span></div><div class="iw-res__body"><section class="iw-panel result-scoreboard"><div class="result-table-head"><span>PLAYER</span><span>STATUS</span><span>ROUNDS SAFE</span></div>${round.actors.map(a=>`<div class="iw-prow ${a.id===0?'is-self':''}"><span class="iw-prow__name">${esc(players[a.id]?.name||'Player '+seatFor(a))}<em>P${seatFor(a)}</em></span><span>${a.eliminated?'OUT':'WINNER'}</span><b>${a.survived}</b></div>`).join('')}</section><section class="iw-panel result-xp"><span class="iw-lvl"><small>LV</small>${profile.level}</span><strong>+${won?PROGRESSION.xpWin:PROGRESSION.xpLose} XP</strong><span>${online?'ONLINE':couch?'COUCH PLAY':'TRAINING'} · ${Math.floor(round.elapsed/60)}:${String(Math.floor(round.elapsed%60)).padStart(2,'0')} ELAPSED</span></section><div class="result-actions"><button id="again" class="primary">${couch?'BACK TO LOBBY':'PLAY AGAIN →'}</button><button id="result-menu" class="secondary">MAIN MENU</button></div></div>`;
+ root.querySelector('#again').onclick=onAgain;root.querySelector('#result-menu').onclick=onMenu;
 }
 
 function renderEventResults(root,{round,won,profile,players,map,onAgain,onMenu,online,couch}){

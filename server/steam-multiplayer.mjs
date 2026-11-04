@@ -362,7 +362,7 @@ export function steamMultiplayer(steam, version, emit, invite) {
       if (opening || active) throw new Error('Leave the current Steam lobby first.');
       if (!['host', 'public', 'join'].includes(mode)) throw new Error('Invalid lobby action.');
       const target = mode === 'join' ? lobbyId(code) : null;
-      const gameMode = profile?.gameMode === 'diretide' ? 'diretide' : 'classic';
+      const gameMode = ['diretide','tiletide'].includes(profile?.gameMode) ? profile.gameMode : 'classic';
       const current = ++attempt;
       opening = true;
       let lobby, session;

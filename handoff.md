@@ -4,9 +4,8 @@ Updated 4 November 2026 (Asia/Kuala_Lumpur).
 
 ## Current build
 
-The Windows x64 Steam playtest is **0.9.116** on `main`, introduced in
-[commit b33c66a](https://github.com/Flowtron22/PNT/commit/b33c66a). The same
-Windows package targets Steam Deck via Proton. The desktop client uses Steam
+The current Windows x64 Steam playtest package is **0.9.117**. The same Windows
+package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
 On Windows with x64 Node.js 22.12 or newer:
@@ -16,7 +15,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.116` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.117` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -44,16 +43,19 @@ specific lobby, or invite Steam friends. Public matchmaking searches the selecte
   a brighter magenta hologram. Iceberg uses tighter wall clearance when walking
   or landing. The jetpack passes through obstacles while airborne.
 - The Windows executable and game window use the PNT thief-head icon.
+- Tile Tumble is available from Events with Hammer and Banana Skin. Its seven
+  platforms disappear with smoke, eliminated players fall into the galaxy, and
+  each announced target allows three seconds after the four-second free-movement phase.
 
 ## Verification and next playtest
 
-Version 0.9.116 passed syntax checks and **332 automated tests** (302 client,
-30 multiplayer). Simulated Steam peers covered host transfer in Classic and
+Version 0.9.117 passed syntax checks and **345 automated tests** (313 client,
+32 multiplayer). Simulated Steam peers covered host transfer in Classic and
 PattyTide, interleaved packets, and matchmaking fallback. Earlier packaged
-builds started live Steam lobbies and bot matches. The 0.9.116 live launch
-check was blocked by an older instance already running.
+builds started live Steam lobbies and bot matches. Visual Steam and Steam Deck
+QA for 0.9.117 remains with the tester.
 
-Close older copies and use 0.9.116 on every machine. Retest guest movement,
+Close older copies and use 0.9.117 on every machine. Retest guest movement,
 tool timing, costume and seat sync, and host transfer with two Steam accounts
 on separate connections. Retest the reported Iceberg wall spot and check the
 Windows build in Steam Deck Gaming Mode.

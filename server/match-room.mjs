@@ -1,4 +1,5 @@
 import {DIRETIDE_VERSION} from '../src/pnt/diretide-rules.js';
+import {TILETIDE_VERSION} from '../src/pnt/tiletide-rules.js';
 import {modeLoadout,normalizeCostume} from '../src/pnt/loadout.js';
 import {startCountdown} from '../src/pnt/rules.js';
 import {COLOR_COSTUMES,normalizeCostumeAppearance} from '../src/pnt/costume-appearance.js';
@@ -14,8 +15,8 @@ function outfit(options){
 }
 export class MatchRoom {
  async onCreate(options){
-  this.gameMode=options.gameMode==='diretide'?'diretide':'classic';this.players=[];this.phase='waiting';this.map=0;this.host=null;this.sim=null;this.loadRevision=0;this.public=options.public===true;this.countdown=0;this.accumulator=0;this.publishTime=0;
-  await this.setMetadata({public:this.public,gameMode:this.gameMode,map:this.gameMode==='diretide'?'grassfield':MAPS[this.map]});
+  this.gameMode=['diretide','tiletide'].includes(options.gameMode)?options.gameMode:'classic';this.players=[];this.phase='waiting';this.map=0;this.host=null;this.sim=null;this.loadRevision=0;this.public=options.public===true;this.countdown=0;this.accumulator=0;this.publishTime=0;
+  await this.setMetadata({public:this.public,gameMode:this.gameMode,map:this.gameMode!=='classic'?'grassfield':MAPS[this.map]});
   this.onMessage('hello',client=>{this.sendLobby(client);if(this.sim&&this.phase!=='loading')client.send('snapshot',this.sim.snapshot());});
   this.onMessage('input',(client,payload)=>{const id=this.players.findIndex(p=>p.sessionId===client.sessionId);if(this.phase==='playing'&&payload&&typeof payload==='object')this.sim.input(id,payload);});
   this.onMessage('tool',(client,payload)=>{const id=this.players.findIndex(p=>p.sessionId===client.sessionId);if(this.phase==='playing'&&Number.isInteger(payload?.slot)&&this.sim.tool(id,payload.slot))this.broadcast('tool-event',{profileId:this.sim.round.profileId,event:this.sim.events.at(-1)});});
@@ -25,7 +26,7 @@ export class MatchRoom {
   this.onMessage('load-error',()=>{if(this.phase==='loading')this.abortLoading('A player could not load the map. Try starting again.');});
   this.setSimulationInterval(delta=>this.update(delta/1000),1000/60);
  }
- onAuth(client,options){if((options.gameMode==='diretide'?'diretide':'classic')!==this.gameMode)throw new Error('This room is for a different game mode. Open the matching mode before joining.');if(this.gameMode==='diretide'&&options.eventVersion!==DIRETIDE_VERSION)throw new Error('Please refresh the game to load the updated candy rules.');if(options.protocol!==1)throw new Error('Please refresh the game before joining.');return true;}
+ onAuth(client,options){if((['diretide','tiletide'].includes(options.gameMode)?options.gameMode:'classic')!==this.gameMode)throw new Error('This room is for a different game mode. Open the matching mode before joining.');if(this.gameMode==='diretide'&&options.eventVersion!==DIRETIDE_VERSION)throw new Error('Please refresh the game to load the updated candy rules.');if(this.gameMode==='tiletide'&&options.tileVersion!==TILETIDE_VERSION)throw new Error('Please refresh the game to load Tile Tumble.');if(options.protocol!==1)throw new Error('Please refresh the game before joining.');return true;}
  onJoin(client,options){
   if(this.phase!=='waiting')throw new Error('This match has already started.');const bot=this.players.findIndex(p=>p.bot);if(this.players.length>=4&&bot<0)throw new Error('This room is full.');
   const player={sessionId:client.sessionId,name:name(options.name),...outfit(options),loadout:modeLoadout(this.gameMode,options.loadout),preference:preference(options.preference),bot:false,connected:true,ready:false};if(bot>=0)this.players[bot]=player;else this.players.push(player);if(!this.host)this.host=client.sessionId;this.sendLobby();
@@ -37,13 +38,13 @@ export class MatchRoom {
   if(this.host===client.sessionId)this.host=this.players.find(p=>!p.bot)?.sessionId||null;this.sendLobby();
  }
  clearInput(client){const id=this.players.findIndex(p=>p.sessionId===client.sessionId);if(this.sim?.actors[id])this.sim.actors[id].input={...this.sim.actors[id].input,x:0,z:0,interact:false};if(this.sim?.actors[id])this.sim.actors[id].inputQueue.length=0;}
- info(){return {code:this.roomId,mode:'online',gameMode:this.gameMode,eventVersion:this.gameMode==='diretide'?DIRETIDE_VERSION:undefined,public:this.public,phase:this.phase,map:this.map,host:this.host,countdown:this.countdown,players:this.players,match:this.phase==='loading'?this.sim?.snapshot():undefined};}
+ info(){return {code:this.roomId,mode:'online',gameMode:this.gameMode,eventVersion:this.gameMode==='diretide'?DIRETIDE_VERSION:undefined,tileVersion:this.gameMode==='tiletide'?TILETIDE_VERSION:undefined,public:this.public,phase:this.phase,map:this.map,host:this.host,countdown:this.countdown,players:this.players,match:this.phase==='loading'?this.sim?.snapshot():undefined};}
  sendLobby(client){const info=this.info();if(client)client.send('lobby',info);else this.broadcast('lobby',info);}
  control(action,direction){
   if(action==='cancel'&&this.phase==='countdown'){this.phase='waiting';this.countdown=0;this.sendLobby();return;}
   if(action==='rematch'&&this.phase==='finished'){this.sim?.dispose();this.sim=null;this.phase='waiting';for(const p of this.players)p.ready=false;this.unlock();this.sendLobby();return;}
   if(this.phase!=='waiting')return;
-  if(action==='map'&&this.gameMode!=='diretide'){this.map=(this.map+(direction===-1?-1:1)+3)%3;this.setMetadata({public:this.public,map:MAPS[this.map]});}
+  if(action==='map'&&this.gameMode==='classic'){this.map=(this.map+(direction===-1?-1:1)+3)%3;this.setMetadata({public:this.public,map:MAPS[this.map]});}
   if(action==='add-bot'&&this.players.length<4){const index=this.players.filter(p=>p.bot).length;this.players.push({sessionId:null,name:['Bot Anas','Bot Min','Bot Amim'][index%3],costume:BOT_COSTUMES[index%3],loadout:modeLoadout(this.gameMode,index%2?['banana','smoke']:['hammer','rocket']),preference:'none',bot:true,connected:true,ready:true});}
   if(action==='remove-bot'){const index=this.players.findLastIndex(p=>p.bot);if(index>=0)this.players.splice(index,1);}
   if(action==='start'&&this.players.length===4&&this.players.every(p=>p.bot||p.connected)){this.phase='countdown';this.countdown=3;}
@@ -56,7 +57,7 @@ export class MatchRoom {
   try{
    await this.lock();if(!current())return;
    this.sim?.dispose();this.sim=null;for(const p of this.players)p.ready=p.bot;this.sendLobby();
-   const prepared=await MatchSimulation.create(this.gameMode==='diretide'?'grassfield':MAPS[this.map],this.players);
+   const prepared=await MatchSimulation.create(this.gameMode!=='classic'?'grassfield':MAPS[this.map],this.players,this.gameMode);
    // An aborted attempt may complete after a newer load has already started.
    if(!current()){prepared.dispose();return;}
    this.sim=prepared;this.sendLobby();this.tryPlay();

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="Seven colorful Tile Tumble platforms">
+ <defs>
+  <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#39cfff"/><stop offset="1" stop-color="#1754be"/></linearGradient>
+  <filter id="shadow"><feDropShadow dx="0" dy="18" stdDeviation="12" flood-color="#08194d" flood-opacity=".48"/></filter>
+  <pattern id="dots" width="54" height="54" patternUnits="userSpaceOnUse"><circle cx="18" cy="18" r="11" fill="#fff" opacity=".32"/></pattern>
+  <pattern id="stripes" width="48" height="48" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="20" height="48" fill="#fff" opacity=".25"/></pattern>
+ </defs>
+ <rect width="1200" height="675" fill="url(#sky)"/>
+ <g fill="none" stroke="#fff" opacity=".3"><path d="M0 110Q180 30 350 115T700 105T1200 90"/><path d="M0 545Q160 460 330 550T680 535T1200 520"/></g>
+ <g filter="url(#shadow)" stroke="#fff" stroke-opacity=".55" stroke-width="9" stroke-linejoin="round">
+  <path d="m410 91 146 0 72 123-72 123H410l-72-123Z" fill="#ffd84f"/><path d="m410 91 146 0 72 123-72 123H410l-72-123Z" fill="url(#stripes)"/>
+  <path d="m644 91 146 0 72 123-72 123H644l-72-123Z" fill="#ff6570"/><path d="m644 91 146 0 72 123-72 123H644l-72-123Z" fill="url(#dots)"/>
+  <path d="m293 292 146 0 72 123-72 123H293l-72-123Z" fill="#35d9ee"/><path d="m293 292 146 0 72 123-72 123H293l-72-123Z" fill="url(#dots)"/>
+  <path d="m527 292 146 0 72 123-72 123H527l-72-123Z" fill="#e9f3ff"/><path d="m527 292 146 0 72 123-72 123H527l-72-123Z" fill="url(#stripes)"/>
+  <path d="m761 292 146 0 72 123-72 123H761l-72-123Z" fill="#69e34e"/><path d="m761 292 146 0 72 123-72 123H761l-72-123Z" fill="url(#dots)"/>
+  <path d="m410 400 146 0 72 123-72 123H410l-72-123Z" fill="#9b62e8"/><path d="m410 400 146 0 72 123-72 123H410l-72-123Z" fill="url(#dots)"/>
+  <path d="m644 400 146 0 72 123-72 123H644l-72-123Z" fill="#f471dc"/><path d="m644 400 146 0 72 123-72 123H644l-72-123Z" fill="url(#stripes)"/>
+ </g>
+</svg>

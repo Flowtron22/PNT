@@ -1,10 +1,21 @@
 /* Event pages share the existing menu/lobby layout and input controls. */
 .event-nav{background:#7641a4!important;color:#fff!important}
-.diretide-card{display:block;position:relative;width:100%;padding:0;overflow:hidden;border:3px solid #f4bf5f;border-radius:24px;background:#211438;color:#fff;text-align:left;cursor:pointer}
-.diretide-card>img{display:block;width:100%;max-height:30vh;object-fit:cover}
-.diretide-card>span{display:block;padding:clamp(12px,2vw,28px)}
-.diretide-card strong{display:block;font-family:Titan,sans-serif;font-size:clamp(28px,5vw,65px);color:#ffd277}
-.diretide-card small{font-weight:bold;letter-spacing:.08em}.diretide-card p{max-width:42em;line-height:1.5}.diretide-card b{display:block;color:#e2acff}
+#menu[data-page=events] .page-panel{left:4vw;right:4vw;top:5vh;bottom:5vh;width:auto;max-width:none;overflow:hidden}
+#menu[data-page=events] #character-label{display:none}
+body.diretide-mode #character-label{display:none}
+#menu[data-page=events] #page-title{margin-bottom:14px}
+.event-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(20px,3vw,52px);max-width:1420px;margin:0 auto;padding:8px 12px 24px}
+.event-mode-card{position:relative;display:flex;flex-direction:column;min-width:0;aspect-ratio:1.08/1;padding:0;overflow:hidden;border:6px solid #fff;border-radius:clamp(22px,2.4vw,40px);background:#171329;color:#fff;text-align:left;box-shadow:0 9px 0 #090713,0 20px 38px #08051188;transform:rotate(-.7deg);transition:transform .35s cubic-bezier(.22,1,.36,1),border-color .2s,box-shadow .2s}
+.event-mode-card:nth-child(2){transform:rotate(.7deg)}.event-mode-card:hover,.event-mode-card:focus-visible,.event-mode-card.pad-focus{transform:translateY(-8px) rotate(0) scale(1.015);border-color:#ff8a14;box-shadow:0 9px 0 #9b4e0a,0 25px 48px #080511aa;outline:none}
+.event-mode-art{position:relative;display:block;flex:0 0 63%;min-height:0;overflow:hidden;background:#24334f}
+.event-mode-art>img{display:block;width:100%;height:100%;object-fit:cover}
+.event-mode-art:after{content:'';position:absolute;inset:auto 0 0;height:45%;background:linear-gradient(transparent,#171329)}
+.event-mode-art>small{position:absolute;z-index:2;left:5%;top:6%;padding:.45em .8em;border:3px solid #fff;border-radius:8px;background:#171329;font:900 clamp(8px,.75vw,13px)/1 Rubik;letter-spacing:.14em;transform:rotate(-2deg)}
+.event-mode-art>strong{position:absolute;z-index:2;left:5%;right:3%;bottom:1%;font:clamp(32px,4.5vw,82px)/.9 Titan;color:#fff;-webkit-text-stroke:clamp(4px,.45vw,8px) #15121c;paint-order:stroke fill;text-shadow:0 7px 0 #15121c;transform:rotate(-2deg)}
+.event-mode-body{display:flex;flex:1;min-height:0;flex-direction:column;padding:clamp(20px,2vw,32px) clamp(16px,2vw,32px)}
+.event-mode-body>p{margin:0;font:700 clamp(11px,1vw,17px)/1.45 Rubik;color:#e7e2ef}
+.event-mode-meta{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:12px}.event-mode-meta i{padding:7px 10px;border-radius:999px;background:#ffffff12;font:900 clamp(7px,.7vw,11px)/1 Rubik;font-style:normal;letter-spacing:.07em;white-space:nowrap}.event-mode-meta b{margin-left:auto;padding:9px 13px;border-radius:999px;background:#ff8a14;color:#171329;font:900 clamp(8px,.8vw,12px)/1 Rubik;white-space:nowrap}
+.tiletide-card .event-mode-art{background:#186ad2}.tiletide-card:hover,.tiletide-card:focus-visible,.tiletide-card.pad-focus{border-color:#59e6f1;box-shadow:0 9px 0 #147d98,0 25px 48px #080511aa}.tiletide-card .event-mode-meta b{background:#59e6f1}
 #event-training{margin-top:12px;width:100%}
 body[data-assets=ready] #home .main-nav{gap:calc(var(--u)*.65)}
 
@@ -28,7 +39,10 @@ body[data-assets=ready] #home .main-nav{gap:calc(var(--u)*.65)}
 
 /* Carried amounts are displayed above each player. */
 .diretide-mode #money-status{display:none!important}
+.tile-call{position:absolute;top:88px;left:18px;width:160px;height:128px;z-index:2;filter:drop-shadow(0 7px 5px #05020aaa);pointer-events:none}.tile-call canvas{display:block;width:100%;height:100%}
+@media(max-width:759px){.tile-call{top:65px;left:4px;width:120px;height:96px}}
 
 @media(max-height:450px){.diretide-mode .toast{font-size:16px;max-width:60vw}}
+@media(max-width:760px){#menu[data-page=events] .page-panel{left:12px;right:12px;top:10px;bottom:38px;padding-right:4px;overflow-y:auto}.event-card-grid{grid-template-columns:1fr;gap:22px;padding:4px}.event-mode-card{aspect-ratio:1.15/1;border-width:4px}.event-mode-art>strong{font-size:clamp(35px,10vw,58px)}.event-mode-body>p{font-size:11px}.event-mode-meta i{font-size:7px;padding:6px 7px}}
 
 .event-nav i svg{display:block;width:100%;height:100%}
