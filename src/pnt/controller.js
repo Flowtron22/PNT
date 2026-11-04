@@ -37,7 +37,7 @@ export function createController(device,index=null){
 }
 
 const menuFocus=new WeakMap(),menuFocusPosition=new WeakMap();
-function menuScope(doc){const modal=doc.querySelector('#virtual-keyboard:not([hidden]),#room-help:not([hidden])');return modal||['pause','results','lobby','menu'].map(id=>doc.getElementById(id)).find(el=>el&&!el.hidden)||null;}
+function menuScope(doc){const modal=doc.querySelector('#leave-lobby-dialog[open]')||doc.querySelector('#virtual-keyboard:not([hidden]),#room-help:not([hidden])');return modal||['pause','results','lobby','menu'].map(id=>doc.getElementById(id)).find(el=>el&&!el.hidden)||null;}
 function menuItems(scope){return [...scope.querySelectorAll('button,input,select,a[href]')].filter(el=>!el.disabled&&!el.closest('[hidden]')&&el.getClientRects().length);}
 function focusKey(el,index){
  if(el.id)return 'id:'+el.id;

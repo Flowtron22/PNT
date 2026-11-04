@@ -130,3 +130,6 @@ body.menu-view #lobby-backdrop{z-index:0}body.menu-view .menu-backdrop{z-index:1
 @media(max-height:500px) and (orientation:landscape){.world-marker.police-badge{width:25.2px;height:27.6px}.police-badge-art{transform:scale(.3)}}
 
 .oyen-swatch.outfit-swatch i{background:var(--outfit-color)}
+
+#leave-lobby-dialog{width:min(460px,calc(100% - 40px));color:white}
+#leave-lobby-dialog::backdrop{background:#171329b5;backdrop-filter:blur(7px)}

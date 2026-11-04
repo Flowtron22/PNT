@@ -1,6 +1,6 @@
 # Police N Thief Steam playtest handoff
 
-Updated 4 November 2026 (Asia/Kuala_Lumpur).
+Updated 5 November 2026 (Asia/Kuala_Lumpur).
 
 ## Current build
 
@@ -28,6 +28,9 @@ specific lobby, or invite Steam friends. Public matchmaking searches the selecte
 
 ## Latest playtest changes
 
+- Online hosts and guests see a **Leave this lobby?** confirmation. **Stay in Lobby**
+  has focus by default. Escape or controller Back dismisses it, and **Leave Lobby**
+  disconnects. The local 0.9.118 Steam package was rebuilt with this prompt.
 - Hammer reach is 3 metres in every mode. Hits resolve at the swing's impact
   beat, and confirmed stuns clear movement drift.
 - Steam allows a brief membership gap during host migration and waits for
@@ -56,14 +59,19 @@ specific lobby, or invite Steam friends. Public matchmaking searches the selecte
 
 ## Verification and next playtest
 
-Version 0.9.118 passed syntax checks and **345 automated tests** (313 client,
-32 multiplayer). Simulated Steam peers covered host transfer in Classic and
-PattyTide, interleaved packets, and matchmaking fallback. Earlier packaged
-builds started live Steam lobbies and bot matches. Visual Steam and Steam Deck
-QA for 0.9.118 remains with the tester.
+Version 0.9.118 passed syntax checks and **346 automated tests** (313 client,
+33 multiplayer). In the three-peer Steam simulation, one guest joined a public
+Classic lobby by room code and the other through matchmaking. Both stayed in
+the match when the host left, including the code guest whose simulated member
+list briefly omitted their own Steam ID. The matchmaking guest took over.
+The original host then opened a public PattyTide lobby. After leaving the old
+match, both guests joined it directly using their original join methods.
+See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.118 on every machine. Retest guest movement,
-tool timing, costume and seat sync, and host transfer with two Steam accounts
+Close older copies and use the rebuilt 0.9.118 on every machine. Live Steam
+testing still needs to cover the leave prompt, guest movement, tool timing,
+costume and seat sync, and host transfer followed by joining another mode.
+The mixed-join scenario uses three Steam accounts, one host and two guests
 on separate connections. Retest the reported Iceberg wall spot and check the
 Windows build in Steam Deck Gaming Mode.
 

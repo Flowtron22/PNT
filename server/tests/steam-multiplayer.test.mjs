@@ -12,9 +12,10 @@ registerHooks({resolve(specifier, context, next) {
 const {steamMultiplayer} = await import('../steam-multiplayer.mjs');
 const {DIRETIDE_VERSION} = await import('../../src/pnt/diretide-rules.js');
 
-function fakeSteamNetwork() {
+function fakeSteamNetwork({hideMemberAfterTransfer} = {}) {
   const lobbies = new Map();
   const users = new Map();
+  let nextLobbyId = 109775243304509900n;
 
   return function user(id) {
     const steamId = {steamId64: id};
@@ -30,11 +31,17 @@ function fakeSteamNetwork() {
         join: () => joinLobby(record.id),
         leave() {
           record.members.delete(id);
-          if (record.owner === id) record.owner = record.members.keys().next().value;
+          if (record.owner === id) {
+            record.owner = record.members.keys().next().value;
+            record.transferTime = performance.now();
+          }
           if (!record.members.size) lobbies.delete(record.id);
         },
         getOwner: () => ({steamId64: record.owner}),
-        getMembers: () => [...record.members].map(steamId64 => ({steamId64})),
+        getMembers() {
+          const hideSelf = id === hideMemberAfterTransfer && performance.now() - record.transferTime < 500;
+          return [...record.members].filter(member => !hideSelf || member !== id).map(steamId64 => ({steamId64}));
+        },
         getMemberCount: () => BigInt(record.members.size),
         getData: key => record.data[key],
         setData: (key, value) => Boolean(record.data[key] = value),
@@ -60,7 +67,7 @@ function fakeSteamNetwork() {
       matchmaking: {
         joinLobby,
         async createLobby(type) {
-          const lobbyId = 109775243304509900n + id;
+          const lobbyId = ++nextLobbyId;
           const record = {id: lobbyId, owner: id, members: new Set([id]), type, joinable: true, data: {}};
           lobbies.set(lobbyId, record);
           return lobbyFor(record);
@@ -111,8 +118,8 @@ async function waitFor(check) {
   }
 }
 
-function steamPeers(t) {
-  const user = fakeSteamNetwork(), peers = [];
+function steamPeers(t, options) {
+  const user = fakeSteamNetwork(options), peers = [];
   t.after(() => { for (const peer of peers) peer.dispose(); });
   return async function connect(id, mode, code, profile = {}) {
     const state = {}, key = String(id);
@@ -120,13 +127,17 @@ function steamPeers(t) {
       state[message.type] = structuredClone(message.data ?? true);
     }, () => {});
     peers.push(connection);
-    await connection.connect(key, mode, {
-      name: 'Tester', protocol: 1, eventVersion: DIRETIDE_VERSION, ...profile
-    }, code);
     const send = (type, data) => connection.send(key, type, data);
-    send('hello');
-    await waitFor(() => state.lobby?.players.some(player => player.sessionId === key));
-    return {connection, key, state, send};
+    async function enter(mode, code, profile) {
+      for (const type of Object.keys(state)) delete state[type];
+      await connection.connect(key, mode, {
+        name: 'Tester', protocol: 1, eventVersion: DIRETIDE_VERSION, ...profile
+      }, code);
+      send('hello');
+      await waitFor(() => state.lobby?.players.some(player => player.sessionId === key));
+    }
+    await enter(mode, code, profile);
+    return {connection, key, state, send, enter};
   };
 }
 
@@ -206,6 +217,59 @@ test('Steam peers join the host, honor host controls and readiness, and receive 
     }
     guest.send('input', {frames: [{seq: 2, x: 1, z: 0}]});
     await waitFor(() => survivor.state.snapshot.poses[1].ack === 2);
+});
+
+test('Public matchmaking and room-code guests stay in a public match after the host leaves', async t => {
+  const connect = steamPeers(t, {hideMemberAfterTransfer: 3n});
+  const host = await connect(1n, 'host');
+  host.send('control', {action: 'visibility', direction: 'public'});
+  await waitFor(() => host.state.lobby.public);
+  const {code} = host.state.lobby;
+  const next = await connect(2n, 'public');
+  const guest = await connect(3n, 'join', code);
+  const survivors = [next, guest];
+  assert.ok(survivors.every(peer => peer.state.lobby.code === code && peer.state.lobby.public));
+
+  host.send('control', {action: 'add-bot'});
+  host.send('control', {action: 'start'});
+  const peers = [host, ...survivors];
+  await waitFor(() => peers.every(peer => peer.state.lobby.match));
+  for (const peer of peers) peer.send('ready');
+  await waitFor(() => survivors.every(peer => peer.state.snapshot?.round.startRemaining === 0));
+  const {tick, round: {profileId}} = guest.state.snapshot;
+  await host.connection.leave(host.key);
+
+  await waitFor(() => survivors.every(peer => peer.state.migrated && peer.state.lobby.host === next.key));
+  await waitFor(() => survivors.every(peer => peer.state.snapshot.tick > tick));
+  for (const {state} of survivors) {
+    assert.equal(state.disconnect, undefined);
+    assert.equal(state.lobby.code, code);
+    assert.equal(state.lobby.public, true);
+    assert.equal(state.lobby.phase, 'playing');
+    assert.equal(state.lobby.players[0].bot, true);
+    assert.equal(state.snapshot.round.profileId, profileId);
+  }
+  guest.send('input', {frames: [{seq: 1, x: 1, z: 0}]});
+  await waitFor(() => next.state.snapshot.poses[2].ack === 1);
+
+  const event = {gameMode: 'diretide'};
+  await host.enter('host', null, event);
+  host.send('control', {action: 'visibility', direction: 'public'});
+  await waitFor(() => host.state.lobby.public);
+  const eventCode = host.state.lobby.code;
+  assert.notEqual(eventCode, code);
+
+  await guest.connection.leave(guest.key);
+  await guest.enter('join', eventCode, event);
+  await next.connection.leave(next.key);
+  await next.enter('public', null, event);
+
+  await waitFor(() => peers.every(peer => peer.state.lobby.players.length === 3));
+  for (const {state} of peers) {
+    assert.equal(state.lobby.code, eventCode);
+    assert.equal(state.lobby.gameMode, event.gameMode);
+    assert.equal(state.lobby.host, host.key);
+  }
 });
 
 test('PattyTide keeps spawning candy and accepting input after a Steam host transfer', async t => {

@@ -78,6 +78,7 @@ let touchControls,interactHeld=false,menuArena=null,gameArena=null,mapData=null,
 let profile=readProfile(localStorage);
 const $=s=>document.querySelector(s),canvas=$('#world');
 const ui={menu:$('#menu'),hud:$('#hud'),pause:$('#pause'),results:$('#results'),lobby:$('#lobby')};
+const leaveLobbyDialog=$('#leave-lobby-dialog');
 const scene=new THREE.Scene();scene.background=new THREE.Color('#70688f');scene.fog=new THREE.Fog('#70688f',38,85);
 const matchRoot=new THREE.Group(),shipPivot=new THREE.Vector3();scene.add(matchRoot);let furniturePhysics=null,shipAngle=0;
 const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
@@ -126,13 +127,13 @@ function applySettings(initial=false){
 }
 function changeSetting(key,value){settings={...settings,[key]:value};const saved=saveSettings(localStorage,settings);applySettings();return saved;}
 addEventListener('resize',resize);applySettings(true);
-function show(name){document.body.classList.toggle('diretide-mode',['diretide','tiletide'].includes(round?.mode)||['diretide','tiletide'].includes(room?.gameMode)||['diretide','tiletide'].includes(selectedMode)&&name==='menu'&&activePage!=='home');document.body.classList.toggle('couch-mode',room?.mode==='couch');$('#couch-hud').hidden=room?.mode!=='couch';ui.lobby.classList.toggle('couch-lobby',room?.mode==='couch');if(name==='menu'){scene.fog.near=38;scene.fog.far=85;}for(const [key,node]of Object.entries(ui))node.hidden=key!==name;document.body.classList.toggle('playing',name==='hud'||name==='pause'||name==='results');document.body.classList.toggle('lobby-view',name==='lobby');document.body.classList.toggle('menu-view',name==='menu');$('#lobby-backdrop').hidden=!['menu','lobby'].includes(name);scene.background=name==='menu'?null:new THREE.Color('#70688f');floor.visible=name!=='menu';if(menuArena)menuArena.visible=false;}
+function show(name){if(name!=='lobby')leaveLobbyDialog.close();document.body.classList.toggle('diretide-mode',['diretide','tiletide'].includes(round?.mode)||['diretide','tiletide'].includes(room?.gameMode)||['diretide','tiletide'].includes(selectedMode)&&name==='menu'&&activePage!=='home');document.body.classList.toggle('couch-mode',room?.mode==='couch');$('#couch-hud').hidden=room?.mode!=='couch';ui.lobby.classList.toggle('couch-lobby',room?.mode==='couch');if(name==='menu'){scene.fog.near=38;scene.fog.far=85;}for(const [key,node]of Object.entries(ui))node.hidden=key!==name;document.body.classList.toggle('playing',name==='hud'||name==='pause'||name==='results');document.body.classList.toggle('lobby-view',name==='lobby');document.body.classList.toggle('menu-view',name==='menu');$('#lobby-backdrop').hidden=!['menu','lobby'].includes(name);scene.background=name==='menu'?null:new THREE.Color('#70688f');floor.visible=name!=='menu';if(menuArena)menuArena.visible=false;}
 function say(text,seconds=2){$('#toast').textContent=text;toastTime=seconds;}
 function clearInput(){couchControllers.reset();couchInputs.clear();online?.input(0,0,false,performance.now(),true);haptics.stop();controller.reset();padMovement={x:0,z:0};interactionSources.clear();interactHeld=false;keys.clear();input.x=input.z=0;touchControls?.reset();}
 function pauseGame(){if(!round||round.phase!=='playing'||paused||busy)return;paused=true;clearInput();show('pause');$('#sunken-look').hidden=!sunkenLook||mapData?.id!=='sunken';$('#sunken-look').textContent='SUNKEN LOOK · '+(sunkenStylized?'STYLIZED':'ORIGINAL');$('#pause p').textContent=online?'The online match continues while this menu is open.':'The clock is paused.';}
 function resume(){if(room?.mode==='couch'&&room.players.some(p=>p&&!p.bot&&!p.connected)){$('#pause p').textContent='Reconnect the missing controller before resuming.';return;}clearInput();paused=false;show('hud');lastFrame=performance.now();}
 function progress(value,text){$('#load-progress').style.width=`${Math.round(value)}%`;$('#load-percent').textContent=`${Math.round(value)}%`;$('#load-status').textContent=text;}
-function beginLoading(title){busy=true;clearInput();$('#loading').hidden=false;$('#loading').setAttribute('aria-busy','true');$('#loading-title').textContent=title;$('#retry').hidden=true;$('#error').hidden=true;progress(0,'Preparing assets…');}
+function beginLoading(title){leaveLobbyDialog.close();busy=true;clearInput();$('#loading').hidden=false;$('#loading').setAttribute('aria-busy','true');$('#loading-title').textContent=title;$('#retry').hidden=true;$('#error').hidden=true;progress(0,'Preparing assets…');}
 function endLoading(){busy=false;$('#loading').hidden=true;$('#loading').setAttribute('aria-busy','false');lastFrame=performance.now();}
 function loadError(error,retry){console.error(error);$('#loading-title').textContent='LET’S TRY THAT AGAIN';$('#load-status').textContent=error.message;$('#retry').hidden=false;$('#retry').onclick=retry;busy=false;}
 const nextFrame=()=>new Promise(resolve=>requestAnimationFrame(resolve));
@@ -151,7 +152,13 @@ function demo(name){const loop=['idle','thiefRun','policeRun','jet','bustedIdle'
 function goBack(){
  if(room?.mode==='couch'&&!ui.lobby.hidden){if(room.phase==='countdown'){cancelCountdown(room);refreshLobby();}else quitLobby();return;}
  if(busy)return;uiEffects.sounds.play('ui_back');
- if(room&&!ui.lobby.hidden){const help=$('#room-help');if(help&&!help.hidden){help.hidden=true;return;}if(online&&room.phase==='countdown'){online.control('cancel');return;}if(!online&&cancelCountdown(room)){refreshLobby();return;}quitLobby();return;}
+ if(room&&!ui.lobby.hidden){
+  if(leaveLobbyDialog.open){leaveLobbyDialog.close();return;}
+  const help=$('#room-help');if(help&&!help.hidden){help.hidden=true;return;}
+  if(online&&room.phase==='countdown'&&room.canHost){online.control('cancel');return;}
+  if(!online&&cancelCountdown(room)){refreshLobby();return;}
+  requestLobbyLeave();return;
+ }
  if(returnToLobby&&room){returnToLobby=false;if(online){const next=onlineProfile();Object.assign(room.players[0],next);online.send('profile',next);}else room.players[0].costume=costume;buildLobbyDisplays();show('lobby');refreshLobby();return;}
  openPage(activePage==='join'?'online':activePage==='online'?'play':activePage==='play'&&['diretide','tiletide'].includes(selectedMode)?'events':'home');
 }
@@ -208,6 +215,12 @@ async function hostLobby(){
   room=createLobby(costume,selectedMode);room.players[0].name=profile.name;returnToLobby=false;buildLobbyDisplays();refreshLobby();progress(90,'Warming up the lobby…');for(const display of lobbyDisplays)await renderer.compileAsync(display.scene,lobbyCamera);show('lobby');endLoading();
  }catch(error){room=null;loadError(error,hostLobby);}
 }
+function requestLobbyLeave(){
+ if(!online){quitLobby();return;}
+ if(busy||leaveLobbyDialog.open)return;
+ leaveLobbyDialog.showModal();
+ if(controllerActive)controllerMenu(document,'focus',$('#stay-in-lobby'));
+}
 function quitLobby(){const training=room?.mode==='practice',event=['diretide','tiletide'].includes(room?.gameMode);online?.leave();online=null;onlineLoading=false;onlineRevision++;onlineRoster='';onlineSnapshot=null;room=null;returnToLobby=false;clearLobbyDisplays();show('menu');if(!preview)previewModel();openPage(event?'events':training?'home':'play');}
 function renderLobbyCharacters(dt){
  renderer.setScissorTest(false);renderer.setViewport(0,0,innerWidth,innerHeight);renderer.setClearColor(0,0);renderer.clear();
@@ -234,7 +247,7 @@ async function connectOnline(mode,code){
  try{await online.connect(mode,onlineProfile(),code);}catch(error){online?.leave();online=null;endLoading();onlineNotice(error.message||'Could not connect to the game server.');}
 }
 function refreshOnlineLobby(){
- if(!room)return;renderLobby(ui.lobby,room,loadout,costume,{quit:quitLobby,invite:desktop?.steam?()=>online.invite():null,visibility:value=>online.control('visibility',value),addBot:()=>online.control('add-bot'),removeBot:()=>online.control('remove-bot'),map:direction=>online.control('map',direction),preference:()=>online.send('profile',{...onlineProfile(),preference:PREFERENCES[(PREFERENCES.indexOf(room.preference)+1)%PREFERENCES.length]}),start:()=>online.control('start'),cancel:()=>online.control('cancel'),edit:page=>{if(room.phase!=='waiting')return;returnToLobby=true;previewModel();show('menu');openPage(page);}});if(controllerActive)controllerMenu(document,'restore');
+ if(!room)return;renderLobby(ui.lobby,room,loadout,costume,{quit:requestLobbyLeave,invite:desktop?.steam?()=>online.invite():null,visibility:value=>online.control('visibility',value),addBot:()=>online.control('add-bot'),removeBot:()=>online.control('remove-bot'),map:direction=>online.control('map',direction),preference:()=>online.send('profile',{...onlineProfile(),preference:PREFERENCES[(PREFERENCES.indexOf(room.preference)+1)%PREFERENCES.length]}),start:()=>online.control('start'),cancel:()=>online.control('cancel'),edit:page=>{if(room.phase!=='waiting')return;returnToLobby=true;previewModel();show('menu');openPage(page);}});if(controllerActive)controllerMenu(document,'restore');
 }
 async function receiveOnlineLobby(data){
  if(!online)return;room=data;selectedMode=data.gameMode||'classic';
@@ -393,6 +406,10 @@ addEventListener('storage',e=>{if(e.key===PROFILE_KEY){profile=readProfile(local
 
 $('#sunken-look').onclick=()=>{if(!sunkenLook)return;sunkenStylized=!sunkenStylized;try{localStorage.setItem('pnt-sunken-look',sunkenStylized?'stylized':'original');}catch{}sunkenLook.setEnabled(sunkenStylized);resume();};
 $('#page-back').onclick=goBack;$('#pause-button').onclick=pauseGame;$('#resume').onclick=resume;$('#leave').onclick=menu;$('#result-menu').onclick=menu;$('#again').onclick=start;
+$('#stay-in-lobby').onclick=()=>leaveLobbyDialog.close();
+$('#confirm-leave-lobby').onclick=()=>{leaveLobbyDialog.close();quitLobby();};
+leaveLobbyDialog.addEventListener('close',()=>{if(!ui.lobby.hidden&&controllerActive)controllerMenu(document,'restore');});
+leaveLobbyDialog.addEventListener('keydown',e=>{if(e.code==='Escape')e.stopPropagation();});
 addEventListener('keydown',e=>{if(!bindingCapture)return;e.preventDefault();e.stopImmediatePropagation();if(e.code==='Escape'){bindingCapture=null;renderBindingSettings();return;}const next=rebind(bindings,bindingCapture,e.code);if(!next){$('#binding-status').textContent='Choose a key, or click left, right or middle mouse button.';return;}bindings=next;bindingCapture=null;clearInput();saveBindings(localStorage,bindings);renderBindingSettings();refreshControlHints();},true);
 function handleCouchLobbyKey(e){
  if(room?.mode!=='couch'||ui.lobby.hidden||busy||e.target.matches('input,select,textarea'))return;
