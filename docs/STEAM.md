@@ -1,5 +1,22 @@
 # Police N Thief on Steam
 
+## Required delivery workflow
+
+These rules apply to every new chat and requested game build. Read
+[AGENTS.md](../AGENTS.md) and the [handoff](../handoff.md) first.
+Steam on Windows x64 and Steam Deck through Proton is the target.
+
+For every requested playable build, increment the patch version beyond the
+source version and existing packaged versions. Update the lockfile and visible
+version labels, run the relevant checks, then use
+`npm run build:steam -- --dev-playtest`. Deliver the complete
+`dist-steam/win64-dev-playtest-<new-version>` folder, including
+`steam_appid.txt`, and update the handoff with its current version and location.
+Documentation-only work keeps the current game version.
+
+The static renderer build is an internal packaging step. New modes and gameplay
+changes require the Steam package as their playable deliverable.
+
 Online matches use Steam lobbies and Steam peer networking. The lobby host runs
 the authoritative match simulation. If the host leaves, Steam assigns a remaining
 player as the new host. An active match resumes from the latest received state

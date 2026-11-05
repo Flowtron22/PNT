@@ -2,6 +2,24 @@
 
 Updated 5 November 2026 (Asia/Kuala_Lumpur).
 
+## Standing instructions for every chat
+
+**Steam is the delivery target for Windows x64 and Steam Deck through Proton.**
+Read [AGENTS.md](AGENTS.md) before continuing this project. These instructions
+apply when reading this handoff, starting a new mode in a new chat, or preparing
+any playable build. The user should not need to repeat the Steam setup.
+
+Every requested game build must use a **newer version number** than both the
+current source and existing Steam packages. Update source and visible versions,
+build with `npm run build:steam -- --dev-playtest`, verify the output, and deliver
+the complete `dist-steam/win64-dev-playtest-<new-version>` folder including
+`steam_appid.txt`. Keep this handoff's current version and folder in sync with
+the successful package. Documentation-only updates keep the existing game version.
+
+Browser preview and static web builds are internal development steps. They do
+not satisfy a Steam delivery request. The historical browser notes below remain
+reference material. Follow the current Steam workflow for all new game work.
+
 ## Current build
 
 The current Windows x64 Steam playtest package is **0.9.135**. The same Windows

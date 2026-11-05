@@ -1,5 +1,10 @@
 # Police N Thief
 
+**Project instructions for new chats are in [AGENTS.md](AGENTS.md).** Steam on
+Windows x64 and Steam Deck through Proton is the delivery target. Every requested
+playable build gets a newer version and a complete versioned Steam folder.
+Read the [current handoff](handoff.md) before continuing development.
+
 The Steam release uses one Windows x64 package for desktop PCs and Steam Deck
 via Proton. See the [Steam build guide](docs/STEAM.md) for build and test steps.
 
