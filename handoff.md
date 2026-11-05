@@ -4,7 +4,7 @@ Updated 5 November 2026 (Asia/Kuala_Lumpur).
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.118**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.135**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -15,7 +15,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.118` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.135` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -25,6 +25,59 @@ For Classic, use **Play → Solo Online → Host Lobby**. For PattyTide, start a
 **Events → PattyTide → Solo Online**. The host can change visibility under
 **Room Setting** while waiting. Share the seven-character room code to join a
 specific lobby, or invite Steam friends. Public matchmaking searches the selected mode.
+
+For the new event, use **Events → Slippery Shoots**. Training, couch play and Steam
+online all use internal mode ID `strikers`, rules version **12**, and arena ID
+`slipperystriker`. Keep those identifiers stable when changing display names.
+
+## Current Slippery Shoots and menu changes
+
+- Four players form Red and Blue teams of two. The active match clock lasts
+  **60 seconds** and pauses during goal celebrations and resets.
+- The supplied `slipperystriker.fbx` replaces Grassfield for this event.
+  Its nine meshes and texture atlas are embedded in
+  `assets/pnt/arenas/slipperystriker-lit.glb`. A separate movement grid samples
+  the imported ice surface. Goal lines and rink bounds follow the normalized rink.
+- Source model and atlas are in
+  `G:/My Drive/PSX/02_Assets/3D/01_Maps/Model_Resources/brawlstar/air-hockey-environment/source/hockey/`.
+  Rebuild assets with
+  `node tools/prepare-slippery-striker.mjs "<source>/slipperystriker.fbx"`.
+  Runtime builds use the checked-in GLB and JSON files.
+- Movement uses the restored Iceberg tuning, acceleration **9**, steering **2.2**,
+  braking **3.2**. The extra drift from 0.9.133 was rejected and reverted in 0.9.134.
+  Running animation plays at 2× rate.
+- Touching the ball grants possession. The ball rolls toward the carrier's feet.
+  Hammer stuns and banana slips knock it loose. The fixed kit is Hammer/Banana,
+  with **1.5-second Hammer stun** in this event.
+- Shoot uses the existing interaction binding. A kick has a .32-second windup,
+  .8-second total animation, anticipation and a full spin after contact.
+  Training and couch briefly slow during the windup. Steam online uses shared
+  simulation speed. Lightning follows the spin.
+- Shots launch at speed 19, or 24 with Power, with upward velocity 5.
+  Gravity is 25 and rolling deceleration is .65. The higher shot arc was rejected.
+  Only shots emit jetpack-style smoke and pink accents, with 1.25-second smoke.
+- Falling chamfered square pickups grant Speed, Power or Shock for eight seconds.
+  Pickup material roughness is .3 and metalness is zero.
+- Scoring freezes play, emits three confetti bursts .55 seconds apart, and lets
+  the scoring team dance for two seconds. Players then reset, count down 3–2–1,
+  and restart with a midfield ball drop. Confetti uses 78 sprites per burst
+  at 2.25× size. The replacement rounded-star goal effect was rejected.
+- Blue starts on screen right and Red on screen left. HUD and result stats use
+  the same order. Larger team arrows contain their labels. The yellow/blue ball
+  rolls visibly over a solid yellow pulsing marker.
+- Camera distance is .72 of fitted distance, with a -.55 m X framing shift.
+  Keep the shared fixed camera and check the near edge and goals on Steam Deck.
+- Results retain the full-screen layout and goals, shots, tools, Hammer stuns and
+  possession. The enlarged winner panel shows both selected costumes dancing.
+  Losing portraits and redundant subtitles were removed.
+- All modes use chubby rounded selection stars, shared orange focus fills and
+  a home logo placed within the menu layout. The costume/loadout corner badge
+  was removed. Empty online status messages remain hidden.
+
+See [Slippery Shoots details](docs/SLIPPERY_SHOOTS.md) for integration points.
+The local Steam package includes these changes. Live Steam/Steam Deck checks
+remain necessary for the rink appearance, collision alignment, kick and celebration
+timing, results portraits, fullscreen logo and controller highlight behavior.
 
 ## Latest playtest changes
 
@@ -49,7 +102,7 @@ specific lobby, or invite Steam friends. Public matchmaking searches the selecte
 - PattyTide uses 30-second collection phases, faster Patrics movement, and striped
   well health bars. Candy keeps spawning after a handoff, and restored live
   players become visible again.
-- All modes show rounded, seat-colored P1–P4 markers at players' feet. B2B uses
+- Classic and the other events show rounded, seat-colored P1–P4 markers at players' feet. B2B uses
   a brighter magenta hologram. Iceberg uses tighter wall clearance when walking
   or landing. The jetpack passes through obstacles while airborne.
 - The Windows executable and game window use the PNT thief-head icon.
@@ -59,7 +112,12 @@ specific lobby, or invite Steam friends. Public matchmaking searches the selecte
 
 ## Verification and next playtest
 
-Version 0.9.118 passed syntax checks and **346 automated tests** (313 client,
+The current 0.9.135 client passed **356 automated tests** (320 client and
+36 multiplayer), syntax checks and the Steam development build.
+These automated checks cover rules and packaging, with live visual/device testing
+still pending as described above.
+
+The prior 0.9.118 baseline passed **346 automated tests** (313 client,
 33 multiplayer). In the three-peer Steam simulation, one guest joined a public
 Classic lobby by room code and the other through matchmaking. Both stayed in
 the match when the host left, including the code guest whose simulated member
@@ -68,7 +126,7 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use the rebuilt 0.9.118 on every machine. Live Steam
+Close older copies and use the rebuilt 0.9.135 on every machine. Live Steam
 testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.
 The mixed-join scenario uses three Steam accounts, one host and two guests

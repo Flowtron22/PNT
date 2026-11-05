@@ -24,6 +24,10 @@ export function createWonderUI({blocked=()=>false,reduced=()=>false}={}){
   for(const scope of scopes)for(const el of document.querySelectorAll(scope+' button')){
    if(el.dataset.wwBound)continue;el.dataset.wwBound='true';
    if(el.matches('.nav-button')){el.classList.add('iw-btn');const ink=document.createElement('span');ink.className='iw-btn__blob';ink.setAttribute('aria-hidden','true');el.prepend(ink);}
+   if(!own(el)&&!el.matches('.nav-button')){
+    el.classList.add('iw-fill');
+    const ink=document.createElement('span');ink.className='iw-btn__blob';ink.setAttribute('aria-hidden','true');el.prepend(ink);
+   }
    if(own(el)){
     el.classList.add('iw-ltile');el.dataset.cur='own';el.dataset.wwTilt=el.closest('.wardrobe-grid')?'12':'14';
     const blob=document.createElement('span');blob.className='iw-ltile__blob';blob.setAttribute('aria-hidden','true');blob.innerHTML=starSVG({seed:90+Array.from(el.parentElement.children).indexOf(el)*7,cls:'iw-fa',r:58,arms:8,drops:0});
@@ -46,7 +50,7 @@ export function createWonderUI({blocked=()=>false,reduced=()=>false}={}){
  document.addEventListener('pointerdown',event=>{sounds.unlock();if(blocked())return;mode='pointer';const el=event.target.closest('button');if(eligible(el)){el.classList.add('is-down');if(event.pointerType!=='touch')setFocus(el);}},true);
  const release=()=>{for(const el of document.querySelectorAll('.is-down'))el.classList.remove('is-down');};document.addEventListener('pointerup',release,true);document.addEventListener('pointercancel',release,true);
  document.addEventListener('change',event=>{if(!blocked()&&event.target.matches('#menu select,#lobby select'))sounds.play('ui_toggle');});
- document.addEventListener('focusin',event=>{if(mode==='keyboard')setFocus(event.target.closest('button'),true);});
+ document.addEventListener('focusin',event=>{setFocus(event.target.closest('button'),mode==='keyboard');});
  document.addEventListener('controllerfocus',event=>{const el=event.target.closest?.('button');if(!eligible(el))return;mode='keyboard';point=null;el.style.setProperty('--mx','50%');el.style.setProperty('--my','50%');setFocus(el,true);});
  document.addEventListener('click',event=>{
   const el=event.target.closest('button');if(!eligible(el)||blocked())return;

@@ -9,6 +9,9 @@ PC and Steam Deck use the same Windows x64 package, with Proton on Deck.
 
 ## Private development playtest
 
+Current development package is **0.9.135** in
+`dist-steam/win64-dev-playtest-0.9.135`.
+
 Build on Windows with x64 Node.js 22.12 or newer. Run Steam and sign in.
 
 ```powershell
@@ -31,6 +34,11 @@ PNT build on every machine.
 
 For PattyTide, start from **Events → PattyTide → Solo Online**. Room codes and
 Steam invites can also take a player directly into a PattyTide lobby.
+
+For **Slippery Shoots**, use **Events → Slippery Shoots → Solo Online**.
+Each room has four seats, split into Red and Blue. Empty seats can be filled
+with bots. Training and couch play are also available from the event.
+See [mode rules and asset pipeline](SLIPPERY_SHOOTS.md).
 
 **Find Public Match** searches Steam for a lobby with the same PNT build and
 game mode and creates a public lobby when the search finds none.
@@ -60,3 +68,7 @@ For an offline packaging check, run `npm run build:steam -- --smoke-test`.
 - Check the invite overlay, join by room code, and host transfer in the lobby and in a match.
 - In Deck Gaming Mode, check gamepad navigation, fullscreen at 1280 × 800,
   HUD readability, and suspend and resume.
+- Check Slippery Shoots rink collisions, sliding turns, team-facing kickoff,
+  shooting, goal dance/countdown, shot-only trails and winner portraits.
+- Check the rounded tool/costume stars, orange focus fill on both play options,
+  and complete home logo at desktop fullscreen and Deck aspect ratios.

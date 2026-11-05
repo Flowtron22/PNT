@@ -4,7 +4,7 @@
 #menu[data-page=events] #character-label{display:none}
 body.diretide-mode #character-label{display:none}
 #menu[data-page=events] #page-title{margin-bottom:14px}
-.event-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(20px,3vw,52px);max-width:1420px;margin:0 auto;padding:8px 12px 24px}
+.event-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(16px,2vw,34px);max-width:1560px;margin:0 auto;padding:8px 12px 24px}
 .event-mode-card{position:relative;display:flex;flex-direction:column;min-width:0;aspect-ratio:1.08/1;padding:0;overflow:hidden;border:6px solid #fff;border-radius:clamp(22px,2.4vw,40px);background:#171329;color:#fff;text-align:left;box-shadow:0 9px 0 #090713,0 20px 38px #08051188;transform:rotate(-.7deg);transition:transform .35s cubic-bezier(.22,1,.36,1),border-color .2s,box-shadow .2s}
 .event-mode-card:nth-child(2){transform:rotate(.7deg)}.event-mode-card:hover,.event-mode-card:focus-visible,.event-mode-card.pad-focus{transform:translateY(-8px) rotate(0) scale(1.015);border-color:#ff8a14;box-shadow:0 9px 0 #9b4e0a,0 25px 48px #080511aa;outline:none}
 .event-mode-art{position:relative;display:block;flex:0 0 63%;min-height:0;overflow:hidden;background:#24334f}
@@ -16,6 +16,7 @@ body.diretide-mode #character-label{display:none}
 .event-mode-body>p{margin:0;font:700 clamp(11px,1vw,17px)/1.45 Rubik;color:#e7e2ef}
 .event-mode-meta{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:12px}.event-mode-meta i{padding:7px 10px;border-radius:999px;background:#ffffff12;font:900 clamp(7px,.7vw,11px)/1 Rubik;font-style:normal;letter-spacing:.07em;white-space:nowrap}.event-mode-meta b{margin-left:auto;padding:9px 13px;border-radius:999px;background:#ff8a14;color:#171329;font:900 clamp(8px,.8vw,12px)/1 Rubik;white-space:nowrap}
 .tiletide-card .event-mode-art{background:#186ad2}.tiletide-card:hover,.tiletide-card:focus-visible,.tiletide-card.pad-focus{border-color:#59e6f1;box-shadow:0 9px 0 #147d98,0 25px 48px #080511aa}.tiletide-card .event-mode-meta b{background:#59e6f1}
+.strikers-card .event-mode-art{background:#168d60}.strikers-card:hover,.strikers-card:focus-visible,.strikers-card.pad-focus{border-color:#ffbd3f;box-shadow:0 9px 0 #a55f0a,0 25px 48px #080511aa}.strikers-card .event-mode-art>strong{font-size:clamp(24px,3.3vw,62px)}
 #event-training{margin-top:12px;width:100%}
 body[data-assets=ready] #home .main-nav{gap:calc(var(--u)*.65)}
 
@@ -46,3 +47,34 @@ body[data-assets=ready] #home .main-nav{gap:calc(var(--u)*.65)}
 @media(max-width:760px){#menu[data-page=events] .page-panel{left:12px;right:12px;top:10px;bottom:38px;padding-right:4px;overflow-y:auto}.event-card-grid{grid-template-columns:1fr;gap:22px;padding:4px}.event-mode-card{aspect-ratio:1.15/1;border-width:4px}.event-mode-art>strong{font-size:clamp(35px,10vw,58px)}.event-mode-body>p{font-size:11px}.event-mode-meta i{font-size:7px;padding:6px 7px}}
 
 .event-nav i svg{display:block;width:100%;height:100%}
+.flow-network-note:empty{display:none}
+
+#hud #timer:has(.strikers-score){display:flex;align-items:stretch;padding:0;overflow:hidden;background:#171329;color:white}
+.strikers-clock{align-self:center;padding:.25em .5em;font-size:.78em}
+.strikers-score{display:grid;place-items:center;min-width:2.9em;padding:.12em .25em;line-height:1.05}
+.strikers-score small{font:900 clamp(9px,1.2vw,14px)/1.3 Rubik,sans-serif;white-space:nowrap}
+.strikers-score.blue{background:#075d9f}
+.strikers-score.red{background:#aa203c}
+#hud .hud-top:has(.strikers-score) #role-label{min-width:0;font-size:clamp(8px,1.1vw,14px);max-width:20vw}
+.strikers-result-scores{position:absolute;top:3%;right:4%;width:57%;height:32%;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border-radius:18px;overflow:hidden}
+.strikers-result-team{display:flex;align-items:center;justify-content:space-around;gap:6px;padding:clamp(5px,1.5vw,20px);background:linear-gradient(145deg,#156ca8,#10294f)}
+.strikers-result-team.team-0{flex-direction:row-reverse}
+.strikers-result-team.team-1{background:linear-gradient(215deg,#ab2947,#55152f)}
+.strikers-result-team>b{font:clamp(26px,5vw,85px)/1 Titan;text-shadow:3px 4px #141020}
+.strikers-result-roster{text-align:center;min-width:0}
+.strikers-result-roster>strong{font:clamp(10px,2vw,25px) Titan}
+.strikers-result-roster>div{display:flex;justify-content:center;gap:5px}
+.strikers-result-roster figure{margin:0;min-width:0;max-width:160px}
+.strikers-portrait{width:clamp(48px,9vw,150px);height:clamp(55px,21vh,190px);background:#130f22b0;border-radius:8px;overflow:hidden}
+.strikers-portrait img,.strikers-portrait canvas{display:block;width:100%;height:100%;object-fit:contain}
+.strikers-portrait[data-winner-portrait]{background:transparent}
+.strikers-result-roster figcaption{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 clamp(8px,1.2vw,14px) Rubik}
+.strikers-result-stats{display:grid;gap:4px;padding:8px clamp(6px,7vw,85px)}
+.strikers-result-stats>div{display:grid;grid-template-columns:1fr 2fr 1fr;align-items:center;text-align:center;background:linear-gradient(90deg,#651c39,#151124 48%,#10436b);padding:4px;font:clamp(11px,2vw,22px) Titan}
+.strikers-result-stats b{font-size:1.25em}
+@media(max-width:759px){
+ #results.strikers-results .iw-res__title{font-size:clamp(24px,6vw,46px)}
+ #results.strikers-results .iw-res__body{top:max(36%,100px)}
+ .strikers-result-scores{right:3%;width:54%;height:29%}
+ .strikers-result-team{padding:4px;gap:3px}
+}

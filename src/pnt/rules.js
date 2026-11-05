@@ -9,15 +9,15 @@ export function createRound(playerRole='runner',caches=[]){
  if(!['runner','chaser'].includes(playerRole))throw new Error('Unknown role');
  return {remaining:ROUND_SECONDS,startRemaining:0,phase:'playing',winner:null,reason:null,playerRole,collected:0,totalMoney:caches.reduce((n,c)=>n+c.amount,0),caches:caches.map(c=>({...c,remaining:c.amount,harvester:null})),actors:Array.from({length:4},(_,i)=>({id:i,role:(playerRole==='chaser'?i===0:i===1)?'chaser':'runner',caught:false,inSmoke:false,caughtTime:0,releaseCooldown:0,rescueProgress:0,rescuer:null,immune:0,toolCooldowns:[0,0],effect:null,effectTime:0,captureRemaining:0,captureLock:0,detectionProgress:0,money:0,captures:0,rescues:0,stuns:0,interacting:false}))};
 }
-export function canAct(round,id){const a=round.actors[id];return !!(round.phase==='playing'&&!(round.startRemaining>0)&&a&&!a.caught&&!(a.captureLock>0)&&a.captureRemaining<=0&&a.effectTime<=0);}
+export function canAct(round,id){const a=round.actors[id];return !!(round.phase==='playing'&&!(round.startRemaining>0||round.resetClock>0)&&a&&!a.caught&&!(a.captureLock>0)&&a.captureRemaining<=0&&a.effectTime<=0);}
 export function startCountdown(round){round.startRemaining=START_SECONDS;}
 export function updateSmokeCoverage(round,positions,clouds){
  const xyz=p=>Array.isArray(p)?p:[p.x,p.y,p.z];
  for(const actor of round.actors){const p=xyz(positions[actor.id]);actor.inSmoke=clouds.some(cloud=>{if(cloud.time<=0)return false;const q=xyz(cloud.position);return Math.hypot(p[0]-q[0],p[2]-q[2])<=SMOKE_RADIUS&&Math.abs(p[1]-q[1])<2.2;});if(actor.inSmoke&&['stunned','airStunned','banana'].includes(actor.effect)){actor.effect=null;actor.effectTime=0;}}
 }
 export function activateTool(round,id,slot,tool='hammer'){
- if(['diretide','tiletide'].includes(round.mode)&&!['hammer','banana'].includes(tool))return false;
- const a=round.actors[id];if(![0,1].includes(slot)||!TOOL_COOLDOWNS[tool]||!canAct(round,id)||a.inSmoke||a.toolCooldowns[slot]>0)return false;a.toolCooldowns[slot]=TOOL_COOLDOWNS[tool];return true;
+ if(['diretide','tiletide','strikers'].includes(round.mode)&&!['hammer','banana'].includes(tool))return false;
+ const a=round.actors[id];if(![0,1].includes(slot)||!TOOL_COOLDOWNS[tool]||!canAct(round,id)||a.inSmoke||a.toolCooldowns[slot]>0)return false;a.toolCooldowns[slot]=TOOL_COOLDOWNS[tool];if(round.mode==='strikers')a.itemsUsed=(a.itemsUsed||0)+1;return true;
 }
 export function finishRound(round,winner,reason){if(round.phase!=='playing')return false;round.phase='finished';round.winner=winner;round.reason=reason;return true;}
 function completeCapture(round,r){cancelInteraction(round,r.id);r.effect=null;r.effectTime=0;r.detectionProgress=0;r.captureRemaining=0;r.caught=true;r.caughtTime=0;r.releaseCooldown=RELEASE_COOLDOWN;r.rescueProgress=0;r.rescuer=null;r.interacting=false;if(round.actors.filter(a=>a.role==='runner').every(a=>a.caught))finishRound(round,'chaser','captured');}

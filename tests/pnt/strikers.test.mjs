@@ -1,0 +1,32 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {createRound} from '../../src/pnt/rules.js';
+import {createStrikersRound,stepStrikers,strikerShoot,updateStrikerPossession,STRIKERS_SECONDS,FIELD,BALL_RADIUS,KICK_WINDUP} from '../../src/pnt/strikers-rules.js';
+const positions=()=>[[-3,-7],[3,-7],[-3,7],[3,7]].map(([x,z])=>({x,y:0,z}));
+test('a shot outside the banner opening rebounds without scoring',()=>{
+ const round=createStrikersRound(createRound(),{seed:1});
+ round.ball.position=[FIELD.goalCenterX+FIELD.goalHalfWidth,BALL_RADIUS,FIELD.maxZ-.05];
+ round.ball.velocity=[0,0,8];
+ stepStrikers(round,1/60);
+ assert.deepEqual(round.score,[0,0]);
+ assert.ok(round.ball.velocity[2]<0);
+});
+for(const effect of ['stunned','banana'])test(`possession follows the carrier and drops on ${effect}`,()=>{
+ const round=createStrikersRound(createRound(),{seed:1});
+ const group={position:{x:0,y:0,z:-1},rotation:{y:0}};
+ stepStrikers(round,1/60,[group.position]);
+ assert.equal(round.ball.carrier,0);
+ group.position.x=3;
+ updateStrikerPossession(round,[group]);
+ assert.ok(round.ball.position[0]>0&&round.ball.position[0]<3);assert.equal(round.ball.position[1],BALL_RADIUS);
+ assert.equal(strikerShoot(round,1,group.position,0),false);
+ Object.assign(round.actors[0],{effect,effectTime:1});
+ updateStrikerPossession(round,[group]);
+ assert.equal(round.ball.carrier,null);
+ assert.ok(round.ball.velocity[2]>0);
+ stepStrikers(round,1/60,[group.position,group.position]);
+ assert.equal(round.ball.carrier,null);
+});
+test('Patty Strikers creates balanced teams, a physical ball and event timer',()=>{const r=createStrikersRound(createRound(),{seed:1});assert.equal(r.mode,'strikers');assert.equal(r.remaining,STRIKERS_SECONDS);assert.deepEqual(r.actors.map(a=>a.team),[0,0,1,1]);assert.deepEqual(r.score,[0,0]);assert.equal(r.ball.position[1],BALL_RADIUS);});
+test('Interact shoots the nearby ball in facing direction and respects cooldown',()=>{const r=createStrikersRound(createRound(),{seed:1});stepStrikers(r,1/60,[{x:0,y:0,z:-1}]);assert.equal(r.ball.carrier,0);assert.equal(strikerShoot(r,0),true);assert.equal(r.actors[0].effect,'kick');assert.equal(r.ball.carrier,0);updateStrikerPossession(r,[{position:{x:0,z:-1},rotation:{y:0}}],KICK_WINDUP);assert.ok(r.ball.velocity[2]>18);assert.ok(r.ball.velocity[1]>4);assert.equal(strikerShoot(r,0,{x:0,z:-1},0),false);});
+test('ball bounces inside sidelines and scores only through goal mouth',()=>{const r=createStrikersRound(createRound(),{seed:2}),p=positions();r.ball.position=[FIELD.maxX-.1,.43,0];r.ball.velocity=[8,0,0];stepStrikers(r,.1,p);assert.ok(r.ball.velocity[0]<0);r.ball.position=[0,BALL_RADIUS,FIELD.minZ+.05];r.ball.velocity=[0,0,-8];r.ball.lastTouch=0;stepStrikers(r,.1,p);assert.deepEqual(r.score,[1,0]);assert.equal(r.actors[0].goals,1);const clock=r.remaining;assert.ok(r.resetClock>3);for(let i=0;i<57;i++)stepStrikers(r,.1,p);assert.equal(r.remaining,clock);stepStrikers(r,.1,p);assert.ok(r.ball.position[1]<2.4);});
+test('falling buffs land and provide temporary boosts',()=>{const r=createStrikersRound(createRound(),{seed:3}),p=positions();r.buffClock=.01;stepStrikers(r,.02,p);assert.equal(r.buffs.length,1);const buff=r.buffs[0];buff.position=[p[0].x,.55,p[0].z];buff.landed=true;stepStrikers(r,.02,p);assert.ok(['speed','power','shock'].includes(r.actors[0].buff));assert.equal(r.actors[0].buffTime,8);});

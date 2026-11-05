@@ -29,11 +29,11 @@ export class CelebrationVFX{
   item.life=item.total=life;item.p.copy(p);item.v.copy(v);item.kind=kind;item.size=size;item.color.set(color);
   item.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);item.spin=(Math.random()-.5)*14;return item;
  }
- celebrate(position,{gold=false}={}){
+ celebrate(position,{gold=false,confetti=26,confettiScale=1}={}){
   const p=position.clone();p.y+=.35;
-  for(let i=0;i<26;i++){
-   const angle=i/26*Math.PI*2,speed=.8+Math.random()*1.4;
-   this.emit(0,p,new THREE.Vector3(Math.cos(angle)*speed,2.5+Math.random()*2.2,Math.sin(angle)*speed),1.05+Math.random()*.4,.055+Math.random()*.035,gold&&i%2===0?0xffce35:palette[i%palette.length]);
+  for(let i=0;i<confetti;i++){
+   const angle=i/confetti*Math.PI*2,speed=.8+Math.random()*1.4;
+   this.emit(0,p,new THREE.Vector3(Math.cos(angle)*speed,2.5+Math.random()*2.2,Math.sin(angle)*speed),1.05+Math.random()*.4,(.055+Math.random()*.035)*confettiScale,gold&&i%2===0?0xffce35:palette[i%palette.length]);
   }
   for(let i=0;i<2;i++){
    const delay=.18+i*.17,base=p.clone();base.x+=(i?1:-1)*.42;

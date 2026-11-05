@@ -20,7 +20,7 @@ export function couchHostLobbyAction(room,slot,command){
 }
 export function prepareCouchMatch(room){if(!canStartCouch(room))return false;room.players=room.players.map((p,i)=>p||{...BOTS[Math.max(0,i-1)],bot:true,loadout:['hammer','banana'],ready:true});return true;}
 export function couchCommand(room,slot,command){
- const p=room.players[slot];if(['diretide','tiletide'].includes(room.gameMode)&&p){p.loadout=modeLoadout(room.gameMode,p.loadout);if(p.picker?.type!=='costume')p.picker=null;if(command==='accept'&&[1,2].includes(p.cursor))return false;}if(!p||p.bot||!p.connected||room.phase!=='waiting')return false;
+ const p=room.players[slot];if(['diretide','tiletide','strikers'].includes(room.gameMode)&&p){p.loadout=modeLoadout(room.gameMode,p.loadout);if(p.picker?.type!=='costume')p.picker=null;if(command==='accept'&&[1,2].includes(p.cursor))return false;}if(!p||p.bot||!p.connected||room.phase!=='waiting')return false;
  if(command==='ready'){if(!p.picker)p.ready=!p.ready;return true;}
  if(p.picker){const options=p.picker.type==='costume'?COSTUMES:TOOLS;if(['up','down','left','right'].includes(command)){const delta={up:-3,down:3,left:-1,right:1}[command];p.picker.index=(p.picker.index+delta+options.length)%options.length;return true;}if(command==='back'){p.picker=null;return true;}if(command==='accept'){const id=options[p.picker.index].id;if(p.picker.type==='costume')p.costume=id;else p.loadout=equipTool(p.loadout,id,p.picker.type);p.picker=null;p.ready=false;return true;}return false;}
  if(command==='up'||command==='down'){p.cursor=(p.cursor+(command==='up'?-1:1)+4)%4;return true;}

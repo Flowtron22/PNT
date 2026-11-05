@@ -75,6 +75,17 @@
 @media(max-height:500px) and (min-width:760px){.iw-main__side{--u:8px;width:27vw;top:12px;bottom:47px}.profile-local{font-size:5px}.iw-profile__rank,.iw-profile__xpnum,.iw-profile__stats span,.iw-kitcard__kind,.iw-kitcard__label{font-size:7px}.iw-kitcard__chips button{font-size:8px}}
 .nav-button.iw-btn:nth-child(6){--tilt:-.8deg}
 button[data-ww-bound]:focus-visible{outline:none}
+/* Share the main-menu ink fill with dynamically created page buttons. */
+button.iw-fill{position:relative;isolation:isolate;overflow:hidden;--fill:var(--a,#ff8a14)}
+button.iw-fill:is(.is-focus,.pad-focus,:focus-visible){color:var(--k,#171329)}
+button.iw-fill:is(.is-focus,.pad-focus,:focus-visible)>.iw-btn__blob{transform:translate(-50%,-50%) scale(1) rotate(0deg)}
+button.iw-fill:is(.is-focus,.pad-focus,:focus-visible)>:is(small,span:not(.iw-btn__blob),strong,b,em){color:inherit}
+button.iw-fill:is(.is-focus,.pad-focus,:focus-visible)>img{filter:brightness(.13)}
+button.flow-option.host-option{background:linear-gradient(140deg,#3b2e52,#251e35);color:#fff;border-color:#655574}
+button.flow-option.host-option>small{color:#c8b6e3}
+button.flow-option.host-option>img{filter:none}
+button.flow-option:is(.is-focus,.pad-focus,:focus-visible)>small{color:#48260a}
+button.flow-option:is(.is-focus,.pad-focus,:focus-visible)>img{filter:brightness(.13)}
 
 
 /* the menu foundation results panel and coverage treatment, adapted to money totals. */

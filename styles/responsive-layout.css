@@ -1,7 +1,7 @@
 /* A shared scale and edge anchors, following Inkwave's full-screen layout model. */
 :root{--u:min(1vw,1.777778vh);--fs-xs:max(8px,calc(var(--u)*.75))}
-#home{left:max(env(safe-area-inset-left,0px),calc(var(--u)*3.8));top:52%;width:calc(var(--u)*24);transform:translateY(-50%);display:block}
-#home .logo{position:absolute;left:50%;top:calc(var(--u)*-12);translate:-50% 0;transform:none;width:calc(var(--u)*16);height:calc(var(--u)*9.5);margin:0}
+#home{left:max(env(safe-area-inset-left,0px),calc(var(--u)*3.8));top:max(env(safe-area-inset-top,0px),calc(var(--u)*1.5));bottom:max(env(safe-area-inset-bottom,0px),calc(var(--u)*3));width:calc(var(--u)*24);transform:none;display:flex;flex-direction:column;gap:calc(var(--u)*1.1)}
+#home .logo{position:static;align-self:center;flex-shrink:0;translate:none;transform:none;width:calc(var(--u)*16);height:calc(var(--u)*9.5);object-fit:contain;margin:0}
 #home .main-nav{gap:calc(var(--u)*.85)}
 #home .nav-button{height:calc(var(--u)*3.85);min-height:29px;padding:calc(var(--u)*.6) calc(var(--u)*1.4);gap:calc(var(--u)*1.1);border-radius:calc(var(--u)*1);font-size:max(13px,calc(var(--u)*1.85));line-height:1.1}
 #home .nav-button.hero{height:calc(var(--u)*6.3);min-height:44px;font-size:max(21px,calc(var(--u)*2.8))}

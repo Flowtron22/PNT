@@ -5,7 +5,8 @@ export const MAPS=[
 ];
 export const EVENT_MAPS=[{id:'grassfield',name:'GRASSFIELD',available:true,description:'Pattytide · 4-player free-for-all',image:'grassfield.png'}];
 export const TILE_EVENT_MAPS=[{id:'grassfield',name:'TUMBLE GARDEN',available:true,description:'Tile Tumble · last player standing',image:'tiletide.svg'}];
-export const lobbyMaps=room=>room?.gameMode==='diretide'?EVENT_MAPS:room?.gameMode==='tiletide'?TILE_EVENT_MAPS:MAPS;
+export const STRIKER_EVENT_MAPS=[{id:'slipperystriker',name:'SLIPPERY SHOOTS',available:true,description:'Slippery Shoots · 2v2 ice rink',image:'slipperystriker.svg'}];
+export const lobbyMaps=room=>room?.gameMode==='diretide'?EVENT_MAPS:room?.gameMode==='tiletide'?TILE_EVENT_MAPS:room?.gameMode==='strikers'?STRIKER_EVENT_MAPS:MAPS;
 export const BOTS=[{name:'Bot Anas',costume:'pumpkin'},{name:'Bot Min',costume:'raptor'},{name:'Bot Amim',costume:'racer'}];
 export const PREFERENCES=['none','chaser','runner'];
 export function createLobby(costume='thief',gameMode='classic'){

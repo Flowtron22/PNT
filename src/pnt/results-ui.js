@@ -5,6 +5,7 @@ export function resultSummary(round){return {stolen:Math.floor(round.collected),
 export function renderResults(root,{round,won,profile,costume,players,map,sounds,onAgain,onMenu,reduced=false,online=false,couch=false,playOutcome=true}){
  if(round.mode==='diretide')return renderEventResults(root,{round,won,profile,players,map,onAgain,onMenu,online,couch});
  if(round.mode==='tiletide')return renderTileResults(root,{round,won,profile,players,map,onAgain,onMenu,online,couch});
+ if(round.mode==='strikers')return renderStrikersResults(root,{round,won,profile,costume,players,map,onAgain,onMenu,couch});
  const stats=resultSummary(round),share=stats.total?stats.stolen/stats.total:0,reason=round.reason==='money'?'EVERY CACHE EMPTIED':round.reason==='captured'?'ALL THIEVES CAUGHT':'TIME UP · MONEY PROTECTED';
  root.className='dialog-screen iw-results '+(won?'is-win':'is-lose')+(reduced?'':' is-intro');
  root.style.setProperty('--ta','#ff9c27');root.style.setProperty('--tb','#5487ff');
@@ -14,6 +15,49 @@ export function renderResults(root,{round,won,profile,costume,players,map,sounds
  const active=()=>!root.hidden&&root.dataset.round===id;root.dataset.round=id;
  setTimeout(()=>{if(active()&&playOutcome)sounds.play(won?'victory_fanfare':'defeat_jingle');},reduced?0:380);
  setTimeout(()=>{if(active()){root.classList.remove('is-intro');sounds.play('xp_tick');}},reduced?0:900);
+}
+
+function renderStrikersResults(root,{round,won,profile,costume,players,map,onAgain,onMenu,couch}){
+ const teams=[0,1].map(team=>round.actors.filter(actor=>actor.team===team));
+ const total=(team,key)=>teams[team].reduce((sum,actor)=>sum+(actor[key]||0),0);
+ const possession=total(0,'possession')+total(1,'possession');
+ const blueShare=possession?Math.round(total(0,'possession')/possession*100):null;
+ const rows=[
+  ['GOALS',round.score[0],round.score[1]],
+  ['SHOTS',total(0,'shots'),total(1,'shots')],
+  ['TOOLS USED',total(0,'itemsUsed'),total(1,'itemsUsed')],
+  ['HAMMER STUNS',total(0,'stuns'),total(1,'stuns')],
+  ['POSSESSION',blueShare===null?'—':blueShare+'%',blueShare===null?'—':(100-blueShare)+'%']
+ ];
+ const draw=round.winnerTeam===null;
+ root.className='dialog-screen iw-results strikers-results '+(won?'is-win':'is-lose');
+ root.style.setProperty('--ta','#42b9ff');root.style.setProperty('--tb','#ff5367');
+ root.innerHTML=`
+  <div class="iw-res__scrim"></div>
+  <header class="iw-res__head ${won?'is-win':'is-lose'}">
+   <div class="iw-res__splat">${starSVG({seed:won?9:14,cls:'iw-fta',r:60,arms:10,drops:4})}</div>
+   <div id="result-title" class="iw-res__title">${draw?'DRAW':couch?(round.winnerTeam===0?'BLUE WINS!':'RED WINS!'):won?'VICTORY!':'DEFEAT'}</div>
+  </header>
+  <div class="strikers-result-scores">${(draw?[1,0]:[round.winnerTeam]).map(team=>`
+   <section class="strikers-result-team team-${team}">
+    <div class="strikers-result-roster"><strong>${round.winnerTeam===null?'DRAW':round.winnerTeam===team?'WINNER!':!couch&&team===round.actors[0].team?'YOUR TEAM':''}</strong>
+    <div>${teams[team].map(actor=>{
+     const player=players[actor.id],name=actor.id===0?profile.name:player?.name||'Player '+(actor.id+1);
+     const outfit=player?.costume||(actor.id===0?costume:'thief')||'thief';
+     return `<figure><div class="strikers-portrait" ${round.winnerTeam===team?`data-winner-portrait="${actor.id}"`:''}><img src="assets/pnt/portraits/${esc(outfit)}.png" alt=""></div><figcaption>${esc(name)}</figcaption></figure>`;
+    }).join('')}</div></div>
+    <b aria-label="${team===0?'Blue':'Red'} goals">${round.score[team]}</b>
+   </section>`).join('')}</div>
+  <div class="iw-res__body">
+   <section class="iw-panel result-scoreboard strikers-result-stats" aria-label="Team statistics">
+    <div><b>RED</b><strong>MATCH STATS</strong><b>BLUE</b></div>
+    ${rows.map(([label,blue,red])=>`<div><b>${red}</b><strong>${label}</strong><b>${blue}</b></div>`).join('')}
+   </section>
+   <section class="iw-panel result-xp"><span class="iw-lvl"><small>LV</small>${profile.level}</span><strong>+${won?PROGRESSION.xpWin:PROGRESSION.xpLose} XP</strong></section>
+   <div class="result-actions"><button id="again" class="primary">${couch?'BACK TO LOBBY':'PLAY AGAIN →'}</button><button id="result-menu" class="secondary">MAIN MENU</button></div>
+  </div>`;
+ root.querySelector('#again').onclick=onAgain;
+ root.querySelector('#result-menu').onclick=onMenu;
 }
 
 function renderTileResults(root,{round,won,profile,players,map,onAgain,onMenu,online,couch}){

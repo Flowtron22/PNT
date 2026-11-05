@@ -1,16 +1,32 @@
-# Police N Thief Web
+# Police N Thief
 
 The Steam release uses one Windows x64 package for desktop PCs and Steam Deck
 via Proton. See the [Steam build guide](docs/STEAM.md) for build and test steps.
 
-A browser practice prototype developed by Todak Studios, using PNT characters,
-role-specific running and action animations, logo and all three Unreal arenas.
-The animated menu has Play, Tools, Costume, Setting and Credit pages.
+The current Steam dev-playtest is **0.9.135**. Build and share the complete
+`dist-steam/win64-dev-playtest-0.9.135` folder, including `steam_appid.txt`.
+
+Developed by Todak Studios, with Classic, PattyTide, Tile Tumble and
+**Slippery Shoots**. The new event is a one-minute 2v2 match on the imported
+air-hockey rink with sliding movement, possession, shooting and temporary buffs.
+See [Slippery Shoots](docs/SLIPPERY_SHOOTS.md) and the [handoff](handoff.md).
 
 Online play uses Steam lobbies and peer networking. The host runs the match
 simulation locally. See the [Steam playtest guide](docs/STEAM.md).
 
-## Play locally
+## Steam playtest
+
+Use Windows x64, Node.js 22.12 or newer, and a running signed-in Steam client.
+
+```powershell
+npm ci
+npm run build:steam -- --dev-playtest
+```
+
+Launch `Police N Thief.exe` from the versioned build folder. The same Windows
+package targets Steam Deck through Proton.
+
+## Local development preview
 
 Requires Node.js. Browser dependencies are vendored; no installation is needed.
 
@@ -55,16 +71,17 @@ Mall, Sunken and Iceberg load their own arena geometry, spawns and money caches.
 costumes, your kit and costume, and your role preference carry into the match.
 Room settings explain that this room is on this device; no joinable code is fabricated.
 
-## Validate and deploy
+## Validate and package
 
 ```powershell
 npm run check
 npm test
-npm run build
+npm run test:multiplayer
+npm run build:steam -- --dev-playtest
 ```
 
-Vercel uses `npm run build` and serves `dist`, configured in `vercel.json`.
-No environment variables or backend service are required for this prototype.
+The Steam packaging step also builds the bundled web renderer. Historical Vercel
+configuration remains in the repository for the earlier browser prototype.
 
 ## Current limits
 

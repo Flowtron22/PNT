@@ -1,7 +1,10 @@
 # Player input
 
-Version 0.9.107 supports keyboard, mouse buttons, touch and a browser-standard
+Steam playtest 0.9.135 supports keyboard, mouse buttons, touch and a standard
 controller. All send the same movement and actions to practice and multiplayer.
+Slippery Shoots labels the interaction action **Shoot**. With possession, press
+E or A/Cross for the kick windup and shot. Hammer and Banana use the usual
+tool slots. The event runs on a slippery rink with two players per team.
 
 ## Controller
 
@@ -38,7 +41,7 @@ Selecting a text field with the controller opens the on-screen QWERTY keyboard.
 Use the stick/D-pad to move, A/Cross to type, X/Square to backspace, Y/Triangle
 for a space, B/Circle to cancel and Start/Options to finish. Player-name mode
 includes case, apostrophe, hyphen and space controls. Room-code mode accepts only
-six uppercase letters or digits. Physical keyboard entry continues to work.
+seven uppercase letters or digits. Physical keyboard entry continues to work.
 
 The radial dead zone is 0.14 with full deflection at 0.96. Direction repeats start
 at 330 ms then every 130 ms. Tool presses are edges; interaction is held. Pads

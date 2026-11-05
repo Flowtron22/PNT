@@ -1,5 +1,11 @@
 # Original environment mechanics and proposed browser adaptation
 
+The current Steam event **Slippery Shoots** uses the imported air-hockey rink.
+It shares Iceberg acceleration (9), steering (2.2) and braking (3.2) through
+`src/pnt/environment.js`. Its separate navigation heights are sampled from the
+FBX ice mesh. See [Slippery Shoots](SLIPPERY_SHOOTS.md) for assets and rules.
+The sections below retain the original environment audit.
+
 Inspected 27 October 2026, Asia/Kuala_Lumpur. Source checkout:
 `F:/PROJECTS/PS_3D/GitHub/PSX`, Unreal Engine 5.6.
 
