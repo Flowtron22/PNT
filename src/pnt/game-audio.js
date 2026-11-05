@@ -6,6 +6,8 @@ const WAV_CLIPS=new Set([...NARRATION,'Coin_GET3','Footstep_A','Footstep_B','Cap
 const CLIP_EXTENSIONS={'menu-bgm':'m4a','pirate-chase-bgm':'m4a','iceberg-chase-bgm':'m4a'};
 const CLIP_VERSIONS={'iceberg-chase-bgm':'0.9.39'};
 const CLIPS=['Coin_GET3','Footstep_A','Footstep_B','Capture_Scuffle','menu-bgm','gameplay-bgm','Match_Countdown','Match_Start','Player_Land','Player_Launch','Player_Spin_Out','Player_Stunned','Police_Capture_Start','Thief_Escape','Thief_Loot_Stolen','Tool_Banana_Slip','Tool_Banana_Throw','Tool_Hammer_Activate','Tool_Hammer_Impact','Tool_Jetpack_Flight','Tool_Jetpack_Land','Tool_Jetpack_Launch','Tool_Rewind_Box_Deploy','se_assist_ghirahim_teleport','Tool_Smoke_Activate','Tool_Smoke_Throw',...NARRATION];
+const eliminationEvent=round=>['balloon','tiletide','diretide'].includes(round.mode);
+const survivorCount=round=>round.actors.filter(a=>eliminationEvent(round)?!a.eliminated&&!a.caught:a.role==='runner'&&!a.caught).length;
 export function createGameplayAudio(getEngine){
  let sfxLevel=1,musicLevel=1;
  let sharedScreen=false,coinVoice=null;const footsteps=new Map();
@@ -29,7 +31,7 @@ export function createGameplayAudio(getEngine){
   if(interrupt)clearAnnouncements();if(announcements.length<8)announcements.push({name,volume});nextAnnouncement();
  }
  function syncMatch(round){
-  if(match===round.profileId)return;stopEffects();match=round.profileId;previous=round.actors.map(a=>({...a}));previousPhase=round.phase;freeRunners=round.actors.filter(a=>a.role==='runner'&&!a.caught).length;cacheRemaining=new Map(round.caches?.map(cache=>[cache.id,cache.remaining])||[]);void prepare();
+  if(match===round.profileId)return;stopEffects();match=round.profileId;previous=round.actors.map(a=>({...a}));previousPhase=round.phase;freeRunners=survivorCount(round);suddenDeath=freeRunners<=(eliminationEvent(round)?2:1);cacheRemaining=new Map(round.caches?.map(cache=>[cache.id,cache.remaining])||[]);void prepare();
  }
  function verdict(round,won){syncMatch(round);if(outcomeMatch===round.profileId)return;outcomeMatch=round.profileId;announce(won?'vc_narration_result_victory':'vc_narration_defeated',1,true);}
  function results(round,won){syncMatch(round);if(resultMatch===round.profileId)return;resultMatch=round.profileId;announce(won?'vc_narration_congratulation':'vc_narration_failure');}
@@ -67,7 +69,7 @@ export function createGameplayAudio(getEngine){
    }
    if(active&&enabled&&flying&&volume>0){if(!loops.has(id)){const item=voice('Tool_Jetpack_Flight',{loop:true,volume:volume*.4});if(item)loops.set(id,item);}else loops.get(id).gain.gain.value=volume*.4;}else if(loops.has(id)){loops.get(id).stop();loops.delete(id);}
   });
-  const alive=round.actors.filter(a=>a.role==='runner'&&!a.caught).length;if(!suddenDeath&&freeRunners>1&&alive===1){suddenDeath=true;play('vc_narration_suddendeath',1,.1);}for(const cache of round.caches||[]){const before=cacheRemaining.get(cache.id);if(before>0&&cache.remaining<=0)play(praise++%2?'vc_menu_narration_great':'vc_menu_narration_waytogo',.9,.1);cacheRemaining.set(cache.id,cache.remaining);}if(previousPhase==='playing'&&round.phase==='finished'&&round.reason==='timeout')play('vc_narration_timeup',1,.1);freeRunners=alive;previousPhase=round.phase;previous=round.actors.map(a=>({...a}));
+  const alive=survivorCount(round),event=eliminationEvent(round);if(!suddenDeath&&(event?active&&round.phase==='playing'&&alive===2:freeRunners>1&&alive===1)){suddenDeath=true;play('vc_narration_suddendeath',1,.1);}for(const cache of round.caches||[]){const before=cacheRemaining.get(cache.id);if(before>0&&cache.remaining<=0)play(praise++%2?'vc_menu_narration_great':'vc_menu_narration_waytogo',.9,.1);cacheRemaining.set(cache.id,cache.remaining);}if(previousPhase==='playing'&&round.phase==='finished'&&round.reason==='timeout')play('vc_narration_timeup',1,.1);freeRunners=alive;previousPhase=round.phase;previous=round.actors.map(a=>({...a}));
  }
  return {setLevels({sfx:effects=sfxLevel,music:track=musicLevel}={}){sfxLevel=Math.max(0,Math.min(1,effects));musicLevel=Math.max(0,Math.min(1,track));if(sfx)sfx.gain.value=enabled?.55*sfxLevel:0;if(music)music.gain.value=musicEnabled?.2*musicLevel:0;},unlock,preload,prepare,play,tool,capture,narrateBeat,verdict,results,update,stop,get enabled(){return enabled;},get musicEnabled(){return musicEnabled;},setEnabled(value){enabled=!!value;if(!enabled){clearAnnouncements();coinVoice?.stop();coinVoice=null;footsteps.clear();}try{localStorage.setItem('pnt-game-sfx',enabled?'on':'off');}catch{}if(sfx)sfx.gain.value=enabled?.55*sfxLevel:0;},setMusic(value){musicEnabled=!!value;try{localStorage.setItem('pnt-game-music',musicEnabled?'on':'off');}catch{}if(music)music.gain.value=musicEnabled?.2*musicLevel:0;}};
 }

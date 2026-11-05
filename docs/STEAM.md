@@ -26,8 +26,8 @@ PC and Steam Deck use the same Windows x64 package, with Proton on Deck.
 
 ## Private development playtest
 
-Current development package is **0.9.135** in
-`dist-steam/win64-dev-playtest-0.9.135`.
+Current development package is **0.9.147** in
+`dist-steam/win64-dev-playtest-0.9.147`.
 
 Build on Windows with x64 Node.js 22.12 or newer. Run Steam and sign in.
 
@@ -49,13 +49,17 @@ PNT build on every machine.
    Testers can enter the code in **Join Lobby** or accept the Steam invite.
 4. Fill empty seats with bots and start the match.
 
-For PattyTide, start from **Events → PattyTide → Solo Online**. Room codes and
-Steam invites can also take a player directly into a PattyTide lobby.
+For Patty Prowl, start from **Events → Patty Prowl → Solo Online**. Room codes and
+Steam invites can also take a player directly into a Patty Prowl lobby.
 
 For **Slippery Shoots**, use **Events → Slippery Shoots → Solo Online**.
 Each room has four seats, split into Red and Blue. Empty seats can be filled
 with bots. Training and couch play are also available from the event.
 See [mode rules and asset pipeline](SLIPPERY_SHOOTS.md).
+
+For **Balloon Bash**, use **Events → Balloon Bash**. Training, couch play and
+Steam online use the same four-player free-for-all rules and fixed Hammer/Banana
+kit. See the [mode notes](BALLOON_BASH.md).
 
 **Find Public Match** searches Steam for a lobby with the same PNT build and
 game mode and creates a public lobby when the search finds none.

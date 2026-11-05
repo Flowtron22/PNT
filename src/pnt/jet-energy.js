@@ -59,9 +59,9 @@ export class JetEnergy{
   this.center=new THREE.Vector3();this.axis=new THREE.Vector3();this.worldRotation=new THREE.Quaternion();this.rotation=new THREE.Quaternion();this.parentRotation=new THREE.Quaternion();this.inverse=new THREE.Matrix4();
   this.right=new THREE.Vector3();this.up=new THREE.Vector3();this.across=new THREE.Vector3();this.along=new THREE.Vector3();this.corner=new THREE.Vector3();
  }
- emit(actor,p,axis,kind){
+ emit(actor,p,axis,kind,lifeScale=1){
   const item=this.items.find(x=>x.life<=0)||this.items[this.cursor++%CAPACITY];
-  item.owner=actor;item.kind=kind;item.life=item.total=kind===0?.26:kind===1?.36:kind===2?.24:.3+Math.random()*.22;
+  item.owner=actor;item.kind=kind;item.life=item.total=(kind===0?.26:kind===1?.36:kind===2?.24:.3+Math.random()*.22)*lifeScale;
   item.size=kind===0?.3:kind===1?.28:kind===2?.65:.035+Math.random()*.045;
   item.p.copy(p);item.axis.copy(axis);item.v.copy(axis).multiplyScalar(kind===0?2.6:kind===1?1.1:kind===2?.2:2.4);
   if(kind===3){item.v.x+=(Math.random()-.5)*3.4;item.v.y+=(Math.random()-.5)*1.7;item.v.z+=(Math.random()-.5)*2.4;item.p.addScaledVector(item.v,.12);}
@@ -70,7 +70,7 @@ export class JetEnergy{
   item.color.set(kind===0?0xff2cdd:kind===2?0xffa6f7:PALETTE[Math.floor(Math.random()*PALETTE.length)]);
  }
  clearActor(actor){for(const item of this.items)if(item.owner===actor){item.life=0;item.owner=null;}this.emitters.delete(actor);}
- actor(actor,state,dt,{reduced=false}={}){
+ actor(actor,state,dt,{reduced=false,longTrail=false}={}){
   if(reduced||state.caught||state.captureRemaining>0){this.clearActor(actor);return;}
   if(state.effect!=='rocket'||!(state.effectTime>0)){this.emitters.delete(actor);return;}
   this.root.updateWorldMatrix(true,false);this.inverse.copy(this.root.matrixWorld).invert();
@@ -84,7 +84,7 @@ export class JetEnergy{
   for(let n=0;emitter.next<=0&&n<3;n++,emitter.next+=.065){
    const fraction=step?THREE.MathUtils.clamp(1+emitter.next/step,0,1):1;
    this.corner.copy(emitter.last).lerp(this.center,fraction);
-   if(emitter.births++%2===0){this.emit(actor,this.corner,this.axis,0);this.emit(actor,this.corner,this.axis,1);for(let i=0;i<3;i++)this.emit(actor,this.corner,this.axis,3);}
+   if(emitter.births++%2===0){const stretch=longTrail?3:1;this.emit(actor,this.corner,this.axis,0,stretch);this.emit(actor,this.corner,this.axis,1,stretch);for(let i=0;i<3;i++)this.emit(actor,this.corner,this.axis,3,stretch);}
   }
   emitter.last.copy(this.center);
  }

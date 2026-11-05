@@ -1,10 +1,10 @@
-# PATTYTIDE event
+# PATTY PROWL event
 
 Live client 0.9.107 / server 0.9.27 (event rules version 4). The event is a four-player free-for-all with an AI Patrics boss.
 
 ## Enter and play
 
-Use **EVENTS** directly below PLAY, select **PATTYTIDE**, then use the same Solo Online / Couch Play flow as the main game. Solo Online has the existing Host, Join, public matchmaking and room codes. The event also has a Training button for one player and three bots. Costumes remain editable; event tools are locked to Hammer and Banana Split. Grassfield is the event's fixed map. Couch Play still requires at least two humans and fills empty seats with bots.
+Use **EVENTS** directly below PLAY, select **PATTY PROWL**, then use the same Solo Online / Couch Play flow as the main game. Solo Online has the existing Host, Join, public matchmaking and room codes. The event also has a Training button for one player and three bots. Costumes remain editable; event tools are locked to Hammer and Banana Split. Grassfield is the event's fixed map. Couch Play still requires at least two humans and fills empty seats with bots.
 
 Online rooms are filtered by `gameMode` as well as public/private status. Joining a room for the other mode by code is rejected. The event is deployed on Vercel and Render. Keep event rules versions compatible when changing shared gameplay; client-only presentation updates need no server redeploy.
 

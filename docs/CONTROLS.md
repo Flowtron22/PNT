@@ -1,6 +1,6 @@
 # Player input
 
-Steam playtest 0.9.135 supports keyboard, mouse buttons, touch and a standard
+Steam playtest 0.9.147 supports keyboard, mouse buttons, touch and a standard
 controller. All send the same movement and actions to practice and multiplayer.
 Slippery Shoots labels the interaction action **Shoot**. With possession, press
 E or A/Cross for the kick windup and shot. Hammer and Banana use the usual

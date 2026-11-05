@@ -1,6 +1,23 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createGameplayAudio} from '../../src/pnt/game-audio.js';
 
+test('elimination events announce sudden death once at two survivors, including pause and rematch',async()=>{
+ const oldStorage=globalThis.localStorage,oldFetch=globalThis.fetch;
+ globalThis.localStorage={getItem:()=>null,setItem(){}};globalThis.fetch=async url=>({ok:true,arrayBuffer:async()=>new TextEncoder().encode(url).buffer});
+ try{for(const mode of ['balloon','tiletide','diretide']){
+  const sources=[],context={currentTime:1,state:'running',createGain:()=>({gain:{value:1},connect(){},disconnect(){}}),decodeAudioData:async b=>new TextDecoder().decode(b),createBufferSource(){return {connect(){},disconnect(){},start(){sources.push(this);},stop(){this.onended?.();}};}},engine={ctx:context,master:{},init(){},resume(){}};
+  const audio=createGameplayAudio(()=>engine);await audio.prepare();
+  const make=id=>({mode,profileId:id,phase:'playing',actors:Array.from({length:4},()=>({role:'runner',caught:false,eliminated:false})),caches:[]});
+  const round=make(mode),actors=round.actors.map(()=>({group:{position:{distanceTo:()=>0}}})),count=()=>sources.filter(s=>s.buffer.includes('vc_narration_suddendeath')).length;
+  audio.update(round,actors,true,false);round.actors[0].eliminated=true;audio.update(round,actors,true,false);assert.equal(count(),0,mode+' three remain');
+  round.actors[1].eliminated=true;audio.update(round,actors,false,false);assert.equal(count(),0,mode+' paused');
+  audio.update(round,actors,true,false);assert.equal(count(),1,mode+' two remain');
+  context.currentTime++;audio.update(round,actors,true,false);round.actors[2].eliminated=true;audio.update(round,actors,true,false);assert.equal(count(),1,mode+' no one-survivor repeat');
+  audio.stop();const restored=make(mode+'-restored');restored.actors[0].eliminated=restored.actors[1].eliminated=true;audio.update(restored,actors,true,false);assert.equal(count(),1,mode+' restore does not replay');
+  const rematch=make(mode+'-rematch');audio.update(rematch,actors,true,false);rematch.actors[0].caught=rematch.actors[1].caught=true;context.currentTime++;audio.update(rematch,actors,true,false);assert.equal(count(),2,mode+' rematch can announce');audio.stop();
+ }}finally{globalThis.localStorage=oldStorage;globalThis.fetch=oldFetch;}
+});
+
 test('capture scuffle uses the supplied WAV once, fades at smoke end and respects mute and cleanup',async()=>{
  const oldStorage=globalThis.localStorage,oldFetch=globalThis.fetch,sources=[],automation=[];
  globalThis.localStorage={getItem:()=>null,setItem(){}};

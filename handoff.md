@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.135**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.147**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,20 +33,213 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.135` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.147` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
 Build archives stay outside Git. See the [Steam build guide](docs/STEAM.md).
 
-For Classic, use **Play → Solo Online → Host Lobby**. For PattyTide, start at
-**Events → PattyTide → Solo Online**. The host can change visibility under
+For Classic, use **Play → Solo Online → Host Lobby**. For Patty Prowl, start at
+**Events → Patty Prowl → Solo Online**. The host can change visibility under
 **Room Setting** while waiting. Share the seven-character room code to join a
 specific lobby, or invite Steam friends. Public matchmaking searches the selected mode.
 
-For the new event, use **Events → Slippery Shoots**. Training, couch play and Steam
-online all use internal mode ID `strikers`, rules version **12**, and arena ID
-`slipperystriker`. Keep those identifiers stable when changing display names.
+For Balloon Bash, use **Events → Balloon Bash**. Training, couch play and Steam
+online all use internal mode ID `balloon`, rules version **10**, and the procedural
+circular arena. Keep those identifiers stable when changing display names.
+
+## Current release summary
+
+Version **0.9.147** adds Balloon Bash (internal mode `balloon`, rules `10`) and
+renames the displayed PattyTide event to **Patty Prowl** without changing its
+internal `diretide` IDs or matchmaking. The latest Events layout and both preview
+destinations use the new composed `balloonbash.png` image.
+
+Balloon Bash currently has a 10.296 m arena radius, .75 m trailing-sphere radius,
+1.3 m centre spacing, 4% maximum link stretch and a .9 m overhead-balloon radius.
+The balloon centre is 2.95 m above ground. Original geometry density is restored:
+24x16 balloons and 20x14 guards, totaling 11,200 triangles. Mall lighting, sand-only
+AO, inward-panning bands and the close fixed camera are active. Elimination uses
+an upright Y-axis launch with exhaust from both feet, confetti and strong shake.
+
+Sphere movement uses geometric contact separation and sliding, including moving
+guards against stationary opponents. Own guards do not block their owner.
+Sudden Death announces at two survivors in Balloon Bash, Tile Tumble and Patty
+Prowl. The Steam package, syntax checks, 337 client tests and 39 multiplayer tests
+passed. Electron checks covered gameplay and Events at 1770x880 and 1280x800;
+live Steam-account and Steam Deck device checks remain pending.
+
+### Known issue diagnosed, not yet fixed
+
+Holding movement input during a Hammer swing can turn a Balloon Bash actor toward
+heading zero (screen right). `advanceActor` zeroes velocity for the swing, but
+quicksand/contact displacement marks it as moved; facing then uses `atan2(0,0)`.
+A diagnostic reproduced a 90-degree heading falling to .44 degrees over 20 ticks.
+Preserve facing while Hammer is active and only derive facing from nonzero
+intentional velocity. This issue was explained to the user but no fix is included
+in 0.9.147; the existing Hammer animation test does not cover movement-driven yaw.
+
+## Balloon Bash implementation history
+
+The notes below record intermediate revisions; the current summary above takes
+precedence for sizes, presentation, lighting and geometry density.
+
+- 0.9.147 renames the displayed PattyTide event to Patty Prowl in Events,
+  mode headings, lobby, HUD, results and connection notices. Internal `diretide`
+  IDs and rules stay unchanged. The Events title uses fitted PATTY / PROWL lines.
+- Balloon Bash now uses `assets/pnt/maps/balloonbash.png`: a composed render
+  of actual costumes, shaped balloons, trailing spheres and the quicksand ring.
+  The preview is tightly cropped and has no baked-in title or HUD text; both the
+  Events card and lobby use it. Card description is shortened to avoid clipping.
+- 0.9.147 Events page visually checked at 1770x880 and 1280x800 in Electron.
+  All four preview images loaded, Patty Prowl fits its two-line title, and no
+  card descriptions extend outside their cards. All 376 automated tests passed.
+
+- 0.9.146 restored original balloon/guard density: 24x16 overhead balloons and
+  20x14 trailing spheres (11,200 triangles total). Balloon vertices form a full
+  rounded crown and longer tapered neck instead of a stretched round sphere.
+- Ground-only AO uses a static 512x512 grayscale contact bake and independent
+  planar UV1. Border contact softly darkens the sand; the centre stays neutral.
+  Only the sand material receives AO, with no baked direct light or glare.
+  Animated inward bands remain separate from the AO coordinates.
+- 0.9.146 Electron check: original-density meshes and ground AO rendered without
+  errors. Sample: 604 frames, median 16.7 ms, p95/max 16.8 ms. All 376 tests pass;
+  live Steam/Deck visual checks remain pending.
+
+- 0.9.145 replaced the overlap-ignore escape loophole with geometric separation
+  and sliding using the exact guard radius plus .32 m player clearance. Contacts
+  account for adjacent guards and the circular wall together, preventing a wall
+  clamp from pushing players back inside spheres. Substeps limit travel to .06 m.
+- Guard motion now checks living opponents too, so a moving snake cannot sweep
+  through a stationary player. Own guards remain nonblocking. Online rendered
+  poses are also separated from the currently visible guard colliders.
+- Sudden Death now announces once at two survivors in Balloon Bash, Tile Tumble
+  and PattyTide. Classic keeps its last-thief cue. Paused transitions announce on
+  resume, rematches reset, and restoring an already-two-player match does not replay.
+  Slippery Shoots is team scoring with four persistent players, so has no survivor cue.
+- 0.9.145 Electron check: 603 frames, median 16.7 ms, p95 16.8 ms, maximum
+  16.8 ms, no renderer errors. Automated regressions cover existing overlaps,
+  adjacent spheres, wall contacts, moving guards and all three event announcers.
+  Live Steam/Deck collision and voice checks remain pending.
+
+- 0.9.144 enlarged trailing spheres from .62 to .75 m radius (+21%) and the
+  overhead balloon from .62 to .9 m radius (+45%). Balloon centre is raised to
+  2.95 m, with resized knot/string and confetti origin matching its new height.
+  Guards remain closely packed at 1.3 m centres with 4% stretch. Collision and
+  Hammer shielding use the same larger guard radius; escape behavior is retained.
+- 0.9.144 Electron visual check confirmed the larger guard chain and overhead
+  balloon. Sample: 604 frames, median/p95 16.7 ms, maximum 16.8 ms, no renderer
+  errors. Live Steam/Deck checks remain pending.
+
+- 0.9.143 packed guards to 1.12 m centre spacing with only 4% maximum link
+  stretch. Equal .62 m radii make the chain slightly overlap rather than leave gaps.
+- Elimination now holds the upright standing pose and rises along world Y.
+  The horizontal jet clip and spine jetpack attachment have been removed from
+  this presentation. Two emitters follow the left/right foot bones, with
+  unrotated sockets and downward exhaust. Smoke horizontal drift is suppressed.
+  Pop confetti, strong camera shake and long trails remain intact.
+- 0.9.143 Electron visual check confirmed upright ascent with foot exhaust and
+  tightly packed guards. Sample: 604 frames, median/p95 16.7 ms, maximum 16.8 ms,
+  no renderer errors. Live Steam/Deck checks remain pending.
+
+- 0.9.142 tightened guard centre spacing to 1.3 m, with 15% stretch;
+  caps speed at 7 m/s and softens border bounce. Low-drag coasting remains, with
+  doubled damping to contain child-link oscillation. Tested 1,200 frames of
+  rapid circular turning against link-length and arena bounds.
+- Ring radius is reduced another 10% to 10.296 m; close camera is unchanged.
+- Each balloon pop emits 78 confetti pieces at head height and a strong 1.15
+  camera kick, once per eliminated player. Shake respects reduced motion and the
+  user's camera shake setting. Jetpack launch/long trails remain intact.
+- Confirmed Balloon Bash takes the procedural-only loader path. No Grassfield
+  model is loaded or attached; its Events-menu preview image belongs to PattyTide.
+- 0.9.142 Electron visual check observed pop confetti and jet launches in the
+  smaller ring. Resource tracing found only Grassfield's menu PNG, no model or
+  navigation/collision data. Sample: 597 frames, median/p95 16.7 ms, maximum
+  16.8 ms, no renderer errors. Live Steam/Deck checks remain pending.
+
+- 0.9.141 introduced low-drag spring momentum, including coasting after a stop,
+  overshoot and elastic sway. Velocity is authoritative and survives snapshots.
+  Bounded link stretch, speed and elastic border bounces keep the chain contained.
+- Popped players launch skyward in jet pose for 2.2 seconds, with the jetpack
+  mounted to the spine. The launch only offsets the rendered model; eliminated
+  players cannot act or collide. Final results wait for the last launch.
+- Elimination jet smoke lives 1.8–2.1 seconds and energy trails live 3x longer
+  using the existing bounded pools. Other modes retain their normal jet trails.
+  Presentation is in `src/pnt/balloon-launch.js`.
+- 0.9.141 Electron visual check observed two popped players launching with
+  attached jetpacks and long smoke/energy columns. The 602-frame sample had
+  median 16.7 ms, p95 16.8 ms, one 83.3 ms frame and no renderer errors.
+  Live Steam/Deck visual and host-transfer checks remain pending.
+
+- 0.9.147 shrinks ring radius/diameter 20 percent to 11.44 m / 22.88 m.
+  Balloons and all four guards use .62 m radius (about 35 percent larger),
+  with 1.5 m guard centre spacing. Shared collision and Hammer shielding use
+  the same new guard radius. Own-tail/overlap escape behavior remains intact.
+- Removed the static painted sand arcs, centre ring and inner perimeter line.
+  Only shader-driven inward-panning sand bands remain. Ground-only specular
+  is disabled to remove the bright right-side hotspot while keeping Mall's
+  diffuse lighting; balloon, guard and border materials retain their highlights.
+- 0.9.147 offscreen Electron visual check confirmed larger separated spheres,
+  no static ground markings and no right-side specular hotspot. Ten-second
+  sample: 599 frames, median/p95 16.7 ms, maximum 16.8 ms, no renderer errors.
+
+- 0.9.139 fixed trapping on guard spheres: own guards never block their owner;
+  enemy contact slides rather than rolling back the whole movement frame. Guards
+  overlapping a player permit escape movement, including multiple overlaps.
+- Close camera returns to original stage bounds 7.8 / 8.2 with .82 distance,
+  and spawns return to the central original positions. The physical ring remains
+  doubled; its outer edges extend beyond this deliberately close camera view.
+- Balloon Bash uses Mall's directional, hemisphere and extra fill lights,
+  matching their intensities and exposure. The custom studio reflection is removed.
+- 0.9.139 Electron offscreen visual/startup check: 596 frames in ten seconds,
+  median/p95 16.7 ms, maximum 50 ms, no frames above 50 ms, no renderer errors.
+  Inspected the closer camera, central player cluster and Mall-lit materials.
+  Tests cover own-tail reversal, sideways sliding and escape from two overlaps.
+
+- 0.9.147 bypasses Grassfield GLB, navigation/collision JSON, baked AO and material
+  conversion entirely for this procedural mode. Client and Steam authority use
+  the same small flat grid. Online also renders a warm-up frame before ready.
+- Removed the transient Hammer PointLight: adding/removing it on each impact
+  changed the scene light count and could compile new shader variants mid-match.
+- Ring radius is 10.296 m after the additional 10-percent reduction.
+  Sand bands pan radially inward in the material shader using one time uniform.
+- Every trailing sphere has equal .62 m visual and collision radius; no taper.
+  Hammer blocks or pops balloons and applies no stun, covered by authority tests.
+- Sphere geometry remains reduced from 11,200 to 4,096 triangles and removes
+  sixteen guard shadow casters. Materials remain nonmetallic with .3 roughness.
+  Balloon Bash bypasses the Grassfield material override, which previously reset
+  roughness and forced every opaque guard to cast shadows.
+- Opponent guard spheres block player movement, including quicksand pull, in
+  local play, authority and prediction. Overlaps permit escape; eliminated
+  snakes stop blocking. Collider radii match the equal-size visible spheres.
+- The preceding 0.9.138 Electron offscreen startup audit at 60 FPS sampled 597 frames across
+  the countdown and first playable seconds: median 16.7 ms, p95 16.8 ms, maximum
+  49.9 ms, no frames over 50 ms and no renderer errors. Resource tracing confirmed
+  no Grassfield model/navigation/collision loads (only the menu preview image).
+  Live Steam and Steam Deck timing still requires device testing.
+
+- Four players compete free-for-all; the last intact balloon wins. Hammering an
+  exposed balloon eliminates that player immediately.
+- Four seat-colored spheres trail each player with snake follow spacing. A sphere
+  intersecting the attack line blocks the balloon hit. The fixed tools are Hammer
+  and Banana Skin.
+- The circular arena has a 10.296 m playable radius and 24 raised, colored border
+  blocks. Arena, balloon and guard materials use metalness 0 and roughness .3.
+- Quicksand reduces speed to 87 percent, pulls living players inward and clamps
+  them to the arena. The close shared camera uses a .82 distance multiplier.
+- Rules, guard positions, pops, eliminations and winner state are authoritative
+  and replicated for Steam matches. The same rules run in training and couch play.
+- Main references: [Balloon Bash](docs/BALLOON_BASH.md),
+  `src/pnt/balloon-rules.js`, `src/pnt/balloon-view.js`, and
+  `server/tests/balloon.test.mjs`.
+
+Live Steam/Steam Deck checks remain necessary for four-player visual readability,
+border collision, quicksand feel, Hammer impact timing, camera framing and active
+match host transfer.
+
+For Slippery Shoots, use **Events → Slippery Shoots**. Training, couch play and
+Steam online use internal mode ID `strikers`, rules version **12**, and arena ID
+`slipperystriker`.
 
 ## Current Slippery Shoots and menu changes
 
@@ -130,8 +323,8 @@ timing, results portraits, fullscreen logo and controller highlight behavior.
 
 ## Verification and next playtest
 
-The current 0.9.135 client passed **356 automated tests** (320 client and
-36 multiplayer), syntax checks and the Steam development build.
+The current 0.9.147 client passed **376 automated tests** (337 client and
+39 multiplayer), syntax checks and the Steam development build.
 These automated checks cover rules and packaging, with live visual/device testing
 still pending as described above.
 
@@ -144,7 +337,7 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use the rebuilt 0.9.135 on every machine. Live Steam
+Close older copies and use the rebuilt 0.9.147 on every machine. Live Steam
 testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.
 The mixed-join scenario uses three Steam accounts, one host and two guests
@@ -210,9 +403,10 @@ The build explicitly includes the title stylesheet. Reference project:
 The responsive Inkwave-style main layout remains live. The user rejected a fixed
 16:9 frame: do not restore letterboxing unless asked.
 
-## Current PATTYTIDE mode
+## Historical PATTYTIDE mode notes
 
-Public UI name is **PATTYTIDE**. Internal mode IDs, filenames and protocol names
+At this historical revision the public UI name was **PATTYTIDE**; the current
+name is **PATTY PROWL**. Internal mode IDs, filenames and protocol names
 remain `diretide`; do not rename these casually. EVENTS is directly below PLAY
 and uses a calendar/star icon. The event card has no small tagline. Shared Solo
 Online, Couch Play, lobby, host/join, public matchmaking, loadout/costume display,

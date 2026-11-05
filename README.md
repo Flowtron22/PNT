@@ -8,13 +8,17 @@ Read the [current handoff](handoff.md) before continuing development.
 The Steam release uses one Windows x64 package for desktop PCs and Steam Deck
 via Proton. See the [Steam build guide](docs/STEAM.md) for build and test steps.
 
-The current Steam dev-playtest is **0.9.135**. Build and share the complete
-`dist-steam/win64-dev-playtest-0.9.135` folder, including `steam_appid.txt`.
+The current Steam dev-playtest is **0.9.147**. Build and share the complete
+`dist-steam/win64-dev-playtest-0.9.147` folder, including `steam_appid.txt`.
 
-Developed by Todak Studios, with Classic, PattyTide, Tile Tumble and
-**Slippery Shoots**. The new event is a one-minute 2v2 match on the imported
-air-hockey rink with sliding movement, possession, shooting and temporary buffs.
-See [Slippery Shoots](docs/SLIPPERY_SHOOTS.md) and the [handoff](handoff.md).
+Developed by Todak Studios, with Classic, Patty Prowl, Tile Tumble, Slippery
+Shoots and **Balloon Bash**. Balloon Bash is a 1v1v1v1 last-player-standing
+event in a circular quicksand arena. Pop exposed balloons while four trailing
+guard spheres screen attacks. See [Balloon Bash](docs/BALLOON_BASH.md) and the
+[handoff](handoff.md).
+
+The 0.9.147 Events page includes the fitted **Patty Prowl** title and a composed
+3D Balloon Bash preview. See the handoff for verified checks and known issues.
 
 Online play uses Steam lobbies and peer networking. The host runs the match
 simulation locally. See the [Steam playtest guide](docs/STEAM.md).
