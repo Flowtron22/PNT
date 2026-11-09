@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.154**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.155**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.154` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.155` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -45,10 +45,15 @@ For Classic, use **Play → Solo Online → Create a Room**. For Patty Prowl, st
 specific lobby, or invite Steam friends. Public matchmaking searches the selected mode.
 
 For Balloon Bash, use **Events → Balloon Bash**. Training, couch play and Steam
-online all use internal mode ID `balloon`, rules version **13**, and the procedural
+online all use internal mode ID `balloon`, rules version **14**, and the procedural
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.155** reduces Balloon Bash spheres from 4.5 to 3 metres across,
+including collision. Spheres share Tile Tumble’s texture generator for dots,
+stripes and zigzags. The renderer rotates each sphere in proportion to its
+horizontal travel, including when the current changes direction around cover.
 
 Version **0.9.154** triples Balloon Bash sphere diameter to 4.5 metres and widens
 the arena radius to 12.6 metres. The opening drops 10–12 spheres across two bands.
@@ -358,8 +363,11 @@ timing, results portraits, fullscreen logo and controller highlight behavior.
 
 ## Verification and next playtest
 
-The current 0.9.154 client passed **367 automated tests** (328 client and
+The current 0.9.155 client passed **367 automated tests** (328 client and
 39 multiplayer), syntax checks and the Steam development build.
+In the packaged Electron renderer, a sphere retained its mesh when another
+despawned and rotated by its visible travel divided by its radius. The 1280 × 800
+training check showed the Tile Tumble textures with no renderer errors.
 In 48 seeded obstacle simulations, every opening batch cleared within 30 seconds.
 The packaged 1280 × 800 Electron training check showed the new camera framing
 and patterned spheres with no renderer errors. Physical Steam Deck QA is pending.
@@ -392,7 +400,7 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.154 on every machine. In Balloon Bash, check
+Close older copies and use 0.9.155 on every machine. In Balloon Bash, check
 first and final pops, moving cover, new sphere drops, and host transfer.
 Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.

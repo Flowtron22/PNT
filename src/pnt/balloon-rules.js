@@ -1,12 +1,12 @@
 // Shared authoritative rules for Balloon Bash. Positions are Y-up metres.
-export const BALLOON_VERSION=13;
+export const BALLOON_VERSION=14;
 export const BALLOON_ARENA_RADIUS=12.6;
 export const BALLOON_RADIUS=.68;
 export const BALLOON_HEIGHT=2.95;
 export const BALLOON_COUNT=2;
 export const BALLOON_HAMMER_RANGE=3;
 export const BALLOON_HAMMER_ARC=Math.PI*.43;
-export const BALLOON_SPHERE_RADIUS=2.25;
+export const BALLOON_SPHERE_RADIUS=1.5;
 export const BALLOON_BANANA_SECONDS=2;
 export const BALLOON_SPAWNS=[[-4.25,0,-2.4],[4.25,0,-2.4],[4.25,0,2.4],[-4.25,0,2.4]];
 

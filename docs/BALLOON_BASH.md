@@ -1,6 +1,6 @@
 # Balloon Bash
 
-Steam playtest 0.9.154 uses mode ID `balloon` and rules version `13`.
+Steam playtest 0.9.155 uses mode ID `balloon` and rules version `14`.
 Choose **Events → Balloon Bash** for training, couch play, or Steam online.
 
 ## Match rules
@@ -20,9 +20,11 @@ Choose **Events → Balloon Bash** for training, couch play, or Steam online.
 
 ## Arena and integration
 
-The arena radius is 12.6 metres. Each sphere is 4.5 metres across and uses a
-seeded surface pattern. The procedural sand ring uses Mall lighting, a sand-only
-AO bake, and animated inward bands. The shared camera looks down at about 47°.
+The arena radius is 12.6 metres. Each sphere is 3 metres across and uses one of
+Tile Tumble’s colored dot, stripe, or zigzag textures, selected by its seed.
+The texture visibly rolls with the sphere’s movement. The sand ring uses Mall
+lighting, a sand-only AO bake, and animated inward bands. The shared camera looks
+down at about 47°.
 The HUD shows survivors and your remaining balloons.
 
 Rules live in `src/pnt/balloon-rules.js`. The shared rules simulate both
