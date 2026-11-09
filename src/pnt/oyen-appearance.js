@@ -57,7 +57,7 @@ export function applyOyenAppearance(model,value){
    };
   }else{
    material.onBeforeCompile=shader=>{
-    shader.uniforms.uOyenSkin={value:new THREE.Color(OYEN_SKINS.find(c=>c.id===appearance.skin).color)};shader.uniforms.uOyenSkinBase={value:new THREE.Color(OYEN_SKINS[0].color)};
+    shader.uniforms.uOyenSkin={value:new THREE.Color(OYEN_SKINS.find(c=>c.id===appearance.skin).color)};shader.uniforms.uOyenSkinBase={value:new THREE.Color(OYEN_SKINS.find(c=>c.id==='original').color)};
     shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uOyenSkin;uniform vec3 uOyenSkinBase;').replace('#include <map_fragment>',`#include <map_fragment>
      vec3 oyenFace=diffuseColor.rgb;float warmth=(oyenFace.r-oyenFace.b)/max(oyenFace.r,0.0001);float skinMask=smoothstep(0.12,0.25,warmth)*smoothstep(0.03,0.10,oyenFace.r);diffuseColor.rgb=mix(oyenFace,uOyenSkin*(oyenFace/uOyenSkinBase),skinMask);`);
    };

@@ -62,7 +62,6 @@ try {
     .replace(/<script type="module" src="src\/pnt\/app-update\.js[^"]*"><\/script>/, '')
     .replace(/<div class="touch-controls">.*?<\/svg><\/div><\/div><\/div>/s, '')
     .replace('OR CLICK OR TAP TO START', 'OR PRESS A CONTROLLER BUTTON')
-    .replace(/(<span class="entry-version">)WEB /, '$1STEAM ')
     .replace(/(<button class="nav-button" data-page="credits".*?<\/button>)/,
       '$1\n    <button class="nav-button" id="quit-game"><i aria-hidden="true">×</i><span>QUIT GAME</span><b>›</b></button>');
   writeFileSync(index, html);

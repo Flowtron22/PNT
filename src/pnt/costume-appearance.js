@@ -8,11 +8,11 @@ const SPECIAL_OUTFITS={
 };
 export function outfitColors(id){return SPECIAL_OUTFITS[id]||OUTFIT_COLORS;}
 export const SKIN_COLORS=[
- {id:'original',name:'Original',color:'#dfb49d'},{id:'dark',name:'Deep brown',color:'#74452f'},
  {id:'porcelain',name:'Porcelain',color:'#f9e1d3'},{id:'rosy',name:'Rosy',color:'#ffd9c2'},
- {id:'peach',name:'Peach',color:'#eab48e'},{id:'honey',name:'Honey',color:'#d9a577'},
+ {id:'peach',name:'Peach',color:'#eab48e'},{id:'original',name:'Original',color:'#dfb49d'},
+ {id:'honey',name:'Honey',color:'#d9a577'},
  {id:'olive',name:'Olive',color:'#c29a72'},{id:'tan',name:'Tan',color:'#b37a52'},
- {id:'ebony',name:'Ebony',color:'#4a2c20'},
+ {id:'dark',name:'Deep brown',color:'#74452f'},{id:'ebony',name:'Ebony',color:'#4a2c20'},
 ];
 export function normalizeCostumeAppearance(value,id){
  const migrations={police:{mint:'security',violet:'khaki'},pingu:{violet:'red'},thief:{mint:'urban',violet:'camo'}};

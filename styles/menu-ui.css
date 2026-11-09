@@ -77,6 +77,7 @@
 button[data-ww-bound]:focus-visible{outline:none}
 /* Share the main-menu ink fill with dynamically created page buttons. */
 button.iw-fill{position:relative;isolation:isolate;overflow:hidden;--fill:var(--a,#ff8a14)}
+button.stage-arrow.iw-fill{position:absolute;z-index:1}
 button.iw-fill:is(.is-focus,.pad-focus,:focus-visible){color:var(--k,#171329)}
 button.iw-fill:is(.is-focus,.pad-focus,:focus-visible)>.iw-btn__blob{transform:translate(-50%,-50%) scale(1) rotate(0deg)}
 button.iw-fill:is(.is-focus,.pad-focus,:focus-visible)>:is(small,span:not(.iw-btn__blob),strong,b,em){color:inherit}
@@ -102,15 +103,15 @@ button.flow-option:is(.is-focus,.pad-focus,:focus-visible)>img{filter:brightness
 :is(.tool-catalog .choice,.equipped-slot,#home-kit-main,#lobby-tools)::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;translate:-110% 0;background:linear-gradient(115deg,transparent 30%,#ffffff55 47%,#ffffff18 55%,transparent 70%)}
 :is(.tool-catalog .choice,.equipped-slot,#home-kit-main,#lobby-tools):is(.is-focus,.pad-focus,:focus-visible)::after{animation:pnt-loadout-shine .65s ease-out}
 
-.online-cards{display:grid;gap:18px;padding:14px clamp(12px,2vw,24px) 22px;max-width:940px}
-.online-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:clamp(12px,2vw,28px);min-height:clamp(116px,17vh,175px);padding:clamp(14px,2vw,28px);border:2px solid #fff;border-radius:22px;color:#fff;text-align:left;box-shadow:6px 8px 0 #100b1d;transform:rotate(-.6deg);transition:transform .35s var(--spring),box-shadow .22s}
+.online-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(16px,2vw,28px);padding:14px clamp(12px,2vw,24px) 22px}
+.online-card{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 1fr;align-items:start;gap:clamp(12px,2vw,24px);min-height:clamp(192px,34vh,310px);padding:clamp(14px,2vw,28px);border:2px solid #fff;border-radius:22px;color:#fff;text-align:left;box-shadow:6px 8px 0 #100b1d;transform:rotate(-.6deg);transition:transform .35s var(--spring),box-shadow .22s}
 .online-card:nth-child(2){transform:rotate(.55deg)}
 .online-card>img{width:clamp(28px,5vw,58px);height:auto;filter:drop-shadow(2px 3px 0 #1b1326)}
-.online-card>span{display:grid;gap:7px;min-width:0}
+.online-card>span{display:grid;grid-column:1/-1;gap:7px;min-width:0}
 .online-card small{justify-self:start;padding:5px 9px;border-radius:5px;background:#171329;color:#fff;font:800 10px Rubik;letter-spacing:.12em}
 .online-card strong{font:clamp(20px,3vw,46px)/1.05 Titan;text-shadow:0 3px 0 #1b1326;-webkit-text-stroke:3px #1b1326;paint-order:stroke fill}
 .online-card span>span{font:600 clamp(11px,1.3vw,16px)/1.35 Rubik}
-.online-card>b{padding:12px;border:2px solid #fff;border-radius:12px;background:#20172c;color:#fff;font:clamp(15px,2vw,25px) Titan;box-shadow:0 0 0 3px #171329}
+.online-card>b{grid-column:2;grid-row:1;padding:12px;border:2px solid #fff;border-radius:12px;background:#20172c;color:#fff;font:clamp(15px,2vw,25px) Titan;box-shadow:0 0 0 3px #171329}
 .online-card:is(.is-focus,.pad-focus,:focus-visible){transform:rotate(0);box-shadow:0 0 0 3px #171329,0 0 0 6px #e9ff52,6px 9px 0 #100b1d;animation:pnt-squash .5s var(--spring)}
 .online-create-card{border-color:#e9ff52;background:repeating-linear-gradient(135deg,#ffffff1e 0 15px,transparent 15px 30px),linear-gradient(155deg,#e354a9,#a52b83);background-size:42.4264px 42.4264px,100% 100%;animation:pnt-room-stripes 2.6s linear infinite}
 .online-create-card:is(.is-focus,.pad-focus,:focus-visible){animation:pnt-room-stripes 2.6s linear infinite,pnt-squash .5s var(--spring)}

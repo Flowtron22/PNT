@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.151**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.152**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.151` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.152` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -49,6 +49,11 @@ online all use internal mode ID `balloon`, rules version **11**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.152** restores the side-by-side Online cards with the existing
+motion and hover effects, orders skin tones light to dark, and shows only the
+version number on the title screen and menu. The lobby stage arrows stay over
+the stage preview when the shared hover effect is attached.
 
 Version **0.9.151** adapts Inkwave motion to Play and Events cards, lobby Start,
 and Costume selections. Tools and Loadout use a focus sheen. The online page
@@ -339,8 +344,11 @@ timing, results portraits, fullscreen logo and controller highlight behavior.
 
 ## Verification and next playtest
 
-The current 0.9.151 client passed **379 automated tests** (340 client and
+The current 0.9.152 client passed **379 automated tests** (340 client and
 39 multiplayer), syntax checks and the Steam development build.
+At 1280 × 800, the packaged Electron UI showed both Online cards on the same
+row, both version labels without a prefix, and all nine tones in order. In a
+mocked Classic host lobby, both arrows were visible and changed the stage.
 The packaged UI was checked in Electron at 1280 × 800 for Play, Start, Online,
 Join, Tools and Costume, including controller focus events, mouse spotlight,
 skin selection, and Reduced Motion. Live Steam and Steam Deck checks remain pending.
@@ -363,7 +371,7 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.151 on every machine. In Balloon Bash, check
+Close older copies and use 0.9.152 on every machine. In Balloon Bash, check
 Hammer aim with movement held and guard blocks during three-player encounters.
 Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.
