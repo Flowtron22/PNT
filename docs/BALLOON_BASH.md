@@ -1,7 +1,7 @@
 # Balloon Bash
 
 Steam playtest 0.9.147 exposes Balloon Bash from **Events → Balloon Bash**.
-The stable internal mode ID is `balloon`, rules version is `10`. The event uses
+The stable internal mode ID is `balloon`, rules version is `11`. The event uses
 a small procedural flat grid shared by client and authority, with no Grassfield
 model or collision export. The sand has a small procedural AO-only contact map.
 
@@ -39,7 +39,7 @@ Core rules live in `src/pnt/balloon-rules.js`; procedural visuals are in
 `src/pnt/balloon-view.js`. Local training, couch play, client prediction, Steam
 authority and host snapshots all share the same mode ID, fixed loadout, movement
 constraint and replicated guard positions. Multiplayer clients must advertise
-Balloon rules version `10` during the room handshake.
+Balloon rules version `11` during the room handshake.
 
 Opponent guards also block player movement and quicksand pull, with a .32 m player
 radius plus each equal-size .75 m sphere radius. Overhead balloons have .9 m
@@ -98,7 +98,6 @@ The Events card and lobby use `assets/pnt/maps/balloonbash.png`, a composed rend
 of the actual arena and character assets. The original SVG remains as a legacy
 asset but is not referenced by the current UI.
 
-Known issue: holding movement during a Hammer swing can reset facing toward
-heading zero because quicksand displacement is mistaken for directed movement
-while velocity is zero. See the diagnosis in `../handoff.md`; no fix is included
-in 0.9.147.
+In 0.9.148, Hammer holds its aim through the swing even when quicksand or guard
+contact moves the attacker. Guards belonging to any living opponent can block
+the hit, including a third player's guard between the attacker and the target.

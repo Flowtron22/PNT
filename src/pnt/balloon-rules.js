@@ -1,5 +1,5 @@
 // Shared authoritative rules for Balloon Bash. Positions are Y-up metres.
-export const BALLOON_VERSION=10;
+export const BALLOON_VERSION=11;
 export const BALLOON_ARENA_RADIUS=10.296;
 export const BALLOON_RADIUS=.9;
 export const BALLOON_HEIGHT=2.95;
@@ -124,7 +124,10 @@ export function balloonHammerTarget(round,attackerId,positions,angles){
   const facing=d>1e-6?Math.acos(Math.max(-1,Math.min(1,(dx*fx+dz*fz)/d))):0;return {target,targetPoint,d,facing};
  }).filter(item=>item.d<=BALLOON_HAMMER_RANGE&&item.facing<=BALLOON_HAMMER_ARC).sort((a,b)=>a.d-b.d||a.target.id-b.target.id);
  const item=candidates[0];if(!item)return null;
- for(const guard of item.target.guards||[]){const hit=distanceToSegment({x:guard[0],z:guard[1]},origin,item.targetPoint);if(hit.t<.92&&hit.distance<=BALLOON_GUARD_RADIUS+.26)return {target:item.target.id,blocked:true,guard};}
+ for(const defender of round.actors){
+  if(defender.id===attackerId||defender.eliminated)continue;
+  for(const guard of defender.guards||[]){const hit=distanceToSegment({x:guard[0],z:guard[1]},origin,item.targetPoint);if(hit.t<.92&&hit.distance<=BALLOON_GUARD_RADIUS+.26)return {target:item.target.id,blocked:true,guard};}
+ }
  return {target:item.target.id,blocked:false};
 }
 export function resolveBalloonHammer(round,attackerId,positions,angles){

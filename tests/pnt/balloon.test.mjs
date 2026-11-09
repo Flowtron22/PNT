@@ -93,6 +93,27 @@ test('own snake cannot stop reversing direction through its trail',()=>{
 });
 
 const positions=()=>BALLOON_SPAWNS.map(([x,y,z])=>({x,y,z}));
+test('quicksand moves a swinging player without changing Hammer aim',()=>{
+ const round=createBalloonRound(createRound()),{grid}=createBalloonArenaData();
+ const actor={group:{position:new THREE.Vector3(4,0,0),rotation:{y:Math.PI/2}},grounded:true};
+ const state={...round.actors[0],effect:'hammer',effectTime:.48};
+ for(let i=0;i<9;i++)advanceActor(actor,state,1,0,1/60,{grid,map:'grassfield',speed:4});
+ assert.ok(actor.group.position.x<4);
+ assert.equal(actor.group.rotation.y,Math.PI/2);
+});
+
+test('a third player’s living guard blocks Hammer but the attacker’s guard does not',()=>{
+ const round=createBalloonRound(createRound()),p=[[0,0,0],[0,0,2.2],[2.8,0,1],[-5,0,5]],angles=[0,0,0,0];
+ round.actors[0].guards=[[0,.5]];
+ round.actors[1].guards=[];
+ round.actors[2].guards=[[0,1.25]];
+ assert.equal(resolveBalloonHammer(round,0,p,angles).blocked,true);
+ assert.equal(round.actors[1].balloonIntact,true);
+ round.actors[2].eliminated=true;
+ assert.equal(resolveBalloonHammer(round,0,p,angles).blocked,false);
+ assert.equal(round.actors[1].balloonIntact,false);
+});
+
 test('Balloon Bash creates four free-for-all players with fixed event tools',()=>{
  const round=createBalloonRound(createRound());assert.equal(round.mode,'balloon');assert.equal(round.eventVersion,BALLOON_VERSION);assert.equal(round.actors.length,4);assert.ok(round.actors.every(actor=>actor.role==='runner'&&actor.balloonIntact&&!actor.eliminated&&actor.guards.length===BALLOON_GUARD_COUNT));assert.deepEqual(modeLoadout('balloon',['rocket','smoke']),['hammer','banana']);
  const lobby=createLobby('thief','balloon');assert.equal(lobbyMaps(lobby)[0].id,'grassfield');assert.equal(lobbyMaps(lobby)[0].image,'balloonbash.png');

@@ -1,6 +1,6 @@
 # Police N Thief Steam playtest handoff
 
-Updated 5 November 2026 (Asia/Kuala_Lumpur).
+Updated 9 November 2026 (Asia/Kuala_Lumpur).
 
 ## Standing instructions for every chat
 
@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.147**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.148**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.147` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.148` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -45,10 +45,15 @@ For Classic, use **Play → Solo Online → Host Lobby**. For Patty Prowl, start
 specific lobby, or invite Steam friends. Public matchmaking searches the selected mode.
 
 For Balloon Bash, use **Events → Balloon Bash**. Training, couch play and Steam
-online all use internal mode ID `balloon`, rules version **10**, and the procedural
+online all use internal mode ID `balloon`, rules version **11**, and the procedural
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.148** keeps Hammer aimed during a swing while quicksand or guard
+contact moves the attacker. A guard from any living opponent can block the hit,
+including a third player's guard between the attacker and the target. The shared
+rules apply to training, couch play and Steam online.
 
 Version **0.9.147** adds Balloon Bash (internal mode `balloon`, rules `10`) and
 renames the displayed PattyTide event to **Patty Prowl** without changing its
@@ -68,16 +73,6 @@ Sudden Death announces at two survivors in Balloon Bash, Tile Tumble and Patty
 Prowl. The Steam package, syntax checks, 337 client tests and 39 multiplayer tests
 passed. Electron checks covered gameplay and Events at 1770x880 and 1280x800;
 live Steam-account and Steam Deck device checks remain pending.
-
-### Known issue diagnosed, not yet fixed
-
-Holding movement input during a Hammer swing can turn a Balloon Bash actor toward
-heading zero (screen right). `advanceActor` zeroes velocity for the swing, but
-quicksand/contact displacement marks it as moved; facing then uses `atan2(0,0)`.
-A diagnostic reproduced a 90-degree heading falling to .44 degrees over 20 ticks.
-Preserve facing while Hammer is active and only derive facing from nonzero
-intentional velocity. This issue was explained to the user but no fix is included
-in 0.9.147; the existing Hammer animation test does not cover movement-driven yaw.
 
 ## Balloon Bash implementation history
 
@@ -323,7 +318,7 @@ timing, results portraits, fullscreen logo and controller highlight behavior.
 
 ## Verification and next playtest
 
-The current 0.9.147 client passed **376 automated tests** (337 client and
+The current 0.9.148 client passed **378 automated tests** (339 client and
 39 multiplayer), syntax checks and the Steam development build.
 These automated checks cover rules and packaging, with live visual/device testing
 still pending as described above.
@@ -337,8 +332,9 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use the rebuilt 0.9.147 on every machine. Live Steam
-testing still needs to cover the leave prompt, guest movement, tool timing,
+Close older copies and use 0.9.148 on every machine. In Balloon Bash, check
+Hammer aim with movement held and guard blocks during three-player encounters.
+Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.
 The mixed-join scenario uses three Steam accounts, one host and two guests
 on separate connections. Retest the reported Iceberg wall spot and check the
