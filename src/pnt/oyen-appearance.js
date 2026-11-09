@@ -1,6 +1,7 @@
 import * as THREE from 'three';
+import {SKIN_COLORS} from './costume-appearance.js';
 export const OYEN_COATS=[{id:'original',name:'Original orange'},{id:'black',name:'Midnight black'},{id:'spots',name:'White & yellow spots'},{id:'stripes',name:'Tiger stripes'}];
-export const OYEN_SKINS=[{id:'original',name:'Face colour 1',color:'#dfb49d'},{id:'dark',name:'Face colour 2',color:'#74452f'}];
+export const OYEN_SKINS=SKIN_COLORS;
 export function normalizeOyenAppearance(value){return {coat:OYEN_COATS.some(c=>c.id===value?.coat)?value.coat:'original',skin:OYEN_SKINS.some(s=>s.id===value?.skin)?value.skin:'original'};}
 export function loadOyenAppearance(storage){try{return normalizeOyenAppearance(JSON.parse(storage.getItem('pnt-oyen-appearance')));}catch{return normalizeOyenAppearance();}}
 export function saveOyenAppearance(storage,value){try{storage.setItem('pnt-oyen-appearance',JSON.stringify(normalizeOyenAppearance(value)));}catch{}}
@@ -38,7 +39,7 @@ export function applyOyenAppearance(model,value){
  model.traverse(mesh=>{
   if(!mesh.isMesh||Array.isArray(mesh.material))return;
   const source=mesh.material,name=source.name;
-  const cloth=['m_cs_oyen_head','m_cs_oyen_body'].includes(name)&&appearance.coat!=='original',face=name==='m_cs_oyen_skin'&&appearance.skin==='dark';
+  const cloth=['m_cs_oyen_head','m_cs_oyen_body'].includes(name)&&appearance.coat!=='original',face=name==='m_cs_oyen_skin'&&appearance.skin!=='original';
   if(!cloth&&!face)return;
   const material=source.clone();materials.push(material);mesh.material=material;
   if(cloth){
@@ -56,7 +57,7 @@ export function applyOyenAppearance(model,value){
    };
   }else{
    material.onBeforeCompile=shader=>{
-    shader.uniforms.uOyenSkin={value:new THREE.Color('#74452f')};shader.uniforms.uOyenSkinBase={value:new THREE.Color('#dfb49d')};
+    shader.uniforms.uOyenSkin={value:new THREE.Color(OYEN_SKINS.find(c=>c.id===appearance.skin).color)};shader.uniforms.uOyenSkinBase={value:new THREE.Color(OYEN_SKINS[0].color)};
     shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uOyenSkin;uniform vec3 uOyenSkinBase;').replace('#include <map_fragment>',`#include <map_fragment>
      vec3 oyenFace=diffuseColor.rgb;float warmth=(oyenFace.r-oyenFace.b)/max(oyenFace.r,0.0001);float skinMask=smoothstep(0.12,0.25,warmth)*smoothstep(0.03,0.10,oyenFace.r);diffuseColor.rgb=mix(oyenFace,uOyenSkin*(oyenFace/uOyenSkinBase),skinMask);`);
    };

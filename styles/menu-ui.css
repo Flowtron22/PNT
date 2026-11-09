@@ -87,6 +87,44 @@ button.flow-option.host-option>img{filter:none}
 button.flow-option:is(.is-focus,.pad-focus,:focus-visible)>small{color:#48260a}
 button.flow-option:is(.is-focus,.pad-focus,:focus-visible)>img{filter:brightness(.13)}
 
+/* Inkwave-style motion on Play, Locker, Loadout and Online. */
+@keyframes pnt-wiggle{0%,100%{rotate:-1.6deg}50%{rotate:1.6deg}}
+@keyframes pnt-squash{0%{scale:.95 1.06}35%{scale:1.035 .955}65%{scale:.99 1.015}100%{scale:1}}
+@keyframes pnt-room-stripes{to{background-position:42.4264px 0,0 0}}
+@keyframes pnt-loadout-shine{from{translate:-110% 0}to{translate:110% 0}}
+
+:is(#solo-online,#couch-play,.event-mode-card,.wardrobe-grid .choice,.oyen-swatch,.face-swatch):is(.is-focus,.pad-focus,:focus-visible),
+:is(#start-lobby,[data-start]):enabled:is(.is-focus,.pad-focus,:focus-visible,.couch-focus){animation:pnt-squash .45s var(--spring),pnt-wiggle 1.3s ease-in-out .45s infinite}
+:is(#start-lobby,[data-start]):enabled{border-color:#ffbc72;box-shadow:0 0 0 2px #26172b,0 0 0 4px #f58051,0 5px 0 #251327;background:linear-gradient(155deg,#ff7da1,#ec4388);color:#fff}
+:is(#start-lobby,[data-start]):enabled:is(.is-focus,.pad-focus,:focus-visible){color:#251327}
+
+:is(.tool-catalog .choice,.equipped-slot,#home-kit-main,#lobby-tools){position:relative;isolation:isolate;overflow:hidden}
+:is(.tool-catalog .choice,.equipped-slot,#home-kit-main,#lobby-tools)::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;translate:-110% 0;background:linear-gradient(115deg,transparent 30%,#ffffff55 47%,#ffffff18 55%,transparent 70%)}
+:is(.tool-catalog .choice,.equipped-slot,#home-kit-main,#lobby-tools):is(.is-focus,.pad-focus,:focus-visible)::after{animation:pnt-loadout-shine .65s ease-out}
+
+.online-cards{display:grid;gap:18px;padding:14px clamp(12px,2vw,24px) 22px;max-width:940px}
+.online-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:clamp(12px,2vw,28px);min-height:clamp(116px,17vh,175px);padding:clamp(14px,2vw,28px);border:2px solid #fff;border-radius:22px;color:#fff;text-align:left;box-shadow:6px 8px 0 #100b1d;transform:rotate(-.6deg);transition:transform .35s var(--spring),box-shadow .22s}
+.online-card:nth-child(2){transform:rotate(.55deg)}
+.online-card>img{width:clamp(28px,5vw,58px);height:auto;filter:drop-shadow(2px 3px 0 #1b1326)}
+.online-card>span{display:grid;gap:7px;min-width:0}
+.online-card small{justify-self:start;padding:5px 9px;border-radius:5px;background:#171329;color:#fff;font:800 10px Rubik;letter-spacing:.12em}
+.online-card strong{font:clamp(20px,3vw,46px)/1.05 Titan;text-shadow:0 3px 0 #1b1326;-webkit-text-stroke:3px #1b1326;paint-order:stroke fill}
+.online-card span>span{font:600 clamp(11px,1.3vw,16px)/1.35 Rubik}
+.online-card>b{padding:12px;border:2px solid #fff;border-radius:12px;background:#20172c;color:#fff;font:clamp(15px,2vw,25px) Titan;box-shadow:0 0 0 3px #171329}
+.online-card:is(.is-focus,.pad-focus,:focus-visible){transform:rotate(0);box-shadow:0 0 0 3px #171329,0 0 0 6px #e9ff52,6px 9px 0 #100b1d;animation:pnt-squash .5s var(--spring)}
+.online-create-card{border-color:#e9ff52;background:repeating-linear-gradient(135deg,#ffffff1e 0 15px,transparent 15px 30px),linear-gradient(155deg,#e354a9,#a52b83);background-size:42.4264px 42.4264px,100% 100%;animation:pnt-room-stripes 2.6s linear infinite}
+.online-create-card:is(.is-focus,.pad-focus,:focus-visible){animation:pnt-room-stripes 2.6s linear infinite,pnt-squash .5s var(--spring)}
+.online-create-card:is(.is-focus,.pad-focus,:focus-visible)>b{background:#e9ff52;color:#171329;animation:pnt-wiggle 1s ease-in-out infinite}
+.online-join-card,#join-code-form.online-join-card{background:radial-gradient(ellipse at var(--mx,50%) var(--my,50%),#aa8dff55,transparent 55%),linear-gradient(155deg,#38294d,#211930)}
+.oyen-faces{flex-wrap:wrap;padding-bottom:6px}
+.oyen-faces>span{flex-basis:100%}
+.oyen-faces .face-swatch{border-radius:50%;width:40px;height:40px}
+.face-swatch i{background:radial-gradient(ellipse at 28% 24%,#fff9 0 13%,transparent 15%),radial-gradient(circle at 40% 32%,var(--face-color) 38%,color-mix(in srgb,var(--face-color),#120c17 30%))}
+.oyen-faces .face-swatch[aria-pressed=true]{box-shadow:0 0 0 2px #ff931c}
+@media (prefers-reduced-motion:reduce){.online-card,.online-card>b{transition:none}}
+.reduced-motion :is(.online-card,.online-card>b,#solo-online,#couch-play,.event-mode-card,.wardrobe-grid .choice,.oyen-swatch,.face-swatch,#start-lobby,[data-start]),
+.reduced-motion :is(.tool-catalog .choice,.equipped-slot,#home-kit-main,#lobby-tools)::after{animation:none;transition:none}
+
 
 /* the menu foundation results panel and coverage treatment, adapted to money totals. */
 .iw-res__scrim { position: absolute; inset: 0; pointer-events: none;

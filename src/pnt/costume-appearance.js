@@ -7,7 +7,13 @@ const SPECIAL_OUTFITS={
  thief:[...OUTFIT_COLORS.slice(0,2),{id:'urban',name:'Urban camo',color:'#22242a',swatch:'linear-gradient(#17191e 0 50%,#dededc 50% 65%,#555860 65% 80%,#ededeb 80% 100%)'},{id:'camo',name:'Army camo',color:'#69724c',swatch:'radial-gradient(ellipse at 20% 30%,#282d1e 0 22%,transparent 24%),radial-gradient(ellipse at 80% 65%,#b0a57c 0 28%,transparent 30%),#69724c'}],
 };
 export function outfitColors(id){return SPECIAL_OUTFITS[id]||OUTFIT_COLORS;}
-export const SKIN_COLORS=[{id:'original',name:'Face colour 1',color:'#dfb49d'},{id:'dark',name:'Face colour 2',color:'#74452f'}];
+export const SKIN_COLORS=[
+ {id:'original',name:'Original',color:'#dfb49d'},{id:'dark',name:'Deep brown',color:'#74452f'},
+ {id:'porcelain',name:'Porcelain',color:'#f9e1d3'},{id:'rosy',name:'Rosy',color:'#ffd9c2'},
+ {id:'peach',name:'Peach',color:'#eab48e'},{id:'honey',name:'Honey',color:'#d9a577'},
+ {id:'olive',name:'Olive',color:'#c29a72'},{id:'tan',name:'Tan',color:'#b37a52'},
+ {id:'ebony',name:'Ebony',color:'#4a2c20'},
+];
 export function normalizeCostumeAppearance(value,id){
  const migrations={police:{mint:'security',violet:'khaki'},pingu:{violet:'red'},thief:{mint:'urban',violet:'camo'}};
  const outfit=migrations[id]?.[value?.outfit]||value?.outfit;
@@ -87,7 +93,7 @@ export function applyCostumeAppearance(model,id,value){
   const material=source.clone(),compile=source.onBeforeCompile,key=source.customProgramCacheKey();materials.push(material);replacements.set(source,material);
   material.onBeforeCompile=function(shader,renderer){
    compile.call(this,shader,renderer);
-   Object.assign(shader.uniforms,{uCostumeOutfit:{value:new THREE.Color(outfitColors(id).find(c=>c.id===appearance.outfit)?.color||'#ffffff')},uCostumeSkin:{value:new THREE.Color('#74452f')},uCostumeMode:{value:outfit?part[0]:0},uCostumeBase:{value:part?.[1]||1},uCostumeFace:{value:face?1:0},uCostumeStyle:{value:outfit?(appearance.outfit==='security'?1:appearance.outfit==='camo'?2:appearance.outfit==='urban'?3:0):0},uCostumeBody:{value:/_body$/i.test(source.name)?1:0}});
+   Object.assign(shader.uniforms,{uCostumeOutfit:{value:new THREE.Color(outfitColors(id).find(c=>c.id===appearance.outfit)?.color||'#ffffff')},uCostumeSkin:{value:new THREE.Color(SKIN_COLORS.find(c=>c.id===appearance.skin).color)},uCostumeMode:{value:outfit?part[0]:0},uCostumeBase:{value:part?.[1]||1},uCostumeFace:{value:face?1:0},uCostumeStyle:{value:outfit?(appearance.outfit==='security'?1:appearance.outfit==='camo'?2:appearance.outfit==='urban'?3:0):0},uCostumeBody:{value:/_body$/i.test(source.name)?1:0}});
    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vCostumeRest;').replace('#include <begin_vertex>','#include <begin_vertex>\nvCostumeRest=position;');
    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\n'+uniforms).replace('#include <map_fragment>','#include <map_fragment>\n'+recolor);
   };

@@ -26,8 +26,8 @@ PC and Steam Deck use the same Windows x64 package, with Proton on Deck.
 
 ## Private development playtest
 
-Current development package is **0.9.150** in
-`dist-steam/win64-dev-playtest-0.9.150`.
+Current development package is **0.9.151** in
+`dist-steam/win64-dev-playtest-0.9.151`.
 
 **Settings → Video → Render resolution** sets the maximum 3D resolution from
 720p to 4K after you select **Apply**. Auto follows the Low, Medium, High and
@@ -47,11 +47,11 @@ Spacewar App ID (480) via its own `steam_appid.txt` and has a separate save
 directory. Each player needs a different signed-in Steam account. Use the same
 PNT build on every machine.
 
-1. The host selects **Play → Solo Online → Host Lobby**.
+1. The host selects **Play → Solo Online → Create a Room**.
 2. Choose **Public** or **Private** under **Room Setting**. Public rooms appear
    in PNT matchmaking. Private rooms are available by room code or invitation.
 3. Share the seven-character **Room Code**, or select **Invite Steam Friends**.
-   Testers can enter the code in **Join Lobby** or accept the Steam invite.
+   Testers can enter the code in **Join a Room** or accept the Steam invite.
 4. Fill empty seats with bots and start the match.
 
 For Patty Prowl, start from **Events → Patty Prowl → Solo Online**. Room codes and

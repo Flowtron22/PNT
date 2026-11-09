@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.150**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.151**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,13 +33,13 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.150` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.151` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
 Build archives stay outside Git. See the [Steam build guide](docs/STEAM.md).
 
-For Classic, use **Play → Solo Online → Host Lobby**. For Patty Prowl, start at
+For Classic, use **Play → Solo Online → Create a Room**. For Patty Prowl, start at
 **Events → Patty Prowl → Solo Online**. The host can change visibility under
 **Room Setting** while waiting. Share the seven-character room code to join a
 specific lobby, or invite Steam friends. Public matchmaking searches the selected mode.
@@ -49,6 +49,15 @@ online all use internal mode ID `balloon`, rules version **11**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.151** adapts Inkwave motion to Play and Events cards, lobby Start,
+and Costume selections. Tools and Loadout use a focus sheen. The online page
+has stacked **Create a Room** and **Join a Room** cards with squash-and-stretch
+focus, moving host stripes and a pointer-tracked join spotlight. The join form
+accepts seven-character Steam codes. Reduced Motion stops the new animation.
+Thief, Police, Pingu, Raptor and Oyen now share nine skin tones. Original and
+Deep Brown keep their existing saved IDs and colors. New tones save and sync
+through the existing appearance fields.
 
 Version **0.9.150** adds **Apply** for render resolution. Graphics quality
 uses the Inkwave Low, Medium, High and Ultra ladder with PNT render and shadow
@@ -330,8 +339,11 @@ timing, results portraits, fullscreen logo and controller highlight behavior.
 
 ## Verification and next playtest
 
-The current 0.9.150 client passed **379 automated tests** (340 client and
+The current 0.9.151 client passed **379 automated tests** (340 client and
 39 multiplayer), syntax checks and the Steam development build.
+The packaged UI was checked in Electron at 1280 × 800 for Play, Start, Online,
+Join, Tools and Costume, including controller focus events, mouse spotlight,
+skin selection, and Reduced Motion. Live Steam and Steam Deck checks remain pending.
 At 2560 × 1440 in Electron, selecting a resolution left the render buffer alone
 until Apply. Applying 720p and 1440p produced the expected buffers with the same
 settings control bounds. The Tools catalog had 12 CSS pixels of left clearance.
@@ -351,7 +363,7 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.150 on every machine. In Balloon Bash, check
+Close older copies and use 0.9.151 on every machine. In Balloon Bash, check
 Hammer aim with movement held and guard blocks during three-player encounters.
 Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.

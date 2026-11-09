@@ -26,7 +26,7 @@ for(const id of COLOR_COSTUMES){
  test(`${id}: original stays untouched; colour variants own only materials and preserve capture tint`,()=>{
   const original=clone(template),sources=meshes(template);applyCostumeAppearance(original,id,{}).dispose();
   meshes(original).forEach((m,i)=>assert.equal(m.material,sources[i].material));
-  const model=clone(template),parts=meshes(model),appearance=applyCostumeAppearance(model,id,{outfit:'mint',skin:'dark'});
+  const model=clone(template),parts=meshes(model),appearance=applyCostumeAppearance(model,id,{outfit:'mint',skin:'tan'});
   let outfitParts=0,skinParts=0,disposed=0;
   parts.forEach((m,i)=>{
    assert.equal(m.geometry,sources[i].geometry);assert.equal(m.material.map,sources[i].material.map);assert.equal(m.skeleton.bones.length,sources[i].skeleton.bones.length);
@@ -34,6 +34,7 @@ for(const id of COLOR_COSTUMES){
    m.material.addEventListener('dispose',()=>disposed++);
    const shader={uniforms:{},vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};m.material.onBeforeCompile(shader);
    outfitParts+=shader.uniforms.uCostumeMode.value>0;skinParts+=shader.uniforms.uCostumeFace.value>0;
+   if(shader.uniforms.uCostumeFace.value)assert.equal(shader.uniforms.uCostumeSkin.value.getHexString(),'b37a52');
   });
   assert.equal(outfitParts,2);assert.ok(skinParts>=1);
   const tint=createCaptureTint(model),shader={uniforms:{},vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};parts[0].material.onBeforeCompile(shader);

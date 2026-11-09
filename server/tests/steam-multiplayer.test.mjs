@@ -146,9 +146,9 @@ test('Steam peers join the host, honor host controls and readiness, and receive 
     const host = await connect(1n, 'host');
     assert.match(host.state.lobby.code, /^[A-HJ-NP-Z2-9]{7}$/);
     const guest = await connect(2n, 'join', host.state.lobby.code);
-    guest.send('profile', {name: 'Tester', costume: 'oyen', appearance: {coat: 'stripes', skin: 'dark'}});
+    guest.send('profile', {name: 'Tester', costume: 'oyen', appearance: {coat: 'stripes', skin: 'honey'}});
     await waitFor(() => [host, guest].every(peer => peer.state.lobby.players[1].appearance?.coat === 'stripes'));
-    assert.deepEqual(guest.state.lobby.players[1].appearance, {coat: 'stripes', skin: 'dark'});
+    assert.deepEqual(guest.state.lobby.players[1].appearance, {coat: 'stripes', skin: 'honey'});
     guest.send('control', {action: 'visibility', direction: 'public'});
     await delay(60);
     assert.equal(host.state.lobby.public, false);

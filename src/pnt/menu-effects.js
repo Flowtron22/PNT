@@ -24,7 +24,8 @@ export function createWonderUI({blocked=()=>false,reduced=()=>false}={}){
   for(const scope of scopes)for(const el of document.querySelectorAll(scope+' button')){
    if(el.dataset.wwBound)continue;el.dataset.wwBound='true';
    if(el.matches('.nav-button')){el.classList.add('iw-btn');const ink=document.createElement('span');ink.className='iw-btn__blob';ink.setAttribute('aria-hidden','true');el.prepend(ink);}
-   if(!own(el)&&!el.matches('.nav-button')){
+   if(el.matches('.online-card'))el.dataset.cur='own';
+   if(!own(el)&&!el.matches('.nav-button,.online-card')){
     el.classList.add('iw-fill');
     const ink=document.createElement('span');ink.className='iw-btn__blob';ink.setAttribute('aria-hidden','true');el.prepend(ink);
    }
@@ -45,7 +46,7 @@ export function createWonderUI({blocked=()=>false,reduced=()=>false}={}){
  document.addEventListener('pointerover',event=>{
   if(event.pointerType==='touch')return;const el=event.target.closest('button');if(!eligible(el))return;mode='pointer';point={x:event.clientX,y:event.clientY};pointer(el,event);el.classList.add('is-hover');setFocus(el,true);
  });
- document.addEventListener('pointermove',event=>{if(event.pointerType==='touch')return;mode='pointer';point={x:event.clientX,y:event.clientY};const el=event.target.closest('button');if(eligible(el)){pointer(el,event);setFocus(el,true);}else setFocus(null);},{passive:true});
+ document.addEventListener('pointermove',event=>{if(event.pointerType==='touch')return;mode='pointer';point={x:event.clientX,y:event.clientY};const el=event.target.closest('button'),join=event.target.closest('form.online-join-card');if(join&&!blocked()&&!reduced())pointer(join,event);if(eligible(el)){pointer(el,event);setFocus(el,true);}else setFocus(null);},{passive:true});
  document.addEventListener('pointerout',event=>{const el=event.target.closest('button');if(!el||el.contains(event.relatedTarget))return;el.classList.remove('is-hover','is-down');for(const property of ['--rx','--ry'])el.style.setProperty(property,'0deg');for(const property of ['--px','--py'])el.style.setProperty(property,'0');if(focus===el&&mode==='pointer')setFocus(null);},{passive:true});
  document.addEventListener('pointerdown',event=>{sounds.unlock();if(blocked())return;mode='pointer';const el=event.target.closest('button');if(eligible(el)){el.classList.add('is-down');if(event.pointerType!=='touch')setFocus(el);}},true);
  const release=()=>{for(const el of document.querySelectorAll('.is-down'))el.classList.remove('is-down');};document.addEventListener('pointerup',release,true);document.addEventListener('pointercancel',release,true);
