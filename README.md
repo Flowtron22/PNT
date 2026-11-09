@@ -8,13 +8,12 @@ Read the [current handoff](handoff.md) before continuing development.
 The Steam release uses one Windows x64 package for desktop PCs and Steam Deck
 via Proton. See the [Steam build guide](docs/STEAM.md) for build and test steps.
 
-The current Steam dev-playtest is **0.9.152**. Build and share the complete
-`dist-steam/win64-dev-playtest-0.9.152` folder, including `steam_appid.txt`.
+The current Steam dev-playtest is **0.9.153**. Build and share the complete
+`dist-steam/win64-dev-playtest-0.9.153` folder, including `steam_appid.txt`.
 
 Developed by Todak Studios, with Classic, Patty Prowl, Tile Tumble, Slippery
 Shoots and **Balloon Bash**. Balloon Bash is a 1v1v1v1 last-player-standing
-event in a circular quicksand arena. Pop exposed balloons while four trailing
-guard spheres screen attacks. See [Balloon Bash](docs/BALLOON_BASH.md) and the
+event in a circular quicksand arena. Pop both of a rival's balloons while falling spheres roll inward and sink. See [Balloon Bash](docs/BALLOON_BASH.md) and the
 [handoff](handoff.md).
 
 The 0.9.147 Events page includes the fitted **Patty Prowl** title and a composed

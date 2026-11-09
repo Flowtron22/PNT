@@ -13,7 +13,7 @@ import {loadArenaData,groundSpot} from './arena.mjs';
 import {createDiretideRound,stepDiretide,collectEventCandy,eventTarget,eventInteract,eventBotGoal,spillOnStun,EVENT_HAMMER_RADIUS,EVENT_BANANA_SECONDS,EVENT_STUN_SECONDS} from '../src/pnt/diretide-rules.js';
 import {createTiletideRound,stepTiletide,tileBotGoal,tileStageContains,TILE_SPAWNS,TILE_STUN_SECONDS,TILE_BANANA_SECONDS} from '../src/pnt/tiletide-rules.js';
 import {createStrikersRound,stepStrikers,strikerShoot,strikerBotGoal,strikerBotWantsShot,updateStrikerPossession,resetStrikerPlayers,strikerKickoffAngle,GOAL_RESET_SECONDS,STRIKER_HAMMER_STUN_SECONDS,STRIKER_SPAWNS} from '../src/pnt/strikers-rules.js';
-import {createBalloonRound,stepBalloon,updateBalloonGuards,resolveBalloonHammer,balloonBotGoal,createBalloonArenaData,BALLOON_SPAWNS} from '../src/pnt/balloon-rules.js';
+import {createBalloonRound,stepBalloon,resolveBalloonHammer,balloonBotGoal,createBalloonArenaData,BALLOON_SPAWNS} from '../src/pnt/balloon-rules.js';
 export class MatchSimulation {
  static async create(map,players,gameMode){const instance=new MatchSimulation(map,players,gameMode==='balloon'?createBalloonArenaData():await loadArenaData(map),gameMode);if(map==='mall'){const arena=instance.data.template.clone(true);instance.root.add(arena);instance.root.updateMatrixWorld(true);instance.physics=await createMallPhysics(arena,instance.root,instance.grid);}return instance;}
  static async restore(snapshot,players){
@@ -129,7 +129,7 @@ export class MatchSimulation {
  }
  resolveHammer(state){
   const p=this.actors[state.id].group.position;
-  if(this.round.mode==='balloon'){const result=resolveBalloonHammer(this.round,state.id,this.actors.map(a=>a.group.position),this.actors.map(a=>a.group.rotation.y));if(result)this.event(result.blocked?'balloon-block':'balloon-pop',{actor:state.id,target:result.target,position:this.actors[result.target].group.position.toArray()});return;}
+  if(this.round.mode==='balloon'){const result=resolveBalloonHammer(this.round,state.id,this.actors.map(a=>a.group.position),this.actors.map(a=>a.group.rotation.y));if(result)this.event(result.blocked?'balloon-block':'balloon-pop',{actor:state.id,target:result.target,remaining:this.round.actors[result.target].balloons,position:this.actors[result.target].group.position.toArray()});return;}
   for(const other of this.round.actors){const event=['diretide','tiletide','strikers','balloon'].includes(this.round.mode),friendly=this.round.mode==='strikers'?other.team===state.team:other.id===state.id;if((event?friendly:other.role===state.role)||other.caught||other.inSmoke)continue;const target=this.actors[other.id];if(p.distanceTo(target.group.position)<EVENT_HAMMER_RADIUS&&this.sight(p,target.group.position,false)){this.effect(other,target.grounded?'stunned':'airStunned',this.round.mode==='tiletide'?TILE_STUN_SECONDS:this.round.mode==='strikers'?STRIKER_HAMMER_STUN_SECONDS:event?EVENT_STUN_SECONDS:2);state.stuns=(state.stuns||0)+1;}}
  }
  step(dt=1/60){
@@ -146,7 +146,7 @@ export class MatchSimulation {
    const botEdge=this.round.mode==='tiletide'&&this.players[actor.id].bot&&state.effect!=='banana'?actor.group.position.clone():null;advanceActor(actor,state,x,z,dt,{map:this.map,grid:this.grid,tilt,speed:state.caught?0:movementSpeed(state.role,this.map,!this.players[actor.id].bot,flying),furniture:this.physics,respawn:actor.spawn});if(botEdge&&!tileStageContains(this.round,actor.group.position)){actor.group.position.copy(botEdge);actor.vx=actor.vz=actor.slideX=actor.speed=0;}
    wishes.push({id:actor.id,wants:input.interact===true});
   }
-  if(this.round.mode==='balloon')updateBalloonGuards(this.round,this.actors.map(a=>a.group.position),dt);this.physics?.step(dt,this.actors);
+  this.physics?.step(dt,this.actors);
   for(const hazard of this.hazards)hazard.time-=dt;this.smokeCoverage();for(const hazard of this.hazards){if(hazard.type==='banana'&&hazard.time>0)for(const state of this.round.actors){const event=['diretide','tiletide','strikers','balloon'].includes(this.round.mode),friendly=this.round.mode==='strikers'?state.team===this.round.actors[hazard.owner]?.team:state.id===hazard.owner;if((event?friendly:state.role===hazard.role)||state.caught||state.inSmoke||state.effectTime>0)continue;if(this.actors[state.id].group.position.distanceTo(hazard.position)<.8){this.effect(state,'banana',this.round.mode==='tiletide'?TILE_BANANA_SECONDS:event?EVENT_BANANA_SECONDS:2);hazard.time=0;break;}}}this.hazards=this.hazards.filter(h=>h.time>0);
   this.smokeCoverage();const cop=this.actors.find(a=>this.round.actors[a.id].role==='chaser');for(const state of this.round.actors.filter(a=>!['diretide','tiletide','strikers','balloon'].includes(this.round.mode)&&a.role==='runner')){const p=cop.group.position,q=this.actors[state.id].group.position;if(detectThiefAt(this.round,cop.id,state.id,dt,p,q,this.sight(p,q))){cop.vx=cop.vz=cop.slideX=cop.speed=0;this.event('capture',{actor:state.id,position:q.toArray(),policePosition:p.toArray()});this.actors[state.id].mark=null;}}
   if(this.round.mode==='strikers')updateStrikerPossession(this.round,this.actors.map(a=>a.group),dt);

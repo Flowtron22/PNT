@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {BALLOON_ARENA_RADIUS,BALLOON_RADIUS,BALLOON_HEIGHT,BALLOON_GUARD_RADIUS,BALLOON_GUARD_COUNT} from './balloon-rules.js';
+import {BALLOON_ARENA_RADIUS,BALLOON_RADIUS,BALLOON_HEIGHT,BALLOON_SPHERE_RADIUS,BALLOON_MAX_SPHERES,BALLOON_COUNT} from './balloon-rules.js';
 import {PLAYER_COLORS} from './diretide-rules.js';
 
 const material=(color,extra={})=>new THREE.MeshStandardMaterial({color,metalness:0,roughness:.3,...extra});
@@ -43,21 +43,48 @@ function arena(root){
  };floorMaterial.customProgramCacheKey=()=> 'balloon-inward-matte-sand-v2';
  const colors=[0xff9f43,0xffd166,0x36c9c6,0xef638c,0x8c6ddd,0x62d07b];const borderGeometry=new THREE.BoxGeometry(2.74,1.05,.72),borderMaterials=colors.map(color=>material(color));
  for(let i=0;i<24;i++){const a=i/24*Math.PI*2,block=new THREE.Mesh(borderGeometry,borderMaterials[i%colors.length]);block.position.set(Math.sin(a)*(BALLOON_ARENA_RADIUS+.34),.22,Math.cos(a)*(BALLOON_ARENA_RADIUS+.34));block.rotation.y=a;block.castShadow=block.receiveShadow=true;root.add(block);}
- return {ao,flowTime,materials:[floorMaterial,...borderMaterials]};
+ return {ao,flowTime};
 }
-function balloonSet(root,id){
- const color=PLAYER_COLORS[id],group=new THREE.Group(),balloon=new THREE.Mesh(balloonGeometry(),material(color));balloon.castShadow=true;group.add(balloon);
- const knot=new THREE.Mesh(new THREE.ConeGeometry(.14,.22,10),material(color));knot.position.y=-1.4;knot.rotation.z=Math.PI;group.add(knot);
- const string=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-1.5,0),new THREE.Vector3(0,-1.85,0)]),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.75}));group.add(string);root.add(group);
- const guardGeometry=new THREE.SphereGeometry(BALLOON_GUARD_RADIUS,20,14),guardMaterial=material(color),guards=Array.from({length:BALLOON_GUARD_COUNT},()=>{const mesh=new THREE.Mesh(guardGeometry,guardMaterial);root.add(mesh);return mesh;});
- return {group,balloon,knot,string,guards,guardGeometry,materials:[balloon.material,knot.material,string.material,guardMaterial],intact:true,pop:0};
+function balloonSet(root,id,geometry,knotGeometry,stringGeometry){
+ const color=PLAYER_COLORS[id],group=new THREE.Group();
+ const skin=material(color),balloon=new THREE.Mesh(geometry,skin);balloon.castShadow=true;group.add(balloon);
+ const knot=new THREE.Mesh(knotGeometry,skin);knot.position.y=-1.04;knot.rotation.z=Math.PI;group.add(knot);
+ const string=new THREE.Line(stringGeometry,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.75}));group.add(string);root.add(group);
+ return {group,pop:0,intact:null};
 }
 export function createBalloonView(parent){
- const root=new THREE.Group(),stage=arena(root),sets=Array.from({length:4},(_,i)=>balloonSet(root,i));
+ const root=new THREE.Group(),stage=arena(root),geometry=balloonGeometry(),knotGeometry=new THREE.ConeGeometry(.11,.18,10);
+ const stringGeometry=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-1.1,0),new THREE.Vector3(0,-1.5,0)]);
+ const sets=Array.from({length:4},(_,i)=>Array.from({length:BALLOON_COUNT},()=>balloonSet(root,i,geometry,knotGeometry,stringGeometry)));
+ const sphereGeometry=new THREE.SphereGeometry(BALLOON_SPHERE_RADIUS,20,14);
+ const sphereMaterials=[0x9d5549,0x4e6184,0x447571,0x747746,0x735d7f,0x9b6741].map(color=>material(color,{roughness:.8}));
+ const spheres=Array.from({length:BALLOON_MAX_SPHERES},()=>{const mesh=new THREE.Mesh(sphereGeometry,sphereMaterials[0]);mesh.visible=false;root.add(mesh);return mesh;});
  parent.add(root);let time=0;
- return {root,update(round,dt,avatars){time+=dt;stage.flowTime.value=time;for(const state of round.actors){const set=sets[state.id],actor=avatars?.[state.id],position=actor?.group.position;if(!position)continue;
-   if(set.intact&&!state.balloonIntact){set.intact=false;set.pop=.34;}if(set.pop>0){set.pop=Math.max(0,set.pop-dt);set.group.visible=set.pop>0;set.group.scale.setScalar(1+(1-set.pop/.34)*1.6);}else{set.group.visible=!!state.balloonIntact;set.group.scale.setScalar(1);}
-   set.group.position.set(position.x,position.y+BALLOON_HEIGHT+Math.sin(time*3.2+state.id)*.045,position.z);
-   for(let i=0;i<set.guards.length;i++){const guard=set.guards[i],p=state.guards?.[i];guard.visible=!state.eliminated&&!!p;if(p){guard.position.set(p[0],position.y+1.55-i*.025,p[1]);guard.rotation.y+=dt*(.65+i*.14);}}
-  }},hammer(){},dispose(){root.removeFromParent();stage.ao.dispose();for(const entry of sets){entry.guardGeometry.dispose();entry.balloon.geometry.dispose();entry.knot.geometry.dispose();entry.string.geometry.dispose();for(const mat of entry.materials)mat.dispose();}for(const mat of stage.materials)mat.dispose();root.traverse(object=>{if(object.isMesh&&object!==sets[0]?.balloon)object.geometry?.dispose?.();});}};
+ return {root,update(round,dt,avatars,onPop){
+  time+=dt;stage.flowTime.value=time;
+  for(const state of round.actors){
+   const actor=avatars?.[state.id],position=actor?.group.position;if(!position)continue;
+   const pair=sets[state.seat??state.id];
+   for(const [slot,set] of pair.entries()){
+    const intact=slot<state.balloons;
+    set.group.position.set(position.x+(slot-.5)*1.44,position.y+BALLOON_HEIGHT+Math.sin(time*3.2+state.id+slot)*.065,position.z);
+    if(set.intact&&!intact){set.pop=.22;if(!state.eliminated)onPop?.(set.group.position);}
+    set.intact=intact;
+    set.pop=Math.max(0,set.pop-dt);
+    set.group.visible=intact||set.pop>0;
+    set.group.scale.setScalar(intact?1:1+(1-set.pop/.22)*.65);
+   }
+  }
+  for(const [index,mesh] of spheres.entries()){
+   const sphere=round.spheres[index];mesh.visible=!!sphere;if(!sphere)continue;
+   mesh.material=sphereMaterials[(sphere.id-1)%sphereMaterials.length];
+   if(mesh.userData.sphereId!==sphere.id){mesh.userData.sphereId=sphere.id;mesh.position.set(sphere.x,sphere.y,sphere.z);}
+   else if(dt>0){const blend=1-Math.exp(-35*dt);mesh.position.x+=(sphere.x-mesh.position.x)*blend;mesh.position.y+=(sphere.y-mesh.position.y)*blend;mesh.position.z+=(sphere.z-mesh.position.z)*blend;}
+  }
+ },hammer(){},dispose(){
+  root.removeFromParent();stage.ao.dispose();
+  const geometries=new Set(),materials=new Set(sphereMaterials);
+  root.traverse(object=>{if(object.geometry)geometries.add(object.geometry);if(object.material)materials.add(object.material);});
+  for(const resource of [...geometries,...materials])resource.dispose();
+ }};
 }

@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.152**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.153**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.152` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.153` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -45,10 +45,17 @@ For Classic, use **Play → Solo Online → Create a Room**. For Patty Prowl, st
 specific lobby, or invite Steam friends. Public matchmaking searches the selected mode.
 
 For Balloon Bash, use **Events → Balloon Bash**. Training, couch play and Steam
-online all use internal mode ID `balloon`, rules version **11**, and the procedural
+online all use internal mode ID `balloon`, rules version **12**, and the procedural
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.153** reworks Balloon Bash. Players have two balloons, and the
+second Hammer pop eliminates them. Five to ten independent spheres fall at GO.
+Another one to three are scheduled every seven seconds, capped at 14 active
+spheres. Landed spheres block movement and Hammer swings, roll inward, and sink
+near the centre. The shared camera pulls back to show more of the arena. Steam
+host restoration preserves both balloon counts and the seeded sphere schedule.
 
 Version **0.9.152** restores the side-by-side Online cards with the existing
 motion and hover effects, orders skin tones light to dark, and shows only the
@@ -86,14 +93,14 @@ renames the displayed PattyTide event to **Patty Prowl** without changing its
 internal `diretide` IDs or matchmaking. The latest Events layout and both preview
 destinations use the new composed `balloonbash.png` image.
 
-Balloon Bash currently has a 10.296 m arena radius, .75 m trailing-sphere radius,
+The 0.9.147 Balloon Bash had a 10.296 m arena radius, .75 m trailing-sphere radius,
 1.3 m centre spacing, 4% maximum link stretch and a .9 m overhead-balloon radius.
 The balloon centre is 2.95 m above ground. Original geometry density is restored:
 24x16 balloons and 20x14 guards, totaling 11,200 triangles. Mall lighting, sand-only
 AO, inward-panning bands and the close fixed camera are active. Elimination uses
 an upright Y-axis launch with exhaust from both feet, confetti and strong shake.
 
-Sphere movement uses geometric contact separation and sliding, including moving
+The earlier tail movement used geometric contact separation and sliding, including moving
 guards against stationary opponents. Own guards do not block their owner.
 Sudden Death announces at two survivors in Balloon Bash, Tile Tumble and Patty
 Prowl. The Steam package, syntax checks, 337 client tests and 39 multiplayer tests
@@ -344,8 +351,12 @@ timing, results portraits, fullscreen logo and controller highlight behavior.
 
 ## Verification and next playtest
 
-The current 0.9.152 client passed **379 automated tests** (340 client and
-39 multiplayer), syntax checks and the Steam development build.
+The current 0.9.153 client passed **366 automated tests** (328 client and
+38 multiplayer), syntax checks and the Steam development build.
+Tests covered both pops, landed cover, sphere replenishment and sinking, and
+continuing the seeded schedule after restoring a host snapshot. In a packaged
+1280 × 800 Electron training match, the HUD reached one balloon with all four
+players still in play and no renderer errors.
 At 1280 × 800, the packaged Electron UI showed both Online cards on the same
 row, both version labels without a prefix, and all nine tones in order. In a
 mocked Classic host lobby, both arrows were visible and changed the stage.
@@ -371,8 +382,8 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.152 on every machine. In Balloon Bash, check
-Hammer aim with movement held and guard blocks during three-player encounters.
+Close older copies and use 0.9.153 on every machine. In Balloon Bash, check
+first and final pops, moving cover, new sphere drops, and host transfer.
 Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.
 The mixed-join scenario uses three Steam accounts, one host and two guests
