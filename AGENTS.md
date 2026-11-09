@@ -41,9 +41,9 @@ Use this workflow unless the user explicitly requests a different target.
    `dist-steam/win64-dev-playtest-<new-version>`. Tell the user to distribute the
    **entire folder**, including `steam_appid.txt`.
 
-The last documented package when these rules were added is **0.9.135**, in
-`dist-steam/win64-dev-playtest-0.9.135`. Determine the actual latest version
-from the files and folders each time. The next game build must exceed 0.9.135.
+See the [current build in the handoff](handoff.md#current-build) for the latest
+documented package. Verify it against the source version and local build folders
+before choosing the next version.
 
 ## New modes and handoff
 
