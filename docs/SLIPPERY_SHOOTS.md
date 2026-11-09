@@ -1,6 +1,6 @@
 # Slippery Shoots
 
-Steam playtest 0.9.135 exposes this event from Events. The stable internal mode
+Open **Events → Slippery Shoots** in the Steam build. The stable internal mode
 ID is `strikers`, arena ID is `slipperystriker`, and rules version is 12.
 Earlier display names Patty Strikers and Slippery Striker are superseded.
 
@@ -56,7 +56,7 @@ JSON. The menu preview is `assets/pnt/maps/slipperystriker.svg`.
 
 ## Verification
 
-The local 0.9.135 Steam dev-playtest contains the imported rink and event code.
+The Steam dev-playtest contains the imported rink and event code.
 Automated tests cover behavior and packaging. Live Steam and Steam Deck checks
 remain necessary for appearance, collision alignment, kick readability, goal
 timing, controller focus, fullscreen logo and winner portrait layout.

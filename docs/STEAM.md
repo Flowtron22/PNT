@@ -86,6 +86,13 @@ The pinned `steamworks.js` package supplies the native binding and
 `steam_api64.dll`. The [full Steamworks SDK](https://partner.steamgames.com/doc/sdk)
 includes SteamPipe upload tools.
 
+The Windows depot installs the contents of `win64` into the player's game
+directory. Keep the runtime DLLs, `.pak` and `.bin` files, `locales/`, and
+license notices alongside the executable. `resources/app/` holds the game,
+assets, and Steam integration. The release packager omits `steam_appid.txt`.
+Steam supplies the assigned App ID at launch. The private dev-playtest package
+includes `steam_appid.txt` for Spacewar App ID 480.
+
 For an offline packaging check, run `npm run build:steam -- --smoke-test`.
 
 ## Device checks

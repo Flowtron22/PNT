@@ -1,6 +1,6 @@
 # Police N Thief Steam playtest handoff
 
-Updated 9 November 2026 (Asia/Kuala_Lumpur).
+Updated 10 November 2026 (Asia/Kuala_Lumpur).
 
 ## Standing instructions for every chat
 
@@ -38,6 +38,8 @@ Share the entire `dist-steam/win64-dev-playtest-0.9.156` folder, including
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
 Build archives stay outside Git. See the [Steam build guide](docs/STEAM.md).
+The production depot uses the `dist-steam/win64` contents, including the
+Electron runtime and `resources/app/`. Steam supplies the App ID at launch.
 
 For Classic, use **Play → Solo Online → Create a Room**. For Patty Prowl, start at
 **Events → Patty Prowl → Solo Online**. The host can change visibility under

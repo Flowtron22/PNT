@@ -1,10 +1,12 @@
 # Player input
 
-Steam playtest 0.9.147 supports keyboard, mouse buttons, touch and a standard
-controller. All send the same movement and actions to practice and multiplayer.
+The Steam build supports keyboard, mouse buttons and standard controllers.
+The browser preview also supports touch. These inputs share the same movement
+and action bindings where applicable.
 Slippery Shoots labels the interaction action **Shoot**. With possession, press
 E or A/Cross for the kick windup and shot. Hammer and Banana use the usual
 tool slots. The event runs on a slippery rink with two players per team.
+Balloon Bash uses the Hammer and Banana Skin slots. Banana spin lasts two seconds.
 
 ## Controller
 

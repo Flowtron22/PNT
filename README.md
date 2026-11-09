@@ -13,11 +13,12 @@ The current Steam dev-playtest is **0.9.156**. Build and share the complete
 
 Developed by Todak Studios, with Classic, Patty Prowl, Tile Tumble, Slippery
 Shoots and **Balloon Bash**. Balloon Bash is a 1v1v1v1 last-player-standing
-event in a circular quicksand arena. Pop both of a rival's balloons while falling spheres roll inward and sink. See [Balloon Bash](docs/BALLOON_BASH.md) and the
-[handoff](handoff.md).
+event in a circular quicksand arena. Pop both of a rival's balloons while
+patterned spheres fall, kick up smoke, and roll inward before sinking.
+See [Balloon Bash](docs/BALLOON_BASH.md).
 
-The 0.9.147 Events page includes the fitted **Patty Prowl** title and a composed
-3D Balloon Bash preview. See the handoff for verified checks and known issues.
+The Events page uses **Patty Prowl** as the display name and a composed 3D
+Balloon Bash preview. See the handoff for verified checks and device QA.
 
 Online play uses Steam lobbies and peer networking. The host runs the match
 simulation locally. See the [Steam playtest guide](docs/STEAM.md).
@@ -33,6 +34,10 @@ npm run build:steam -- --dev-playtest
 
 Launch `Police N Thief.exe` from the versioned build folder. The same Windows
 package targets Steam Deck through Proton.
+
+For Steam distribution, use the assigned game or Steam Playtest App ID and
+upload the production `dist-steam/win64` contents. See the
+[Steam distribution steps](docs/STEAM.md#steam-distribution).
 
 ## Local development preview
 
