@@ -1,4 +1,4 @@
-import {RENDER_RESOLUTIONS} from './settings.js';
+import {GRAPHICS_QUALITY,RENDER_RESOLUTIONS} from './settings.js';
 
 const percent=v=>Math.round(v*100)+'%';
 export const SETTINGS_TABS=[
@@ -9,8 +9,8 @@ export const SETTINGS_TABS=[
   {key:'bindings',label:'Key & mouse mapping',action:true,help:'Map keyboard keys or left, right and middle mouse buttons. Controller: left stick moves, A / Cross interacts, X / Square and Y / Triangle use tools. Start pauses; B / Circle goes back; LB / RB switches settings tabs.'}
  ]},
  {id:'video',label:'Video',icon:'▣',rows:[
-  {key:'renderResolution',label:'Render resolution',options:RENDER_RESOLUTIONS,desktopOnly:true,help:'Set the maximum 3D resolution. The game fits your display and keeps the same menu and HUD scale. Auto caps at 1080p in Balanced or 720p in Battery.'},
-  {key:'quality',label:'Graphics quality',options:[['battery','Battery'],['balanced','Balanced']],help:'Battery lowers rendering resolution to reduce GPU work. Balanced keeps a sharper image.'},
+  {key:'renderResolution',label:'Render resolution',options:RENDER_RESOLUTIONS,desktopOnly:true,help:'Choose the maximum 3D resolution, then select Apply. Auto follows Graphics quality. Menu and HUD scale independently.'},
+  {key:'quality',label:'Graphics quality',options:Object.keys(GRAPHICS_QUALITY).map(key=>[key,key[0].toUpperCase()+key.slice(1)]),help:'Low through Ultra increase shadow detail and the resolution used by Auto.'},
   {key:'fpsCap',label:'Frame rate limit',options:[[0,'Max'],[60,'60'],[30,'30']],help:'Limit rendering to save battery. Movement and networking continue independently.'},
   {key:'showFps',label:'Show FPS',toggle:true,help:'Show measured rendered frames per second during a match.'},
   {key:'fullscreen',label:'Fullscreen',action:true,help:'Fill the display when your browser supports fullscreen.'}
@@ -34,13 +34,12 @@ export function mountSettings(root,{getSettings,onChange,onReset,bindingsMarkup,
  const valueLabel=(r,v)=>r.toggle?(v?'ON':'OFF'):r.format?r.format(v):r.options?.find(([key])=>key===v)?.[1]||'';
  function preview(r){const s=getSettings(),v=s[r.key];card.querySelector('h2').textContent=r.label;card.querySelector('p').textContent=r.help;card.querySelector('output').textContent=valueLabel(r,v);demo.dataset.preview=r.key;demo.classList.toggle('quiet',s.reducedMotion);demo.style.setProperty('--strength',s.cameraShake);demo.style.setProperty('--joy-size',s.joystickSize);demo.style.setProperty('--sensitivity',s.joystickSensitivity);demo.style.setProperty('--hud-size',s.hudScale);demo.style.setProperty('--level',`${(r.key==='music'||r.key==='sfx'?s.master*s[r.key]:s.master)*100}%`);
   const joystick=['joystickSize','joystickSensitivity'].includes(r.key),hud=['hudScale','showFps','fpsCap'].includes(r.key),audio=['master','music','sfx','uiSounds'].includes(r.key);
-  demo.innerHTML=joystick?'<div class="preview-joystick"><i></i></div><small>LEFT THUMB · DRAG TO MOVE</small>':hud?`<div class="preview-hud"><b>2:45</b><span>💰 1,250</span><small>${s.showFps?'60 FPS':'THIEF · FREE'}</small></div>`:audio?'<div class="preview-audio"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><small>MUSIC & SOUND</small>':r.key==='quality'?`<img class="preview-map ${v==='battery'?'battery':''}" src="assets/pnt/maps/mall.webp" alt=""><small>${valueLabel(r,v).toUpperCase()}</small>`:r.key==='bindings'?'<div class="preview-keys"><kbd>↑</kbd><span><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span></div>':r.key==='haptics'?'<div class="preview-symbol">⌁</div><small>VIBRATION FEEDBACK</small>':r.key==='fullscreen'?'<div class="preview-symbol">⛶</div>':'<div class="preview-impact">★</div><small>IMPACT & MOTION</small>';
+  demo.innerHTML=joystick?'<div class="preview-joystick"><i></i></div><small>LEFT THUMB · DRAG TO MOVE</small>':hud?`<div class="preview-hud"><b>2:45</b><span>💰 1,250</span><small>${s.showFps?'60 FPS':'THIEF · FREE'}</small></div>`:audio?'<div class="preview-audio"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><small>MUSIC & SOUND</small>':r.key==='quality'?`<img class="preview-map ${v==='low'?'battery':''}" src="assets/pnt/maps/mall.webp" alt=""><small>${valueLabel(r,v).toUpperCase()}</small>`:r.key==='bindings'?'<div class="preview-keys"><kbd>↑</kbd><span><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span></div>':r.key==='haptics'?'<div class="preview-symbol">⌁</div><small>VIBRATION FEEDBACK</small>':r.key==='fullscreen'?'<div class="preview-symbol">⛶</div>':'<div class="preview-impact">★</div><small>IMPACT & MOTION</small>';
  }
  function build(){const t=SETTINGS_TABS[tab];rows.replaceChildren();rows.setAttribute('aria-labelledby','settings-tab-'+t.id);
   const visibleRows=desktop?t.rows.filter(r=>!['joystickSize','joystickSensitivity'].includes(r.key)).map(r=>{
    if(r.key==='haptics')return {...r,help:'Controller vibration for rocket and banana effects, when supported.'};
    if(r.key==='hudScale')return {...r,help:'Resize the timer, money counter and crew portraits.'};
-   if(r.key==='quality')return {...r,help:'Battery reduces graphics detail and uses a lower resolution cap in Auto.'};
    return r;
   }):t.rows.filter(r=>!r.desktopOnly);
   for(const r of visibleRows){const row=doc.createElement('div');row.className='settings-option';row.innerHTML=`<label>${r.label}</label><div class="settings-control"></div>`;const host=row.lastElementChild,label=row.firstElementChild;let control;
@@ -49,7 +48,13 @@ export function mountSettings(root,{getSettings,onChange,onReset,bindingsMarkup,
    else{control=doc.createElement('input');control.type=r.toggle?'checkbox':'range';if(r.toggle){control.checked=getSettings()[r.key];control.setAttribute('role','switch');}else{control.min=r.min;control.max=r.max;control.step=r.step;control.value=getSettings()[r.key];const output=doc.createElement('output');output.textContent=valueLabel(r,+control.value);host.append(output);}}
    control.id='setting-'+r.key;label.htmlFor=control.id;host.append(control);row.addEventListener('focusin',()=>preview(r));row.addEventListener('pointerenter',()=>preview(r));row.addEventListener('pointerdown',()=>preview(r));
    if(r.key==='haptics'&&!hapticsSupported){control.disabled=true;label.append(doc.createElement('small'));label.lastChild.textContent='Unavailable in this browser';}
-   if(!r.action)control.addEventListener(r.toggle||r.options?'change':'input',()=>{const value=r.toggle?control.checked:r.options&&r.key==='quality'?control.value:+control.value;const persisted=onChange(r.key,value);saved.textContent=persisted===false?'Applied · browser storage unavailable':'Saved automatically ✓';if(host.querySelector('output'))host.querySelector('output').textContent=valueLabel(r,value);preview(r);});
+   function apply(){const value=r.toggle?control.checked:r.key==='quality'?control.value:+control.value;const persisted=onChange(r.key,value);saved.textContent=persisted===false?'Applied · storage unavailable':'Saved ✓';if(host.querySelector('output'))host.querySelector('output').textContent=valueLabel(r,value);preview(r);}
+   if(r.key==='renderResolution'){
+    host.classList.add('settings-resolution');
+    const button=doc.createElement('button');button.type='button';button.id='apply-render-resolution';button.textContent='APPLY';button.disabled=true;host.append(button);
+    control.onchange=()=>{button.disabled=+control.value===getSettings().renderResolution;saved.textContent=button.disabled?'Resolution is current':'Select Apply to change resolution';};
+    button.onclick=()=>{apply();control.focus({preventScroll:true});button.disabled=true;};
+   }else if(!r.action)control.addEventListener(r.toggle||r.options?'change':'input',apply);
    rows.append(row);
   }
   if(t.id==='controls'){const status=doc.createElement('p');status.id='controller-status';status.className='controller-status';status.setAttribute('role','status');status.textContent='Controller ready · connect a pad and press a button';rows.prepend(status);const section=doc.createElement('section');section.className='settings-bindings key-mapping';section.id='settings-bindings';section.hidden=true;section.innerHTML=bindingsMarkup;rows.append(section);onBindings();}

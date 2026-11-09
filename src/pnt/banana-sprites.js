@@ -2,8 +2,8 @@ import * as THREE from 'three';
 
 const CAPACITY=32,PALETTE=[0xe28cff,0xb65cff,0x65edff,0xff9bdc,0xffe58a];
 function roundedStar(){
- const corners=Array.from({length:10},(_,i)=>{const angle=Math.PI/2+i*Math.PI/5,r=i%2?.64:1;return new THREE.Vector2(Math.cos(angle)*r,Math.sin(angle)*r);}),shape=new THREE.Shape();
- for(let i=0;i<10;i++){const corner=corners[i],before=corner.clone().lerp(corners[(i+9)%10],.24),after=corner.clone().lerp(corners[(i+1)%10],.24);if(i===0)shape.moveTo(before.x,before.y);else shape.lineTo(before.x,before.y);shape.quadraticCurveTo(corner.x,corner.y,after.x,after.y);}shape.closePath();
+ const corners=Array.from({length:10},(_,i)=>{const angle=Math.PI/2+i*Math.PI/5,r=i%2?.56:1;return new THREE.Vector2(Math.cos(angle)*r,Math.sin(angle)*r);}),shape=new THREE.Shape();
+ for(let i=0;i<10;i++){const corner=corners[i],trim=i%2?.05:.14,before=corner.clone().lerp(corners[(i+9)%10],trim),after=corner.clone().lerp(corners[(i+1)%10],trim);if(i===0)shape.moveTo(before.x,before.y);else shape.lineTo(before.x,before.y);shape.quadraticCurveTo(corner.x,corner.y,after.x,after.y);}shape.closePath();
  const geometry=new THREE.ShapeGeometry(shape,4),flat=geometry.index?geometry.toNonIndexed():geometry,vertices=flat.getAttribute('position').array.slice();if(flat!==geometry)flat.dispose();geometry.dispose();return vertices;
 }
 const STAR=roundedStar();

@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import {ARENA_ROUGHNESS} from './arena-appearance.js';
+import {GRAPHICS_QUALITY} from './settings.js';
 
 // Sunken-only material/light experiment. Every override can be restored in place.
-export function createSunkenLook({renderer,scene,sunlight,fill,hemisphere,bounds,quality='balanced',enabled=true,lightScale=1,exposure=1.12}){
+export function createSunkenLook({renderer,scene,sunlight,fill,hemisphere,bounds,quality='high',enabled=true,lightScale=1,exposure=1.12}){
  const records=new Map(),materials=new Map();let active=false,disposed=false;
  const saved={sunColor:sunlight.color.clone(),sunPosition:sunlight.position.clone(),sunIntensity:sunlight.intensity,target:sunlight.target.position.clone(),targetParent:sunlight.target.parent,fillColor:fill.color.clone(),fillIntensity:fill.intensity,sky:hemisphere.color.clone(),ground:hemisphere.groundColor.clone(),hemiIntensity:hemisphere.intensity,exposure:renderer.toneMappingExposure,shadows:renderer.shadowMap.enabled,shadowType:renderer.shadowMap.type,cast:sunlight.castShadow,map:sunlight.shadow.map,mapSize:sunlight.shadow.mapSize.clone(),camera:sunlight.shadow.camera.clone(),bias:sunlight.shadow.bias,normalBias:sunlight.shadow.normalBias};
  const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3()),radius=Math.max(size.x,size.z)*.65+5;
@@ -30,7 +31,12 @@ export function createSunkenLook({renderer,scene,sunlight,fill,hemisphere,bounds
   const record={original:mesh.material,styled:Array.isArray(mesh.material)?list.map(convert):convert(mesh.material),cast:mesh.castShadow,receive:mesh.receiveShadow,opaque};records.set(mesh,record);apply(mesh,record);
  });}
  function unregister(root){root.traverse(mesh=>{const r=records.get(mesh);if(!r)return;mesh.material=r.original;mesh.castShadow=r.cast;mesh.receiveShadow=r.receive;records.delete(mesh);});}
- function setQuality(value){const pixels=value==='battery'?512:1024;sunlight.shadow.mapSize.set(pixels,pixels);sunlight.shadow.needsUpdate=true;}
+ function setQuality(value){
+  const pixels=(GRAPHICS_QUALITY[value]||GRAPHICS_QUALITY.high).shadow,shadow=sunlight.shadow;
+  if(shadow.mapSize.x===pixels&&shadow.mapSize.y===pixels)return;
+  if(shadow.map!==saved.map)shadow.map?.dispose();
+  shadow.map=null;shadow.mapSize.set(pixels,pixels);shadow.needsUpdate=true;
+ }
  function setEnabled(value){
   if(disposed)return;active=!!value;
   renderer.shadowMap.enabled=active||saved.shadows;renderer.shadowMap.type=active?THREE.PCFSoftShadowMap:saved.shadowType;sunlight.castShadow=active||saved.cast;

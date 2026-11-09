@@ -192,13 +192,13 @@ export function splatShape(cx, cy, r, { arms = 9, seed = 7, armLen = 0.42, drops
 }
 /** Five-point selection star, retaining the caller's existing colour and size. */
 export function starSVG({ cls = 'iw-fa', fill = null, viewBox = 200, r = 58, extra = '' } = {}) {
-  const c = viewBox / 2, outer = Math.min(r * 1.65, viewBox * .49), inner = outer * .68;
+  const c = viewBox / 2, outer = Math.min(r * 1.5, viewBox * .46), inner = outer * .56;
   const points = Array.from({ length: 10 }, (_, i) => {
     const angle = -Math.PI / 2 - Math.PI / 12 + i * Math.PI / 5, radius = i % 2 ? inner : outer;
     return [f1(c + Math.cos(angle) * radius), f1(c + Math.sin(angle) * radius)];
   });
   const fa = fill ? `fill="${fill}"` : `class="${cls}"`;
-  const corners=points.map((point,i)=>{const prev=points[(i+9)%10],next=points[(i+1)%10],t=i%2?.24:.34;return {point,start:point.map((v,k)=>f1(v+(prev[k]-v)*t)),end:point.map((v,k)=>f1(v+(next[k]-v)*t))};});
+  const corners=points.map((point,i)=>{const prev=points[(i+9)%10],next=points[(i+1)%10],t=i%2?.05:.14;return {point,start:point.map((v,k)=>f1(v+(prev[k]-v)*t)),end:point.map((v,k)=>f1(v+(next[k]-v)*t))};});
   const path=corners.map((v,i)=>`${i?'L':'M'}${v.start.join(' ')} Q${v.point.join(' ')} ${v.end.join(' ')}`).join(' ')+' Z';
   return `<svg viewBox="0 0 ${viewBox} ${viewBox}" aria-hidden="true" ${extra}><path ${fa} d="${path}"/></svg>`;
 }

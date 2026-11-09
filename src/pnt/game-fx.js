@@ -26,7 +26,7 @@ export function createHammerSmokeGeometry(){
 }
 const hammerSmokeGeometry=createHammerSmokeGeometry();
 const starShape=new THREE.Shape();
-for(let i=0;i<10;i++){const angle=Math.PI/2+i*Math.PI/5,r=i%2?.45:1;starShape[i?'lineTo':'moveTo'](Math.cos(angle)*r,Math.sin(angle)*r);}starShape.closePath();
+for(let i=0;i<10;i++){const angle=Math.PI/2+i*Math.PI/5,r=i%2?.56:1;starShape[i?'lineTo':'moveTo'](Math.cos(angle)*r,Math.sin(angle)*r);}starShape.closePath();
 const heartShape=new THREE.Shape();heartShape.moveTo(0,.5);heartShape.bezierCurveTo(-.5,1.2,-1.2,.6,-.9,0);heartShape.bezierCurveTo(-.7,-.4,-.2,-.8,0,-1);heartShape.bezierCurveTo(.2,-.8,.7,-.4,.9,0);heartShape.bezierCurveTo(1.2,.6,.5,1.2,0,.5);
 const starGeometry=new THREE.ShapeGeometry(starShape),heartGeometry=new THREE.ShapeGeometry(heartShape);
 starGeometry.name='jet-star';heartGeometry.name='jet-heart';

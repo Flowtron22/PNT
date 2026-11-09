@@ -1,4 +1,7 @@
 /* Settings stays separate from gameplay and room rules. */
+.settings-resolution select{min-width:0}
+.settings-resolution button:not(:disabled){background:var(--orange);color:var(--ink)}
+.settings-resolution button:disabled{opacity:.45}
 #menu[data-page=settings] .page-panel{left:max(28px,calc((100vw - 1200px)/2));right:max(28px,calc((100vw - 1200px)/2));top:5vh;bottom:5vh;width:auto;max-width:none;padding:8px 12px 20px;background:none}
 #menu[data-page=settings] h1{margin:6px 0 20px}
 .settings-shell{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(230px,1fr);gap:24px;align-items:start}
