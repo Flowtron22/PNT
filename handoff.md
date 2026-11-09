@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.155**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.156**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.155` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.156` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -49,6 +49,12 @@ online all use internal mode ID `balloon`, rules version **14**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.156** adds a radial burst of sand-colored smash smoke and a short
+camera shake when a Balloon Bash sphere touches down. Simultaneous landings
+share the same shake cap. The landing cue uses the rendered fall and fires
+once for each observed sphere. Reduced Motion reduces the smoke and disables
+the shake.
 
 Version **0.9.155** reduces Balloon Bash spheres from 4.5 to 3 metres across,
 including collision. Spheres share Tile Tumble’s texture generator for dots,
@@ -363,8 +369,11 @@ timing, results portraits, fullscreen logo and controller highlight behavior.
 
 ## Verification and next playtest
 
-The current 0.9.155 client passed **367 automated tests** (328 client and
+The current 0.9.156 client passed **367 automated tests** (328 client and
 39 multiplayer), syntax checks and the Steam development build.
+Packaged Electron checks confirmed eight puffs for one observed landing and
+no replay for a sphere first seen on the ground. The 1280 × 800 training check
+showed the smoke around the opening wave with no renderer errors.
 In the packaged Electron renderer, a sphere retained its mesh when another
 despawned and rotated by its visible travel divided by its radius. The 1280 × 800
 training check showed the Tile Tumble textures with no renderer errors.
@@ -400,7 +409,7 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.155 on every machine. In Balloon Bash, check
+Close older copies and use 0.9.156 on every machine. In Balloon Bash, check
 first and final pops, moving cover, new sphere drops, and host transfer.
 Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.

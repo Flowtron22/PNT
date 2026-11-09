@@ -1,6 +1,6 @@
 # Balloon Bash
 
-Steam playtest 0.9.155 uses mode ID `balloon` and rules version `14`.
+Steam playtest 0.9.156 uses mode ID `balloon` and rules version `14`.
 Choose **Events → Balloon Bash** for training, couch play, or Steam online.
 
 ## Match rules
@@ -13,6 +13,8 @@ Choose **Events → Balloon Bash** for training, couch play, or Steam online.
   scheduled every six seconds. Drops require open space and cap at 18 active spheres.
 - Spheres become solid cover when they land. They block players and Hammer
   strikes, slide past other spheres, and drift inward at about 1.4 m/s.
+  A landing kicks up a radial sand-smoke burst and a short camera shake.
+  Reduced Motion lowers the puff count and suppresses the shake.
   Near the centre they sink at 1.35 m/s, lose collision as they submerge, and
   disappear beneath the sand.
 - Quicksand slows players to 87 percent and pulls them toward the centre.

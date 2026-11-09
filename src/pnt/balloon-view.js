@@ -65,7 +65,7 @@ export function createBalloonView(parent){
  });
  const activeSpheres=new Map(),rollAxis=new THREE.Vector3();
  parent.add(root);let time=0;
- return {root,update(round,dt,avatars,onPop){
+ return {root,update(round,dt,avatars,onPop,onLand){
   time+=dt;stage.flowTime.value=time;
   for(const state of round.actors){
    const actor=avatars?.[state.id],position=actor?.group.position;if(!position)continue;
@@ -90,6 +90,7 @@ export function createBalloonView(parent){
    let mesh=activeSpheres.get(sphere.id);
    if(!mesh){
     mesh=freeSpheres.pop();activeSpheres.set(sphere.id,mesh);
+    mesh.userData.awaitingLanding=sphere.phase==='falling';
     mesh.material=sphereSkins[Math.floor(sphere.pattern*sphereSkins.length)];
     mesh.position.set(sphere.x,sphere.y,sphere.z);
     mesh.rotation.set(sphere.pattern*Math.PI,0,sphere.pattern*2*Math.PI);
@@ -98,6 +99,10 @@ export function createBalloonView(parent){
    }
    const dx=(sphere.x-mesh.position.x)*blend,dz=(sphere.z-mesh.position.z)*blend;
    mesh.position.x+=dx;mesh.position.z+=dz;mesh.position.y+=(sphere.y-mesh.position.y)*blend;
+   if(mesh.userData.awaitingLanding&&sphere.phase!=='falling'&&mesh.position.y<=BALLOON_SPHERE_RADIUS+.1){
+    mesh.userData.awaitingLanding=false;
+    onLand?.(mesh.position.x,mesh.position.z);
+   }
    const distance=Math.hypot(dx,dz);
    if(distance>1e-6){
     rollAxis.set(dz/distance,0,-dx/distance);

@@ -8,7 +8,7 @@ import {createTiletideRound,stepTiletide,tileBotGoal,tileStageContains,TILE_SPAW
 import {createTiletideView,createTiletideCallout} from './tiletide-view.js';
 import {createStrikersRound,stepStrikers,strikerShoot,strikerBotGoal,strikerBotWantsShot,updateStrikerPossession,resetStrikerPlayers,strikerKickoffAngle,GOAL_RESET_SECONDS,STRIKER_HAMMER_STUN_SECONDS,STRIKER_TEAMS,STRIKER_SPAWNS} from './strikers-rules.js';
 import {createStrikersView} from './strikers-view.js';
-import {createBalloonRound,stepBalloon,resolveBalloonHammer,balloonBotGoal,createBalloonArenaData,slideBalloonSpheres,BALLOON_SPAWNS,BALLOON_ARENA_RADIUS,BALLOON_BANANA_SECONDS} from './balloon-rules.js';
+import {createBalloonRound,stepBalloon,resolveBalloonHammer,balloonBotGoal,createBalloonArenaData,slideBalloonSpheres,BALLOON_SPAWNS,BALLOON_ARENA_RADIUS,BALLOON_BANANA_SECONDS,BALLOON_SPHERE_RADIUS} from './balloon-rules.js';
 import {createBalloonView} from './balloon-view.js';
 import {updateBalloonLaunch,BALLOON_LAUNCH_SECONDS} from './balloon-launch.js';
 import {menuPreviewFrame} from './viewport.js';
@@ -820,7 +820,10 @@ function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed
  if(eventView&&round?.mode==='balloon'&&!busy&&(!paused||online)){
   for(const state of round.actors)if(state.eliminated)updateBalloonLaunch(avatars[state.id],state,dt,{fx:gameFX,camera:matchCamera,reduced,play:actor=>gameAudio.tool('rocket',actor.id,avatars),shake:strength=>{cameraShake=Math.max(cameraShake,strength);}});
   if(round.phase==='finished'&&!round.endStarted)gameFX.update(dt,matchCamera,{map:mapData?.id,bounds});
-  eventView.update(round,round.startRemaining>0||round.endStarted?0:dt,avatars,position=>gameFX.balloonPop(position));
+  eventView.update(round,round.startRemaining>0||round.endStarted?0:dt,avatars,position=>gameFX.balloonPop(position),(x,z)=>{
+   gameFX.sphereImpact(x,z,BALLOON_SPHERE_RADIUS,{reduced});
+   if(!reduced)cameraShake=Math.max(cameraShake,.32);
+  });
  }
  if(eventView&&round?.mode==='strikers'&&!busy&&(!paused||online)){
   const playing=round.phase==='playing'&&!(round.startRemaining>0||round.resetClock>0);
