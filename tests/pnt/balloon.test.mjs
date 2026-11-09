@@ -12,11 +12,12 @@ test('initial batch falls at GO, lands, moves inward, sinks and is replenished',
  stepBalloon(round,.1);assert.equal(round.spheres.length,0);
  stepBalloon(round,.1);stepBalloon(round,.1);
  const batch=round.spheres.slice(),initialCount=batch.length;
- assert.ok(initialCount>=5&&initialCount<=10);
+ assert.ok(initialCount>=10&&initialCount<=12);
  assert.ok(batch.every(sphere=>sphere.phase==='falling'&&sphere.y>4));
  assert.deepEqual(round.actors[0].sphereColliders,[]);
  for(let i=0;i<20;i++)stepBalloon(round,.1);
- assert.ok(batch.every(sphere=>sphere.phase==='rolling'));
+ assert.ok(batch.every(sphere=>sphere.phase!=='falling'));
+ assert.equal(new Set(batch.map(sphere=>sphere.pattern)).size,initialCount);
  assert.equal(round.actors[0].sphereColliders.length,initialCount);
  const radius=Math.hypot(batch[0].x,batch[0].z);
  for(let i=0;i<20;i++)stepBalloon(round,.1);
@@ -56,9 +57,9 @@ test('shared sphere collision stops crossings and preserves sliding along the bo
   const to={x:3,z};slideBalloonSpheres(state,{x:-3,z:0},to);assert.ok(to.x<0);
   for(const [x,cz,r] of state.sphereColliders)assert.ok(Math.hypot(to.x-x,to.z-cz)>=r+.32-1e-7);
  }
- const wall={sphereColliders:[[9,0,.75]]},to={x:10,z:0};
- slideBalloonSpheres(wall,{x:9.7,z:0},to);
- assert.ok(Math.hypot(to.x-9,to.z)>=1.07-1e-7);
+ const wall={sphereColliders:[[11.2,0,.75]]},to={x:13,z:0};
+ slideBalloonSpheres(wall,{x:11.9,z:0},to);
+ assert.ok(Math.hypot(to.x-11.2,to.z)>=1.07-1e-7);
  assert.ok(Math.hypot(to.x,to.z)<=BALLOON_ARENA_RADIUS-.42+1e-7);
 });
 

@@ -1,6 +1,6 @@
 # Balloon Bash
 
-Steam playtest 0.9.153 uses mode ID `balloon` and rules version `12`.
+Steam playtest 0.9.154 uses mode ID `balloon` and rules version `13`.
 Choose **Events → Balloon Bash** for training, couch play, or Steam online.
 
 ## Match rules
@@ -8,22 +8,22 @@ Choose **Events → Balloon Bash** for training, couch play, or Steam online.
 - Four players compete free-for-all with two balloons each. Every successful
   Hammer swing pops one balloon. The second pop eliminates the player and
   triggers their upward launch. The last player standing wins.
-- The fixed kit is Hammer and Banana Skin. Banana can open a path to a rival.
-- At GO, 5–10 spheres fall at randomized locations. Every seven seconds, another
-  1–3 are scheduled, up to a maximum of 14 active spheres.
+- The fixed kit is Hammer and Banana Skin. Banana spin lasts two seconds.
+- At GO, 10–12 spheres fall across two staggered bands. A wave of 3–5 is
+  scheduled every six seconds. Drops require open space and cap at 18 active spheres.
 - Spheres become solid cover when they land. They block players and Hammer
-  strikes, slide past other spheres, and drift inward at about 0.48 m/s.
-  Near the centre they sink at 0.55 m/s, lose collision as they submerge, and
+  strikes, slide past other spheres, and drift inward at about 1.4 m/s.
+  Near the centre they sink at 1.35 m/s, lose collision as they submerge, and
   disappear beneath the sand.
 - Quicksand slows players to 87 percent and pulls them toward the centre.
   Players remain inside the circular arena.
 
 ## Arena and integration
 
-The arena radius is 10.296 metres. The procedural sand ring uses Mall lighting,
-a sand-only AO bake, animated inward bands and a shared camera widened to show
-more of the arena. The spheres and overhead balloons have distinct shapes and
-colors. The HUD shows survivors and your remaining balloons.
+The arena radius is 12.6 metres. Each sphere is 4.5 metres across and uses a
+seeded surface pattern. The procedural sand ring uses Mall lighting, a sand-only
+AO bake, and animated inward bands. The shared camera looks down at about 47°.
+The HUD shows survivors and your remaining balloons.
 
 Rules live in `src/pnt/balloon-rules.js`. The shared rules simulate both
 balloon counts and spheres. Steam snapshots carry obstacle positions, phase,

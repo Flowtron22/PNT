@@ -33,18 +33,31 @@ test('host restore keeps the remaining balloons, active spheres and next seeded 
  const sim=await MatchSimulation.create('grassfield',players(),'balloon');
  try{
   sim.round.startRemaining=0;
-  sim.round.actors[1].balloons=1;
+  sim.round.actors[1].balloons=1;sim.round.sphereSeed=6201;
   assert.ok(sim.actors.every(actor=>actor.tools.join(',')==='hammer,banana'));
-  for(let i=0;i<400;i++)sim.step();
+  for(let i=0;i<350;i++)sim.step();
   const restored=await MatchSimulation.restore(JSON.parse(JSON.stringify(sim.snapshot())),players());
   try{
    assert.equal(restored.round.actors[1].balloons,1);
-   assert.ok(restored.round.spheres.length>=5);
+   assert.ok(restored.round.spheres.length>0);
+   assert.deepEqual(restored.round.spheres,sim.round.spheres);
    const lastId=restored.round.sphereId;
    for(let i=0;i<60;i++){sim.step();restored.step();}
    assert.ok(restored.round.sphereId>lastId);
    assert.deepEqual(restored.round.spheres,sim.round.spheres);
    assert.deepEqual(restored.round.actors[0].sphereColliders,sim.round.actors[0].sphereColliders);
   }finally{restored.dispose();}
+ }finally{sim.dispose();}
+});
+
+test('Balloon Bash Banana spin wears off after two seconds',async()=>{
+ const sim=await MatchSimulation.create('grassfield',players(),'balloon');
+ try{
+  sim.round.startRemaining=0;sim.round.sphereId=1;
+  const target=sim.actors[1];
+  sim.addHazard('banana',sim.actors[0],10,target.group.position);
+  sim.step();assert.equal(sim.round.actors[1].effectTime,2);
+  for(let i=0;i<120;i++)sim.step();
+  assert.equal(sim.round.actors[1].effect,null);
  }finally{sim.dispose();}
 });

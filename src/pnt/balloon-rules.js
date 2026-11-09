@@ -1,12 +1,13 @@
 // Shared authoritative rules for Balloon Bash. Positions are Y-up metres.
-export const BALLOON_VERSION=12;
-export const BALLOON_ARENA_RADIUS=10.296;
+export const BALLOON_VERSION=13;
+export const BALLOON_ARENA_RADIUS=12.6;
 export const BALLOON_RADIUS=.68;
 export const BALLOON_HEIGHT=2.95;
 export const BALLOON_COUNT=2;
 export const BALLOON_HAMMER_RANGE=3;
 export const BALLOON_HAMMER_ARC=Math.PI*.43;
-export const BALLOON_SPHERE_RADIUS=.75;
+export const BALLOON_SPHERE_RADIUS=2.25;
+export const BALLOON_BANANA_SECONDS=2;
 export const BALLOON_SPAWNS=[[-4.25,0,-2.4],[4.25,0,-2.4],[4.25,0,2.4],[-4.25,0,2.4]];
 
 // Small flat grid shared by the procedural client arena and Steam authority.
@@ -22,36 +23,45 @@ function finish(round){
  const survivors=alive(round);round.phase='finished';round.winnerId=survivors.length===1?survivors[0].id:null;
  round.winner=survivors.length===1?'runner':null;round.reason=survivors.length===1?'last-standing':'draw';
 }
-const DROP_INTERVAL=7,SINK_RADIUS=.95;
-export const BALLOON_MAX_SPHERES=14;
+const DROP_INTERVAL=6,SINK_RADIUS=3.8,CROWDED_SINK_RADIUS=6.3;
+export const BALLOON_MAX_SPHERES=18;
 function random(round){
  round.sphereSeed=(Math.imul(round.sphereSeed,1664525)+1013904223)>>>0;
  return round.sphereSeed/4294967296;
 }
-function dropSphere(round,angle){
- const radius=3.6+random(round)*5.1;
- round.spheres.push({id:++round.sphereId,x:Math.cos(angle)*radius,z:Math.sin(angle)*radius,y:5+random(round)*4,speed:0,phase:'falling'});
+function dropSphere(round,angle,radius){
+ const x=Math.cos(angle)*radius,z=Math.sin(angle)*radius;
+ round.spheres.push({id:++round.sphereId,x,z,y:7+random(round)*4,pattern:random(round),speed:0,phase:'falling'});
 }
 export function createBalloonRound(base,{seed=Math.floor(Math.random()*4294967296)}={}){
  return {...base,mode:'balloon',eventVersion:BALLOON_VERSION,playerRole:'runner',winner:null,winnerId:null,reason:null,
   elapsed:0,caches:[],totalMoney:0,collected:0,spheres:[],sphereSeed:seed>>>0,sphereId:0,sphereClock:DROP_INTERVAL,
   actors:base.actors.map(actor=>({...actor,role:'runner',caught:false,eliminated:false,balloons:BALLOON_COUNT,pops:0,blocks:0,money:0}))};
 }
-function sphereRadius(sphere){
- if(sphere.phase==='falling')return 0;
+function sphereRadius(sphere,includeFalling=false){
+ if(sphere.phase==='falling'&&!includeFalling)return 0;
  const depth=Math.min(0,sphere.y);
  return Math.sqrt(Math.max(0,BALLOON_SPHERE_RADIUS**2-depth**2));
 }
 function updateSpheres(round,dt){
  if(!round.sphereId){
-  const count=5+Math.floor(random(round)*6),offset=random(round)*Math.PI*2;
-  for(let i=0;i<count;i++)dropSphere(round,offset+(i+.3*random(round))*Math.PI*2/count);
+  const count=10+Math.floor(random(round)*3),outer=count-4,offset=random(round)*Math.PI*2;
+  // Split the batch across two bands so the larger spheres do not seal the ring.
+  for(let i=0;i<outer;i++)dropSphere(round,offset+(i+.2*random(round))*Math.PI*2/outer,10+random(round)*.3);
+  for(let i=0;i<4;i++)dropSphere(round,offset+(i+.15*random(round))*Math.PI/2,5+random(round)*.25);
  }
  round.sphereClock-=dt;
  if(round.sphereClock<=0){
   round.sphereClock+=DROP_INTERVAL;
-  const count=1+Math.floor(random(round)*3);
-  for(let i=0;i<count&&round.spheres.length<BALLOON_MAX_SPHERES;i++)dropSphere(round,random(round)*Math.PI*2);
+  const count=3+Math.floor(random(round)*3);
+  for(let i=0;i<count&&round.spheres.length<BALLOON_MAX_SPHERES;i++){
+   for(let attempt=0;attempt<18;attempt++){
+    const angle=random(round)*Math.PI*2,radius=6.6+random(round)*3.7;
+    const x=Math.cos(angle)*radius,z=Math.sin(angle)*radius;
+    if(round.spheres.some(sphere=>Math.hypot(x-sphere.x,z-sphere.z)<BALLOON_SPHERE_RADIUS+sphereRadius(sphere,true)+.7))continue;
+    dropSphere(round,angle,radius);break;
+   }
+  }
  }
  for(const sphere of round.spheres){
   if(sphere.phase==='falling'){
@@ -59,13 +69,15 @@ function updateSpheres(round,dt){
    if(sphere.y===BALLOON_SPHERE_RADIUS)sphere.phase='rolling';
    continue;
   }
-  if(sphere.phase==='sinking'){sphere.y-=.55*dt;continue;}
+  if(sphere.phase==='sinking'){sphere.y-=1.35*dt;continue;}
   const radius=Math.hypot(sphere.x,sphere.z);
   if(radius<=SINK_RADIUS){sphere.phase='sinking';continue;}
-  const travel=Math.min(radius,.48*dt),from={x:sphere.x,z:sphere.z},to={x:sphere.x*(1-travel/radius),z:sphere.z*(1-travel/radius)};
+  const travel=Math.min(radius,1.4*dt),from={x:sphere.x,z:sphere.z},to={x:sphere.x*(1-travel/radius),z:sphere.z*(1-travel/radius)};
   const neighbors=round.spheres.filter(other=>other!==sphere).map(other=>[other.x,other.z,sphereRadius(other)]).filter(([, , r])=>r>0);
   slideCircles(from,to,neighbors,BALLOON_SPHERE_RADIUS,BALLOON_ARENA_RADIUS-BALLOON_SPHERE_RADIUS);
   sphere.x=to.x;sphere.z=to.z;
+  // A crowded centre swallows blocked spheres before they can jam the flow.
+  if(radius<=CROWDED_SINK_RADIUS&&radius-Math.hypot(to.x,to.z)<travel*.2)sphere.phase='sinking';
  }
  round.spheres=round.spheres.filter(sphere=>sphere.y>-BALLOON_SPHERE_RADIUS);
  const colliders=round.spheres.map(sphere=>[sphere.x,sphere.z,sphereRadius(sphere)]).filter(([, , radius])=>radius>0);
