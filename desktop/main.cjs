@@ -87,6 +87,17 @@ function launch() {
       }
     });
 
+    // Keep a 1280 × 720 layout baseline on larger displays. Chromium applies
+    // zoom to CSS viewports and pointer coordinates as well as the DOM.
+    const scaleLayout = () => {
+      const [width, height] = window.getContentSize();
+      const zoom = Math.max(1, Math.min(width / 1280, height / 720));
+      if (Math.abs(window.webContents.getZoomFactor() - zoom) > 0.001) window.webContents.setZoomFactor(zoom);
+    };
+    window.on('resize', scaleLayout);
+    window.on('enter-full-screen', scaleLayout);
+    window.on('leave-full-screen', scaleLayout);
+    window.webContents.on('did-finish-load', scaleLayout);
     window.webContents.setWindowOpenHandler(() => ({action: 'deny'}));
     window.webContents.on('will-navigate', (event, url) => {
       if (url !== gameUrl) event.preventDefault();

@@ -1,3 +1,5 @@
+import {RENDER_RESOLUTIONS} from './settings.js';
+
 const percent=v=>Math.round(v*100)+'%';
 export const SETTINGS_TABS=[
  {id:'controls',label:'Controls',icon:'✥',rows:[
@@ -7,6 +9,7 @@ export const SETTINGS_TABS=[
   {key:'bindings',label:'Key & mouse mapping',action:true,help:'Map keyboard keys or left, right and middle mouse buttons. Controller: left stick moves, A / Cross interacts, X / Square and Y / Triangle use tools. Start pauses; B / Circle goes back; LB / RB switches settings tabs.'}
  ]},
  {id:'video',label:'Video',icon:'▣',rows:[
+  {key:'renderResolution',label:'Render resolution',options:RENDER_RESOLUTIONS,desktopOnly:true,help:'Set the maximum 3D resolution. The game fits your display and keeps the same menu and HUD scale. Auto caps at 1080p in Balanced or 720p in Battery.'},
   {key:'quality',label:'Graphics quality',options:[['battery','Battery'],['balanced','Balanced']],help:'Battery lowers rendering resolution to reduce GPU work. Balanced keeps a sharper image.'},
   {key:'fpsCap',label:'Frame rate limit',options:[[0,'Max'],[60,'60'],[30,'30']],help:'Limit rendering to save battery. Movement and networking continue independently.'},
   {key:'showFps',label:'Show FPS',toggle:true,help:'Show measured rendered frames per second during a match.'},
@@ -37,8 +40,9 @@ export function mountSettings(root,{getSettings,onChange,onReset,bindingsMarkup,
   const visibleRows=desktop?t.rows.filter(r=>!['joystickSize','joystickSensitivity'].includes(r.key)).map(r=>{
    if(r.key==='haptics')return {...r,help:'Controller vibration for rocket and banana effects, when supported.'};
    if(r.key==='hudScale')return {...r,help:'Resize the timer, money counter and crew portraits.'};
+   if(r.key==='quality')return {...r,help:'Battery reduces graphics detail and uses a lower resolution cap in Auto.'};
    return r;
-  }):t.rows;
+  }):t.rows.filter(r=>!r.desktopOnly);
   for(const r of visibleRows){const row=doc.createElement('div');row.className='settings-option';row.innerHTML=`<label>${r.label}</label><div class="settings-control"></div>`;const host=row.lastElementChild,label=row.firstElementChild;let control;
    if(r.action){control=doc.createElement('button');control.type='button';control.textContent=r.key==='bindings'?'EDIT KEYS':'ENTER';control.onclick=()=>{preview(r);if(r.key==='bindings'){const section=rows.querySelector('.settings-bindings');section.hidden=!section.hidden;if(section.hidden)onCloseBindings();control.setAttribute('aria-expanded',String(!section.hidden));}else onFullscreen(control,rows.querySelector('#fullscreen-status'));};if(r.key==='bindings'){control.setAttribute('aria-expanded','false');control.setAttribute('aria-controls','settings-bindings');}}
    else if(r.options){control=doc.createElement('select');for(const [v,text]of r.options){const o=doc.createElement('option');o.value=v;o.textContent=text;control.append(o);}control.value=String(getSettings()[r.key]);}

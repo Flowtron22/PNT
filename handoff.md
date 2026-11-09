@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.148**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.149**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.148` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.149` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -49,6 +49,12 @@ online all use internal mode ID `balloon`, rules version **11**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.149** adds **Settings → Video → Render resolution** for Steam.
+Choose Auto, 720p, 1080p, 1440p or 4K. The setting caps the 3D render buffer and
+fits the display aspect ratio. Desktop layout scales independently from a
+1280 × 720 baseline on larger windows and displays. Auto caps Balanced at
+1080p and Battery at 720p. The resolution choice saves locally.
 
 Version **0.9.148** keeps Hammer aimed during a swing while quicksand or guard
 contact moves the attacker. A guard from any living opponent can block the hit,
@@ -318,8 +324,12 @@ timing, results portraits, fullscreen logo and controller highlight behavior.
 
 ## Verification and next playtest
 
-The current 0.9.148 client passed **378 automated tests** (339 client and
+The current 0.9.149 client passed **379 automated tests** (340 client and
 39 multiplayer), syntax checks and the Steam development build.
+The packaged Electron renderer used the same 1280 × 720 layout viewport in
+1280 × 720 and 3840 × 2160 windows. Changing the 3D buffer from 720p to 4K kept
+the settings control bounds unchanged. Check fullscreen gameplay and HUD
+readability on a physical 4K display and Steam Deck.
 These automated checks cover rules and packaging, with live visual/device testing
 still pending as described above.
 
@@ -332,7 +342,7 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.148 on every machine. In Balloon Bash, check
+Close older copies and use 0.9.149 on every machine. In Balloon Bash, check
 Hammer aim with movement held and guard blocks during three-player encounters.
 Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.

@@ -8,8 +8,8 @@ Read the [current handoff](handoff.md) before continuing development.
 The Steam release uses one Windows x64 package for desktop PCs and Steam Deck
 via Proton. See the [Steam build guide](docs/STEAM.md) for build and test steps.
 
-The current Steam dev-playtest is **0.9.148**. Build and share the complete
-`dist-steam/win64-dev-playtest-0.9.148` folder, including `steam_appid.txt`.
+The current Steam dev-playtest is **0.9.149**. Build and share the complete
+`dist-steam/win64-dev-playtest-0.9.149` folder, including `steam_appid.txt`.
 
 Developed by Todak Studios, with Classic, Patty Prowl, Tile Tumble, Slippery
 Shoots and **Balloon Bash**. Balloon Bash is a 1v1v1v1 last-player-standing

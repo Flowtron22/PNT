@@ -36,7 +36,7 @@ import {updateCaptureGauge,createCaptureTint} from './capture-ui.js';
 import {createMoneyTrail} from './money-trail.js';
 import {PROFILE_KEY,readProfile,saveProfile,profileName,recordMatch} from './profile.js';
 import {renderHomeWidgets} from './home-widgets.js';
-import {loadSettings,saveSettings,DEFAULT_SETTINGS,createRenderGate} from './settings.js';
+import {loadSettings,saveSettings,DEFAULT_SETTINGS,createRenderGate,renderPixelRatio} from './settings.js';
 import {mountSettings} from './settings-ui.js';
 import {createController,createControllerPool,controllerMenu} from './controller.js';
 import {createVirtualKeyboard} from './virtual-keyboard.js';
@@ -121,7 +121,11 @@ const moneyTrail=createMoneyTrail(ui.hud,$('#money-status'),{reduced:()=>reduced
 document.addEventListener('pointerdown',()=>void gameAudio.prepare(),{capture:true});
 document.addEventListener('keydown',()=>void gameAudio.prepare(),{capture:true,once:true});
 document.body.classList.toggle('reduced-motion',reduced);
-function resize(){const aspect=innerWidth/innerHeight;menuCamera.aspect=aspect;menuCamera.updateProjectionMatrix();matchCamera.aspect=aspect;matchCamera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,quality==='battery'?1:1.5));renderer.setSize(innerWidth,innerHeight,false);}
+function resize(){
+ const width=Math.max(1,innerWidth),height=Math.max(1,innerHeight),aspect=width/height;
+ menuCamera.aspect=aspect;menuCamera.updateProjectionMatrix();matchCamera.aspect=aspect;matchCamera.updateProjectionMatrix();
+ renderer.setDrawingBufferSize(width,height,renderPixelRatio(width,height,devicePixelRatio,quality,settings.renderResolution,!!desktop));
+}
 function applySettings(initial=false){
  const qualityChanged=quality!==settings.quality;quality=settings.quality;reduced=settings.reducedMotion;document.body.classList.toggle('reduced-motion',reduced);
  document.documentElement.style.setProperty('--joystick-size',settings.joystickSize);document.documentElement.style.setProperty('--hud-scale',settings.hudScale);
@@ -130,7 +134,7 @@ function applySettings(initial=false){
  gameAudio.setLevels({sfx:settings.sfx,music:settings.music});gameAudio.setEnabled(settings.sfx>0);gameAudio.setMusic(settings.music>0);
  if(initial||qualityChanged){resize();sunkenLook?.setQuality(quality);}
 }
-function changeSetting(key,value){settings={...settings,[key]:value};const saved=saveSettings(localStorage,settings);applySettings();return saved;}
+function changeSetting(key,value){settings={...settings,[key]:value};const saved=saveSettings(localStorage,settings);applySettings();if(key==='renderResolution')resize();return saved;}
 addEventListener('resize',resize);applySettings(true);
 function show(name){if(name!=='lobby')leaveLobbyDialog.close();document.body.classList.toggle('diretide-mode',['diretide','tiletide','strikers','balloon'].includes(round?.mode)||['diretide','tiletide','strikers','balloon'].includes(room?.gameMode)||['diretide','tiletide','strikers','balloon'].includes(selectedMode)&&name==='menu'&&activePage!=='home');document.body.classList.toggle('couch-mode',room?.mode==='couch');$('#couch-hud').hidden=room?.mode!=='couch';ui.lobby.classList.toggle('couch-lobby',room?.mode==='couch');if(name==='menu'){scene.fog.near=38;scene.fog.far=85;}for(const [key,node]of Object.entries(ui))node.hidden=key!==name;document.body.classList.toggle('playing',name==='hud'||name==='pause'||name==='results');document.body.classList.toggle('lobby-view',name==='lobby');document.body.classList.toggle('menu-view',name==='menu');$('#lobby-backdrop').hidden=!['menu','lobby'].includes(name);scene.background=name==='menu'?null:new THREE.Color('#70688f');floor.visible=name!=='menu';if(menuArena)menuArena.visible=false;}
 function say(text,seconds=2){$('#toast').textContent=text;toastTime=seconds;}
@@ -363,7 +367,7 @@ function openPage(name){if(busy)return;bindingCapture=null;settingsPage=null;act
    onCloseBindings:()=>{bindingCapture=null;},
    desktop:!!desktop,
    onFullscreen:(button,status)=>configureFullscreen(button,status),
-   onReset:()=>{settings={...DEFAULT_SETTINGS,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches};bindings={...DEFAULT_BINDINGS};bindingCapture=null;saveBindings(localStorage,bindings);refreshControlHints();const saved=saveSettings(localStorage,settings);applySettings();return saved;}
+   onReset:()=>{settings={...DEFAULT_SETTINGS,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches};bindings={...DEFAULT_BINDINGS};bindingCapture=null;saveBindings(localStorage,bindings);refreshControlHints();const saved=saveSettings(localStorage,settings);applySettings(true);return saved;}
   });
  }else{
   content.innerHTML=creditsMarkup();

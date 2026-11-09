@@ -26,8 +26,12 @@ PC and Steam Deck use the same Windows x64 package, with Proton on Deck.
 
 ## Private development playtest
 
-Current development package is **0.9.148** in
-`dist-steam/win64-dev-playtest-0.9.148`.
+Current development package is **0.9.149** in
+`dist-steam/win64-dev-playtest-0.9.149`.
+
+**Settings → Video → Render resolution** sets the maximum 3D resolution from
+720p to 4K. Auto caps Balanced at 1080p and Battery at 720p. The game fits the
+display aspect ratio and scales the menus and HUD independently of this setting.
 
 Build on Windows with x64 Node.js 22.12 or newer. Run Steam and sign in.
 

@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DEFAULT_SETTINGS,SETTINGS_KEY,normalizeSettings,loadSettings,saveSettings,createRenderGate} from '../../src/pnt/settings.js';
+import {DEFAULT_SETTINGS,SETTINGS_KEY,normalizeSettings,loadSettings,saveSettings,createRenderGate,renderPixelRatio} from '../../src/pnt/settings.js';
+test('desktop resolution caps the drawing buffer without changing viewport proportions',()=>{
+ const ratio=(w,h,dpr,mode,height)=>renderPixelRatio(w,h,dpr,mode,height,true);
+ assert.equal(ratio(1280,720,3,'balanced',0),1.5);
+ assert.equal(ratio(1280,720,3,'battery',0),1);
+ assert.equal(ratio(1280,720,3,'battery',2160),3);
+ assert.equal(ratio(1280,800,1,'balanced',2160),1);
+ assert.equal(ratio(1280,800,1,'balanced',720),.9);
+ assert.equal(normalizeSettings({renderResolution:1440}).renderResolution,1440);
+ assert.equal(normalizeSettings({renderResolution:9000}).renderResolution,0);
+});
 test('settings migrate existing audio, graphics and accessibility preferences once',()=>{
  const data=new Map([['psx-web-quality','battery'],['pnt-game-music','off'],['pnt-game-sfx','off'],['pnt-ui-sounds','off'],['pnt-haptics','off']]),storage={getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)};
  const s=loadSettings(storage,true);assert.equal(s.quality,'battery');assert.equal(s.music,0);assert.equal(s.sfx,0);assert.equal(s.uiSounds,false);assert.equal(s.haptics,false);assert.equal(s.reducedMotion,true);
