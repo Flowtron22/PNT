@@ -1,7 +1,7 @@
 // Territory rules shared by local play, Steam host and client prediction.
-export const SPLASH_VERSION=2;
+export const SPLASH_VERSION=3;
 export const SPLASH_HALF=12,SPLASH_SIZE=256,SPLASH_CELL=24/SPLASH_SIZE;
-export const SPLASH_COLORS=['#428fff','#ffa52e','#38d995','#f16cb7'];
+export const SPLASH_COLORS=['#006cff','#ff8700','#00c96a','#ff0088'];
 export const SPLASH_SPAWNS=[[-9,0,-9],[9,0,-9],[9,0,9],[-9,0,9]];
 export function createSplashArenaData(){const n=65;return {metadata:{id:'grassfield',name:'SPLISH SPLASH',origin:[0,0,0],spawns:SPLASH_SPAWNS,caches:[]},grid:{step:.5,nx:n,nz:n,minX:-16,minZ:-16,heights:new Float32Array(n*n),blocked:new Uint8Array(n*n),edges:new Uint8Array(n*n)}};}
 function random(r){r.paintSeed=(Math.imul(r.paintSeed,1664525)+1013904223)>>>0;return r.paintSeed/4294967296;}
@@ -35,24 +35,66 @@ export function splashPaint(r,seat,x,z,radius,seed=0){
  if(changed){r.paint=cells.join('');r.paintRevision++;}
 }
 function burst(r,s){splashPaint(r,s.seat,s.x,s.z,s.can?2.55:.69,s.id*.71);r.paintBursts.push({id:s.id,x:s.x,z:s.z,seat:s.seat,r:s.can?2.55:.69});if(r.paintBursts.length>24)r.paintBursts.shift();}
-export function splashAction(r,id,slot,p,angle){const a=r.actors[id];if(r.mode!=='splash'||r.phase!=='playing'||r.startRemaining>0||!a)return false;if(slot===0){a.diving=!a.diving;return true;}if(slot!==1||a.ink<30||a.toolCooldowns[1]>0)return false;a.diving=false;a.submerged=false;a.ink-=30;a.paintIdle=0;a.toolCooldowns[1]=5;a.cans++;launch(r,a,p,angle,true);return true;}
-function launch(r,a,p,angle,can=false,speed=10){
- r.paintShots.push({id:++r.paintShotId,seat:a.paintSeat,x:p.x,z:p.z,y:.8,
-  vx:Math.sin(angle)*speed,vz:Math.cos(angle)*speed,vy:can?7:.65,age:0,can});
+export function splashHoseTarget(boxes,p,angle){
+ const dx=Math.sin(angle),dz=Math.cos(angle);
+ let distance=0;
+ for(let d=.06;d<=3.3;d+=.06){
+  if(!splashClear(boxes,p.x+dx*d,p.z+dz*d,.07))break;
+  distance=d;
+ }
+ return {x:p.x+dx*distance,z:p.z+dz*distance,distance};
+}
+export const SPLASH_CAN_TIME=.85;
+export function splashCanHeight(t){return .86*(1-t)+13.6*t*(1-t)+.05;}
+export function splashCanTarget(boxes,p,angle){
+ const dx=Math.sin(angle),dz=Math.cos(angle);
+ for(let distance=6;distance>0;distance-=.25){
+  const x=p.x+dx*distance,z=p.z+dz*distance;
+  if(!splashClear(boxes,x,z,.2))continue;
+  let clear=true;
+  for(let i=1;i<64;i++){
+   const t=i/64,y=splashCanHeight(t);
+   if(boxes.some(box=>y<box.h+.23&&splashInside(box,p.x+dx*distance*t,p.z+dz*distance*t,.17))){
+    clear=false;break;
+   }
+  }
+  if(clear)return {x,z};
+ }
+ return {x:p.x,z:p.z};
+}
+export function splashAction(r,id,slot,p,angle){
+ const a=r.actors[id];
+ if(r.mode!=='splash'||r.phase!=='playing'||r.startRemaining>0||!a)return false;
+ if(slot===0){a.diving=!a.diving;a.spraying=false;return true;}
+ if(slot!==1||a.ink<30||a.toolCooldowns[1]>0)return false;
+ const target=splashCanTarget(r.paintCover,p,angle);
+ a.diving=false;a.submerged=false;a.ink-=30;a.paintIdle=0;a.toolCooldowns[1]=5;a.cans++;
+ r.paintShots.push({id:++r.paintShotId,seat:a.paintSeat,x:p.x,z:p.z,y:splashCanHeight(0),
+  startX:p.x,startZ:p.z,targetX:target.x,targetZ:target.z,age:0,can:true});
+ return true;
 }
 export function splashFire(r,id,p,angle,wants){
  const a=r.actors[id];
- if(!wants||r.startRemaining>0||r.phase!=='playing'||a.diving||a.ink<2.5||a.shotCooldown>0)return;
+ a.spraying=false;
+ if(!wants||r.startRemaining>0||r.phase!=='playing'||a.ink<2.5)return;
+ a.diving=false;a.submerged=false;a.spraying=true;a.sprayAngle=angle;
+ if(a.shotCooldown>0)return;
  a.ink-=2.5;a.shotCooldown=.13;a.paintIdle=0;a.shots++;
- const sway=Math.sin(a.shots*2.4)*.06;
- // A staggered fan joins into a wet strip as the player sweeps their aim.
- launch(r,a,p,angle+sway-.22,false,8.3);
- launch(r,a,p,angle+sway,false,11.5);
- launch(r,a,p,angle+sway+.22,false,9.6);
+ const target=splashHoseTarget(r.paintCover,p,angle);
+ burst(r,{id:++r.paintShotId,seat:a.paintSeat,x:target.x,z:target.z,can:false});
 }
 export function stepSplash(r,dt,positions){if(r.phase!=='playing'||!Number.isFinite(dt)||dt<=0)return;dt=Math.min(.1,dt);if(r.startRemaining>0){r.startRemaining=Math.max(0,r.startRemaining-dt);if(r.startRemaining<1e-8)r.startRemaining=0;return;}dt=Math.min(dt,r.remaining);r.elapsed+=dt;r.remaining=Math.max(0,r.remaining-dt);
  for(const a of r.actors){a.shotCooldown=Math.max(0,a.shotCooldown-dt);a.toolCooldowns=a.toolCooldowns.map(t=>Math.max(0,t-dt));a.submerged=a.diving&&ownPaint(r,a,positions[a.id]);a.paintIdle=(a.paintIdle||0)+dt;if(a.submerged)a.ink=Math.min(100,a.ink+42*dt);else if(a.paintIdle>.9)a.ink=Math.min(100,a.ink+5*dt);}
- const live=[];for(const s of r.paintShots){const n=Math.max(1,Math.ceil(Math.hypot(s.vx,s.vz)*dt/.1));let hit=false;for(let i=0;i<n;i++){const step=dt/n,nx=s.x+s.vx*step,nz=s.z+s.vz*step;s.vy-=18*step;s.y+=s.vy*step;s.age+=step;if(!splashClear(r.paintCover,nx,nz,.06)){hit=true;break;}s.x=nx;s.z=nz;if(s.y<=.05||s.age>1.5){hit=true;break;}}if(hit)burst(r,s);else live.push(s);}r.paintShots=live;
+ const live=[];
+ for(const shot of r.paintShots){
+  shot.age+=dt;
+  const t=Math.min(1,shot.age/SPLASH_CAN_TIME);
+  shot.x=shot.startX+(shot.targetX-shot.startX)*t;
+  shot.z=shot.startZ+(shot.targetZ-shot.startZ)*t;
+  shot.y=splashCanHeight(t);
+  if(t===1)burst(r,shot);else live.push(shot);
+ }
+ r.paintShots=live;
  if(r.remaining<1e-8){r.remaining=0;r.phase='finished';const best=Math.max(...r.paintCounts),winners=r.actors.filter(a=>r.paintCounts[a.paintSeat]===best);r.winnerId=winners.length===1?winners[0].id:null;r.winner=r.winnerId===null?null:'runner';r.reason=winners.length===1?'coverage':'draw';}
 }
 // Bots walk between clear points; low ink returns to their closest owned turf.

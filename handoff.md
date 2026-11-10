@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.158**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.159**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.158` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.159` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -51,6 +51,17 @@ online all use internal mode ID `balloon`, rules version **14**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.159** gives Splish Splash a continuous paint hose, saturated
+ink colors and a ground contact lightmap baked for each seeded layout.
+Interact surfaces and fires directly from submerge when there is enough ink.
+The paint can follows a previewed ballistic arc to its landing ring and can
+clear boxes. Steam mode `splash` now uses rules version **3**.
+Syntax checks and 380 tests passed (338 client, 42 multiplayer). Packaged
+Electron training at 1280 × 800 showed the continuous stream, saturated paint,
+and ground contact shadows without renderer errors. Automated checks verified
+surface-to-fire and landing at the shared arc target. Live Steam and Deck
+hardware checks remain pending.
 
 Version **0.9.158** renames the event **Splish Splash**. The floor shader
 reconstructs smooth liquid edges separately from scoring. The fixed camera
@@ -447,7 +458,7 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.158 on every machine. In Balloon Bash, check
+Close older copies and use 0.9.159 on every machine. In Balloon Bash, check
 first and final pops, moving cover, new sphere drops, and host transfer.
 Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.
