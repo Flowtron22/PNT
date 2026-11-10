@@ -72,12 +72,14 @@ function launch() {
     if (startupError) throw startupError;
     protocol.handle('pnt', serveGame);
 
+    const startFullscreen = steam?.utils.isSteamRunningOnSteamDeck() || process.env.SteamDeck === '1' || process.argv.includes('--fullscreen');
     window = new BrowserWindow({
       width: 1280,
       height: 800,
-      resizable: false,
+      resizable: startFullscreen,
       maximizable: false,
-      fullscreen: steam?.utils.isSteamRunningOnSteamDeck() || process.env.SteamDeck === '1' || process.argv.includes('--fullscreen'),
+      fullscreenable: true,
+      fullscreen: startFullscreen,
       autoHideMenuBar: true,
       icon: resolve(__dirname, 'pnt.ico'),
       backgroundColor: '#211b32',
@@ -97,8 +99,13 @@ function launch() {
       if (Math.abs(window.webContents.getZoomFactor() - zoom) > 0.001) window.webContents.setZoomFactor(zoom);
     };
     window.on('resize', scaleLayout);
-    window.on('enter-full-screen', scaleLayout);
-    window.on('leave-full-screen', scaleLayout);
+    for (const name of ['enter-full-screen', 'leave-full-screen']) {
+      window.on(name, () => {
+        if (name === 'leave-full-screen') window.setResizable(false);
+        scaleLayout();
+        window.webContents.send('game:fullscreen-changed', window.isFullScreen());
+      });
+    }
     window.webContents.on('did-finish-load', scaleLayout);
     window.webContents.setWindowOpenHandler(() => ({action: 'deny'}));
     window.webContents.on('will-navigate', (event, url) => {
@@ -106,7 +113,23 @@ function launch() {
     });
     const fromGame = event => event.sender === window.webContents &&
       event.senderFrame === window.webContents.mainFrame && event.senderFrame.url === gameUrl;
+    const setFullscreen = enabled => {
+      if (enabled === window.isFullScreen()) return;
+      // Windows can enter borderless mode without resizing a fixed window.
+      if (enabled) window.setResizable(true);
+      window.setFullScreen(enabled);
+    };
     ipcMain.on('game:quit', event => { if (fromGame(event)) app.quit(); });
+    ipcMain.handle('game:fullscreen', (event, enabled) => {
+      if (!fromGame(event)) return false;
+      if (typeof enabled === 'boolean') setFullscreen(enabled);
+      return window.isFullScreen();
+    });
+    window.webContents.on('before-input-event', (event, input) => {
+      if (input.key !== 'F11' && !(input.alt && input.key === 'Enter')) return;
+      event.preventDefault();
+      if (input.type === 'keyDown' && !input.isAutoRepeat) setFullscreen(!window.isFullScreen());
+    });
 
     if (steam) {
       registerHooks({resolve(specifier, context, next) {

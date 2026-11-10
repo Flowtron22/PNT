@@ -28,6 +28,24 @@ function fullscreenFixture({native=false,iphone=false,standalone=false}={}){cons
 test('iPhone Settings retains only the fullscreen button without guide text',async()=>{const f=fullscreenFixture({iphone:true});assert.equal(fullscreenMode(f.doc,f.win),'unsupported');configureFullscreen(f.button,f.status,f.doc,f.win);assert.equal(f.button.textContent,'TOGGLE FULLSCREEN');assert.equal(f.status.textContent,'');assert.equal(f.status.hidden,true);await f.button.onclick();assert.equal(f.status.textContent,'');});
 
 test('native fullscreen enters, exits and reports rejection instead of silently failing',async()=>{const f=fullscreenFixture({native:true});f.doc.exitFullscreen=async()=>{f.doc.fullscreenElement=null;};configureFullscreen(f.button,f.status,f.doc,f.win);await f.button.onclick();assert.match(f.button.textContent,/EXIT/);await f.button.onclick();assert.match(f.button.textContent,/TOGGLE/);f.doc.documentElement.requestFullscreen=async()=>{throw Error('blocked');};await f.button.onclick();assert.equal(f.status.textContent,'');});
+test('desktop fullscreen queries and toggles the native window even without DOM fullscreen',async()=>{
+ const f=fullscreenFixture();
+ let active=true;
+ const calls=[];
+ f.win.pntDesktop={fullscreen:async enabled=>{
+  calls.push(enabled);
+  if(typeof enabled==='boolean')active=enabled;
+  return active;
+ }};
+ configureFullscreen(f.button,f.status,f.doc,f.win);
+ await Promise.resolve();
+ assert.equal(f.button.textContent,'EXIT FULLSCREEN');
+ await f.button.onclick();
+ assert.equal(f.button.textContent,'TOGGLE FULLSCREEN');
+ await f.button.onclick();
+ assert.equal(f.button.textContent,'EXIT FULLSCREEN');
+ assert.deepEqual(calls,[undefined,false,true]);
+});
 
 test('holding Interact continues until its own finger releases, and pause/reset cancels it',()=>{const root=new EventTarget(),stick=new Control(),knob=new Control(),button=new Control();let held=false;const api=bindGameControls({root,joystick:stick,knob,actions:[[button,()=>{held=true;},()=>{held=false;}]],isActive:()=>true,onMove:()=>{}});fire(stick,'pointerdown',{pointerId:1,clientX:80,clientY:50});fire(button,'pointerdown',{pointerId:2,pointerType:'touch'});assert.equal(held,true);fire(root,'pointerup',{pointerId:1});assert.equal(held,true);fire(root,'pointerup',{pointerId:2});assert.equal(held,false);fire(button,'pointerdown',{pointerId:3,pointerType:'touch'});api.reset();assert.equal(held,false);api.dispose();});
 

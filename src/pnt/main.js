@@ -494,6 +494,7 @@ if(desktop){
  $('#pause-button').onclick=null;
 }
 for(const name of ['fullscreenchange','webkitfullscreenchange'])document.addEventListener(name,()=>{if(activePage==='settings')settingsPage?.refreshFullscreen();});
+desktop?.onFullscreenChange?.(()=>{if(activePage==='settings')settingsPage?.refreshFullscreen();});
 
 function restoreRemoteFurniture(){for(const f of remoteFurniture){f.parent.add(f.mesh);f.mesh.position.copy(f.position);f.mesh.quaternion.copy(f.quaternion);f.mesh.scale.copy(f.scale);}remoteFurniture=[];}
 function prepareRemoteFurniture(){const meshes=[];gameArena.traverse(o=>{if(o.isMesh&&/^BP_Coffee(Chair|Table)/.test(o.name))meshes.push(o);});remoteFurniture=meshes.map(mesh=>{const item={mesh,parent:mesh.parent,position:mesh.position.clone(),quaternion:mesh.quaternion.clone(),scale:mesh.scale.clone()};matchRoot.attach(mesh);return item;});}
@@ -830,8 +831,8 @@ function updateMenuCloud(dt,now){
  const sway=reduced?0:Math.sin(cloudTime*1.25);
  menuCloud.position.x=sway*.085;
  menuCloud.rotation.set(0,-.69+sway*.065,sway*.035);
- menuWake.update(cloudTime,reduced);
  frameMenuCharacter(menuCloudAnchor,dt,now);
+ menuWake.update(cloudTime,reduced,menuCamera);
 }
 function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed=Math.max(0,(now-lastFrame)/1000),dt=Math.min(elapsed,.05);lastFrame=now;updateController(now,dt);uiEffects.tick(dt);waterAnimation?.update(dt);tickStageVerdict(elapsed);haptics.update(round?.actors[0]?.effect,Math.min(elapsed,.1),!!round&&round.phase==='playing'&&!paused&&!busy&&!document.hidden&&round.actors[0].effectTime>0);if(resultPortrait&&!ui.results.hidden)resultPortrait.update(dt);
  tileCallout.update(round?.safeTile,round?.mode==='tiletide'&&round.tileStage==='run'&&!ui.hud.hidden,dt);

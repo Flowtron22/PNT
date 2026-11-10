@@ -2,6 +2,8 @@ const {contextBridge, ipcRenderer} = require('electron');
 
 contextBridge.exposeInMainWorld('pntDesktop', {
   quit: () => ipcRenderer.send('game:quit'),
+  fullscreen: enabled => ipcRenderer.invoke('game:fullscreen', enabled),
+  onFullscreenChange: fn => { ipcRenderer.on('game:fullscreen-changed', (_, active) => fn(active)); },
   steam: {
     connect: (...args) => ipcRenderer.invoke('steam:connect', ...args),
     send: (...args) => ipcRenderer.send('steam:send', ...args),

@@ -40,6 +40,7 @@ export function mountSettings(root,{getSettings,onChange,onReset,bindingsMarkup,
   const visibleRows=desktop?t.rows.filter(r=>!['joystickSize','joystickSensitivity'].includes(r.key)).map(r=>{
    if(r.key==='haptics')return {...r,help:'Controller vibration for rocket and banana effects, when supported.'};
    if(r.key==='hudScale')return {...r,help:'Resize the timer, money counter and crew portraits.'};
+   if(r.key==='fullscreen')return {...r,help:'Fill the display. You can also press F11 or Alt+Enter.'};
    return r;
   }):t.rows.filter(r=>!r.desktopOnly);
   for(const r of visibleRows){const row=doc.createElement('div');row.className='settings-option';row.innerHTML=`<label>${r.label}</label><div class="settings-control"></div>`;const host=row.lastElementChild,label=row.firstElementChild;let control;

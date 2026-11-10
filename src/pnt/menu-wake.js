@@ -55,27 +55,36 @@ export function createMenuWake(parent) {
   parent.add(sprite);
   return sprite;
  });
+ const anchor = new THREE.Vector3();
  const wakePoint = new THREE.Vector3();
- function curve(progress,time) {
-  wakePoint.set(.31+1.37*progress+.29*Math.sin(progress*10-time*3.5)*progress,
-   .47-.48*progress+.32*Math.sin(progress*11-time*3.3)*progress,
-   -1.02-progress*13.5);
- }
+ const toParent = new THREE.Matrix4();
  return {
-  update(time,reduced) {
+  update(time,reduced,camera) {
    const motion = reduced?0:time;
+   camera.updateMatrixWorld();
+   anchor.set(-.27,.34,-1.29);
+   parent.localToWorld(anchor).project(camera);
+   toParent.copy(parent.matrixWorld).invert();
+   // Frame the wake in the same screen space as the menu while keeping its
+   // geometry behind the cloud for depth occlusion.
+   const span = Math.max(.12,1.15-anchor.x);
+   const project = (progress,offsetX=0,offsetY=0) => {
+    const distance = progress*span;
+    const wave = Math.sin(distance*9-motion*3.5)*.015*progress;
+    return wakePoint.set(anchor.x+distance+offsetX,
+     anchor.y+distance*.45+wave+offsetY,
+     THREE.MathUtils.lerp(anchor.z,1,progress*.38)).unproject(camera).applyMatrix4(toParent);
+   };
    for (let i=0;i<=SEGMENTS;i++) {
     const progress = i/SEGMENTS;
-    curve(progress,motion);
-    const width = (.54+.96*Math.sin(progress*Math.PI*.74))*(1-progress*.20);
-    const opacity = Math.min(1,progress*17,(1-progress)*4.8);
+    const width = THREE.MathUtils.lerp(.42,.12,Math.min(1,progress*1.03));
+    const opacity = Math.min(1,progress*24,(1-progress)*8);
     const glint = .88+.11*Math.sin(progress*27-motion*8);
     for (let band=0;band<BANDS.length;band++) {
      for (let edge=0;edge<2;edge++) {
       const vertex = (band*(SEGMENTS+1)+i)*2+edge;
-      position[vertex*3] = wakePoint.x;
-      position[vertex*3+1] = wakePoint.y+((band+edge)/BANDS.length-.5)*width;
-      position[vertex*3+2] = wakePoint.z;
+      const point = project(progress,0,((band+edge)/BANDS.length-.5)*width);
+      point.toArray(position,vertex*3);
       color[vertex*4+3] = opacity*glint*(reduced?.62:.94);
      }
     }
@@ -87,13 +96,11 @@ export function createMenuWake(parent) {
     if (reduced) continue;
     const progress = (i*.618034+time*(.235+(i%4)*.032))%1;
     const side = i%2===0?1:-1;
-    curve(progress,time);
-    star.position.copy(wakePoint);
-    star.position.x += side*progress*(.4+(i%3)*.34);
-    star.position.y += side*(.18+progress*(.41+(i%5)*.27));
+    const spread = (.045+(i%5)*.021)*(1-progress*.48);
+    star.position.copy(project(progress,side*(i%3)*.008,side*spread));
     star.material.rotation = i*.47+side*time*2;
     star.material.opacity = Math.min(1,progress*15,(1-progress)*5);
-    star.scale.setScalar((.36+(i%4)*.13)*(.84+progress*.66));
+    star.scale.setScalar((.32+(i%4)*.085)*(1-progress*.2));
    }
   }
  };
