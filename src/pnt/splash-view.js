@@ -54,42 +54,62 @@ function updateHose(mesh,p,angle,reach,time){
  positions.needsUpdate=true;
 }
 function createImpactDroplets(root){
- const capacity=128,geometry=new THREE.BufferGeometry();
- const positions=new THREE.BufferAttribute(new Float32Array(capacity*3),3);
- const colors=new THREE.BufferAttribute(new Float32Array(capacity*3),3);
- geometry.setAttribute('position',positions);geometry.setAttribute('color',colors);geometry.setDrawRange(0,0);
- const canvas=document.createElement('canvas');canvas.width=canvas.height=32;
- const ctx=canvas.getContext('2d'),gradient=ctx.createRadialGradient(12,10,1,16,16,15);
- gradient.addColorStop(0,'#fff');gradient.addColorStop(.72,'#fff');gradient.addColorStop(1,'transparent');
- ctx.fillStyle=gradient;ctx.beginPath();ctx.arc(16,16,15,0,Math.PI*2);ctx.fill();
- const sprite=new THREE.CanvasTexture(canvas);
- const material=new THREE.PointsMaterial({size:.13,map:sprite,vertexColors:true,
-  transparent:true,alphaTest:.12,depthWrite:false,toneMapped:false});
- const points=new THREE.Points(geometry,material);points.frustumCulled=false;root.add(points);
+ const capacity=192,geometry=new THREE.PlaneGeometry(1,1);
+ const material=new THREE.ShaderMaterial({
+  transparent:true,depthWrite:false,toneMapped:false,
+  vertexShader:`
+   varying vec2 spriteUv;
+   varying vec3 ink;
+   void main(){
+    spriteUv=uv;ink=instanceColor;
+    vec4 center=modelViewMatrix*instanceMatrix[3];
+    center.xy+=position.xy*instanceMatrix[0].x;
+    gl_Position=projectionMatrix*center;
+   }
+  `,
+  fragmentShader:`
+   varying vec2 spriteUv;
+   varying vec3 ink;
+   void main(){
+    vec2 p=spriteUv*2.0-1.0;
+    float r=length(p);
+    float alpha=1.0-smoothstep(.82,1.0,r);
+    if(alpha<.02)discard;
+    vec3 body=mix(ink*1.1,ink*.26,smoothstep(.63,.95,r));
+    float gleam=1.0-smoothstep(.08,.48,length(p-vec2(-.29,.33)));
+    gl_FragColor=vec4(mix(body,vec3(1.0),gleam*.92),alpha);
+    #include <colorspace_fragment>
+   }
+  `
+ });
+ const sprites=new THREE.InstancedMesh(geometry,material,capacity);
+ sprites.frustumCulled=false;sprites.count=0;root.add(sprites);
  const pool=Array.from({length:capacity},()=>({life:0}));
- const palette=SPLASH_COLORS.map(c=>new THREE.Color(c)),tint=new THREE.Color(),white=new THREE.Color('#fff');
+ const palette=SPLASH_COLORS.map(c=>new THREE.Color(c)),transform=new THREE.Matrix4();
+ sprites.setColorAt(0,palette[0]);
  let cursor=0;
  return {
   emit(x,z,seat){
    const drop=pool[cursor];cursor=(cursor+1)%capacity;
-   const angle=Math.random()*Math.PI*2,speed=.45+Math.random()*2.9;
-   Object.assign(drop,{x,z,y:.07,vx:Math.cos(angle)*speed,vz:Math.sin(angle)*speed,
-    vy:1.15+Math.random()*2,life:.22+Math.random()*.21,seat,glint:Math.random()*.42});
+   const angle=Math.random()*Math.PI*2,speed=1.35+Math.random()*3;
+   const life=.28+Math.random()*.23;
+   Object.assign(drop,{x,z,y:.11,vx:Math.cos(angle)*speed,vz:Math.sin(angle)*speed,
+    vy:2.4+Math.random()*2.5,life,duration:life,seat,size:.19+Math.random()*.16});
   },
   update(dt){
    let count=0;
    for(const drop of pool){
     if(drop.life<=0)continue;
-    drop.life-=dt;drop.vy-=10*dt;
+    drop.life-=dt;drop.vy-=12*dt;
     drop.x+=drop.vx*dt;drop.z+=drop.vz*dt;drop.y+=drop.vy*dt;
     if(drop.y<=.02||drop.life<=0){drop.life=0;continue;}
-    positions.setXYZ(count,drop.x,drop.y,drop.z);
-    tint.copy(palette[drop.seat]).lerp(white,drop.glint);
-    colors.setXYZ(count++,tint.r,tint.g,tint.b);
+    const size=drop.size*Math.min(1,drop.life/drop.duration*3);
+    transform.makeScale(size,size,size).setPosition(drop.x,drop.y,drop.z);
+    sprites.setMatrixAt(count,transform);sprites.setColorAt(count++,palette[drop.seat]);
    }
-   geometry.setDrawRange(0,count);positions.needsUpdate=colors.needsUpdate=true;
+   sprites.count=count;sprites.instanceMatrix.needsUpdate=sprites.instanceColor.needsUpdate=true;
   },
-  dispose(){points.removeFromParent();sprite.dispose();material.dispose();geometry.dispose();}
+  dispose(){sprites.removeFromParent();sprites.dispose();material.dispose();geometry.dispose();}
  };
 }
 export function createSplashView(parent){
@@ -188,10 +208,12 @@ export function createSplashView(parent){
   const {x,z,distance}=splashHoseTarget(round.paintCover,p,angle);
   updateHose(hose,p,angle,distance,time);
   if(dt>0){
-   const interval=reduced?.11:.024;
+   const interval=reduced?.12:.043;
    impactTimers[actor.paintSeat]+=dt;
    while(impactTimers[actor.paintSeat]>=interval){
-    impactTimers[actor.paintSeat]-=interval;droplets.emit(x,z,actor.paintSeat);
+    impactTimers[actor.paintSeat]-=interval;
+    const count=reduced?1:3;
+    for(let i=0;i<count;i++)droplets.emit(x,z,actor.paintSeat);
    }
   }
  }
