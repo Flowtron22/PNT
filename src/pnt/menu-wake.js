@@ -3,26 +3,23 @@ import * as THREE from 'three';
 const BANDS = [0xa99aff,0x66dfff,0x9be876,0xffdf68,0xffa858,0xff658d];
 const SEGMENTS = 48;
 const STAR_COLORS = [0xffdc47,0xff78be,0x60f2ff,0xb996ff,0xffad62];
+const STAR_SIZES = [.22,.47,.30,.62,.18,.39,.53,.26];
 
-function starTexture() {
- const canvas = document.createElement('canvas');
- canvas.width = canvas.height = 64;
- const ink = canvas.getContext('2d');
- ink.translate(32,32);
- ink.shadowBlur = 7;
- ink.shadowColor = 'white';
- ink.fillStyle = 'white';
- ink.beginPath();
+function starGeometry() {
+ const shape = new THREE.Shape();
  for (let i=0;i<10;i++) {
-  const angle = i*Math.PI/5-Math.PI/2;
-  const radius = i%2===0?25:11.5;
-  ink.lineTo(Math.cos(angle)*radius,Math.sin(angle)*radius);
+  const angle = i*Math.PI/5+Math.PI/2;
+  const radius = i%2===0?.47:.26;
+  const x = Math.cos(angle)*radius, y = Math.sin(angle)*radius;
+  if (i===0) shape.moveTo(x,y);
+  else shape.lineTo(x,y);
  }
- ink.closePath();
- ink.fill();
- const texture = new THREE.CanvasTexture(canvas);
- texture.colorSpace = THREE.SRGBColorSpace;
- return texture;
+ shape.closePath();
+ const geometry = new THREE.ExtrudeGeometry(shape,{
+  depth:.24,bevelSize:.045,bevelThickness:.065,bevelSegments:3,steps:1
+ });
+ geometry.center();
+ return geometry;
 }
 
 export function createMenuWake(parent) {
@@ -46,18 +43,24 @@ export function createMenuWake(parent) {
   vertexColors:true,side:THREE.DoubleSide,transparent:true,depthWrite:false,toneMapped:false
  }));
  mesh.frustumCulled = false;
+ mesh.renderOrder = 1;
  parent.add(mesh);
- const texture = starTexture();
- const stars = Array.from({length:25},(_,i)=>{
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
-   map:texture,color:STAR_COLORS[i%STAR_COLORS.length],transparent:true,depthWrite:false,toneMapped:false
+ const geometry = starGeometry();
+ const stars = Array.from({length:16},(_,i)=>{
+  const tint = STAR_COLORS[i%STAR_COLORS.length];
+  const star = new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({
+   color:tint,emissive:tint,emissiveIntensity:.24,roughness:.46,transparent:true,depthWrite:false
   }));
-  parent.add(sprite);
-  return sprite;
+  star.renderOrder = 2;
+  parent.add(star);
+  return star;
  });
  const anchor = new THREE.Vector3();
  const wakePoint = new THREE.Vector3();
  const toParent = new THREE.Matrix4();
+ const cameraFacing = new THREE.Quaternion();
+ const tilt = new THREE.Quaternion();
+ const tumble = new THREE.Euler();
  return {
   update(time,reduced,camera) {
    const motion = reduced?0:time;
@@ -65,6 +68,7 @@ export function createMenuWake(parent) {
    anchor.set(-.27,.34,-1.29);
    parent.localToWorld(anchor).project(camera);
    toParent.copy(parent.matrixWorld).invert();
+   parent.getWorldQuaternion(cameraFacing).invert().multiply(camera.quaternion);
    // Frame the wake in the same screen space as the menu while keeping its
    // geometry behind the cloud for depth occlusion.
    const span = Math.max(.12,1.15-anchor.x);
@@ -94,13 +98,14 @@ export function createMenuWake(parent) {
     const star = stars[i];
     star.visible = !reduced;
     if (reduced) continue;
-    const progress = (i*.618034+time*(.235+(i%4)*.032))%1;
+    const progress = (i/stars.length+time*.25)%1;
     const side = i%2===0?1:-1;
-    const spread = (.045+(i%5)*.021)*(1-progress*.48);
-    star.position.copy(project(progress,side*(i%3)*.008,side*spread));
-    star.material.rotation = i*.47+side*time*2;
+    const spread = .09+(i*3%7)*.021+progress*.07;
+    star.position.copy(project(progress,0,side*spread));
+    tumble.set(.24+.40*Math.sin(time*1.8+i),.37+.54*Math.cos(time*1.6+i*.73),i*.47+side*time*1.7);
+    star.quaternion.copy(cameraFacing).multiply(tilt.setFromEuler(tumble));
     star.material.opacity = Math.min(1,progress*15,(1-progress)*5);
-    star.scale.setScalar((.32+(i%4)*.085)*(1-progress*.2));
+    star.scale.setScalar(STAR_SIZES[(i*3)%STAR_SIZES.length]*(1-progress*.16));
    }
   }
  };

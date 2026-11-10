@@ -26,8 +26,8 @@ PC and Steam Deck use the same Windows x64 package, with Proton on Deck.
 
 ## Private development playtest
 
-Current development package is **0.9.170** in
-`dist-steam/win64-dev-playtest-0.9.170`.
+Current development package is **0.9.171** in
+`dist-steam/win64-dev-playtest-0.9.171`.
 
 The windowed client opens at a fixed size. Toggle fullscreen in Settings → Video, or press F11 or Alt+Enter.
 
