@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.163**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.164**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.163` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.164` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -51,6 +51,13 @@ online all use internal mode ID `balloon`, rules version **14**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.164** rebuilds 0.9.163 on this Windows x64 machine with
+no gameplay changes. Syntax checks and all 380 automated tests passed
+(338 client, 42 multiplayer). Package verification confirmed App ID 480,
+the Electron and Steamworks runtime, version labels, and matching game
+code and logo files. Live Steam sessions, physical controllers and
+Steam Deck/Proton remain pending.
 
 Version **0.9.163** disables dragging to resize and maximizing the desktop
 window, keeping its default size in windowed mode. Fullscreen remains
@@ -485,7 +492,7 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.163 on every machine. In Balloon Bash, check
+Close older copies and use 0.9.164 on every machine. In Balloon Bash, check
 first and final pops, moving cover, new sphere drops, and host transfer.
 Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.
