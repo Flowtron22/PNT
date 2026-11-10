@@ -174,3 +174,35 @@ button.flow-option:is(.is-focus,.pad-focus,:focus-visible)>img{filter:brightness
 @media(max-height:500px){.studio-credits-view{top:100px}.studio-credits-roll{padding-top:35px}.studio-credit{margin-bottom:55px}.todak-credit-logo{width:260px}.ureka-credit-logo{width:150px}}
 @media(prefers-reduced-motion:reduce){.studio-credits-view{overflow-y:auto}.studio-credits-roll{will-change:auto}}
 body.reduced-motion .studio-credits-view{overflow-y:auto}
+
+body.menu-view .menu-backdrop {
+ overflow:hidden;
+ background:linear-gradient(180deg,#2580d7 0%,#58b9ee 48%,#b7e8fd 100%);
+}
+body.menu-view .menu-backdrop::before,
+body.menu-view .menu-backdrop::after {
+ content:"";
+ position:absolute;
+ inset:0;
+ background:url("../assets/pnt/ui/menu-sky-clouds.svg") 0 center / var(--cloud-span) 100% repeat-x;
+ animation:menu-cloud-pan var(--cloud-duration) linear infinite;
+}
+body.menu-view .menu-backdrop::before {
+ --cloud-span:84vw;
+ --cloud-duration:90s;
+ opacity:.56;
+}
+body.menu-view .menu-backdrop::after {
+ --cloud-span:126vw;
+ --cloud-duration:54s;
+ opacity:.9;
+ animation-delay:-18s;
+ mask-image:linear-gradient(90deg,#0005,#000 55%);
+}
+@keyframes menu-cloud-pan {
+ to {background-position-x:calc(0px - var(--cloud-span));}
+}
+body.reduced-motion .menu-backdrop::after {animation:none}
+@media(prefers-reduced-motion:reduce) {
+ body.menu-view .menu-backdrop::after {animation:none}
+}
