@@ -1,14 +1,14 @@
-# Splash Area
+# Splish Splash
 
-Available from **Events → Splash Area** in Steam playtest **0.9.157**.
-Training, couch and Steam online use mode ID `splash`, rules version `1`.
+Available from **Events → Splish Splash** in Steam playtest **0.9.158**.
+Training, couch and Steam online use mode ID `splash`, rules version `2`.
 
 Four individual players compete for the largest share of paintable floor in
 120 seconds. Repainting replaces the previous owner. Exact cell counts decide
 the winner; equal largest counts draw. The HUD and results show percentages.
 Unpainted floor remains in the denominator; box footprints do not count.
 
-- Move to aim; hold Interact (default E / controller A) to fire paintballs.
+- Move to aim; hold Interact (default E / controller A) to fire a short fan of paint.
 - Slot 1 (default Q / X) toggles submerge. Move into your own paint to refill
   at 42 ink/second, then surface with the same button before shooting.
 - Slot 2 (default W / Y) throws a paint can: 30 ink, five-second cooldown,
@@ -18,9 +18,9 @@ Unpainted floor remains in the denominator; box footprints do not count.
 - Standard equipped tools do not apply. This mode has no damage or elimination.
 
 The 24 × 24 metre arena has a fixed shared camera with Tile Tumble's viewing
-angle, framed to show all boundaries. Eight seeded boxes use quarter-turn
-symmetry, varied dimensions and three-segment bevels. Players slide against
-chamfered collision footprints; substepped paintball/can flight stops at cover.
+angle and 10% tighter zoom. Eight seeded boxes shift independently each round,
+with varied dimensions and three-segment bevels. Players slide against
+chamfered collision footprints; substepped spray/can flight stops at cover.
 Splashes cannot paint through boxes. Each match selects a new seed.
 
 `src/pnt/splash-rules.js` runs in local and authoritative Steam simulation.
@@ -30,7 +30,7 @@ when a guest's own player is remapped to local actor zero. Host restoration uses
 the received layout and continues the same rules. Steam lobby discovery isolates
 this mode, and the rules-version handshake rejects incompatible peers.
 
-`src/pnt/splash-view.js` draws the ownership texture, beveled cover, paintballs,
+`src/pnt/splash-view.js` reconstructs smooth paint contours from ownership and draws beveled cover, spray streaks,
 paint cans and splash ripples. The design adapts the paint/repaint/submerge loop
 from `D:/Projects/wonder-wave` (`world/paint.js`, `game/weapons.js`, `game/actor.js`).
 The existing MIT notice in `notices/foundation.txt` remains distributed.

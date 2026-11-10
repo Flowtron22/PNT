@@ -303,7 +303,7 @@ test('PattyTide keeps spawning candy and accepting input after a Steam host tran
 });
 
 test('Splash Area public discovery and host migration preserve turf, seed, ink actions and seat ownership', async t => {
- const connect=steamPeers(t),event={gameMode:'splash',splashVersion:1};
+ const connect=steamPeers(t),event={gameMode:'splash',splashVersion:2};
  const host=await connect(1n,'host',null,event);host.send('control',{action:'visibility',direction:'public'});await waitFor(()=>host.state.lobby.public);
  const next=await connect(2n,'public',null,event),guest=await connect(3n,'join',host.state.lobby.code,event),peers=[host,next,guest];
  host.send('control',{action:'add-bot'});host.send('control',{action:'start'});await waitFor(()=>peers.every(p=>p.state.lobby.match));for(const p of peers)p.send('ready');await waitFor(()=>guest.state.snapshot?.round.startRemaining===0);

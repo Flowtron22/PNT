@@ -8,12 +8,12 @@ Read the [current handoff](handoff.md) before continuing development.
 The Steam release uses one Windows x64 package for desktop PCs and Steam Deck
 via Proton. See the [Steam build guide](docs/STEAM.md) for build and test steps.
 
-New in 0.9.157: **Events → Splash Area** — shoot paintballs, submerge to refill,
+New in 0.9.158: **Events → Splish Splash** — spray paint, submerge to refill,
 and cover the most turf in two minutes. Training, couch and Steam online are
 supported. See [controls and rules](docs/SPLASH_AREA.md).
 
-The current Steam dev-playtest is **0.9.157**. Build and share the complete
-`dist-steam/win64-dev-playtest-0.9.157` folder, including `steam_appid.txt`.
+The current Steam dev-playtest is **0.9.158**. Build and share the complete
+`dist-steam/win64-dev-playtest-0.9.158` folder, including `steam_appid.txt`.
 
 Developed by Todak Studios, with Classic, Patty Prowl, Tile Tumble, Slippery
 Shoots and **Balloon Bash**. Balloon Bash is a 1v1v1v1 last-player-standing
