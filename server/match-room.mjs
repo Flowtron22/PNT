@@ -1,3 +1,4 @@
+import {SPLASH_VERSION} from '../src/pnt/splash-rules.js';
 import {DIRETIDE_VERSION} from '../src/pnt/diretide-rules.js';
 import {TILETIDE_VERSION} from '../src/pnt/tiletide-rules.js';
 import {STRIKERS_VERSION} from '../src/pnt/strikers-rules.js';
@@ -17,7 +18,7 @@ function outfit(options){
 }
 export class MatchRoom {
  async onCreate(options){
-  this.gameMode=['diretide','tiletide','strikers','balloon'].includes(options.gameMode)?options.gameMode:'classic';this.players=[];this.phase='waiting';this.map=0;this.host=null;this.sim=null;this.loadRevision=0;this.public=options.public===true;this.countdown=0;this.accumulator=0;this.publishTime=0;
+  this.gameMode=['diretide','tiletide','strikers','balloon','splash'].includes(options.gameMode)?options.gameMode:'classic';this.players=[];this.phase='waiting';this.map=0;this.host=null;this.sim=null;this.loadRevision=0;this.public=options.public===true;this.countdown=0;this.accumulator=0;this.publishTime=0;
   await this.setMetadata({public:this.public,gameMode:this.gameMode,map:this.gameMode==='strikers'?'slipperystriker':this.gameMode!=='classic'?'grassfield':MAPS[this.map]});
   this.onMessage('hello',client=>{this.sendLobby(client);if(this.sim&&this.phase!=='loading')client.send('snapshot',this.sim.snapshot());});
   this.onMessage('input',(client,payload)=>{const id=this.players.findIndex(p=>p.sessionId===client.sessionId);if(this.phase==='playing'&&payload&&typeof payload==='object')this.sim.input(id,payload);});
@@ -28,7 +29,7 @@ export class MatchRoom {
   this.onMessage('load-error',()=>{if(this.phase==='loading')this.abortLoading('A player could not load the map. Try starting again.');});
   this.setSimulationInterval(delta=>this.update(delta/1000),1000/60);
  }
- onAuth(client,options){if((['diretide','tiletide','strikers','balloon'].includes(options.gameMode)?options.gameMode:'classic')!==this.gameMode)throw new Error('This room is for a different game mode. Open the matching mode before joining.');if(this.gameMode==='diretide'&&options.eventVersion!==DIRETIDE_VERSION)throw new Error('Please refresh the game to load the updated candy rules.');if(this.gameMode==='tiletide'&&options.tileVersion!==TILETIDE_VERSION)throw new Error('Please refresh the game to load Tile Tumble.');if(this.gameMode==='strikers'&&options.strikersVersion!==STRIKERS_VERSION)throw new Error('Please refresh the game to load Slippery Shoots.');if(this.gameMode==='balloon'&&options.balloonVersion!==BALLOON_VERSION)throw new Error('Please refresh the game to load Balloon Bash.');if(options.protocol!==1)throw new Error('Please refresh the game before joining.');return true;}
+ onAuth(client,options){if((['diretide','tiletide','strikers','balloon','splash'].includes(options.gameMode)?options.gameMode:'classic')!==this.gameMode)throw new Error('This room is for a different game mode. Open the matching mode before joining.');if(this.gameMode==='diretide'&&options.eventVersion!==DIRETIDE_VERSION)throw new Error('Please refresh the game to load the updated candy rules.');if(this.gameMode==='tiletide'&&options.tileVersion!==TILETIDE_VERSION)throw new Error('Please refresh the game to load Tile Tumble.');if(this.gameMode==='strikers'&&options.strikersVersion!==STRIKERS_VERSION)throw new Error('Please refresh the game to load Slippery Shoots.');if(this.gameMode==='splash'&&options.splashVersion!==SPLASH_VERSION)throw new Error('Please update to Splash Area.');if(this.gameMode==='balloon'&&options.balloonVersion!==BALLOON_VERSION)throw new Error('Please refresh the game to load Balloon Bash.');if(options.protocol!==1)throw new Error('Please refresh the game before joining.');return true;}
  onJoin(client,options){
   if(this.phase!=='waiting')throw new Error('This match has already started.');const bot=this.players.findIndex(p=>p.bot);if(this.players.length>=4&&bot<0)throw new Error('This room is full.');
   const player={sessionId:client.sessionId,name:name(options.name),...outfit(options),loadout:modeLoadout(this.gameMode,options.loadout),preference:preference(options.preference),bot:false,connected:true,ready:false};if(bot>=0)this.players[bot]=player;else this.players.push(player);if(!this.host)this.host=client.sessionId;this.sendLobby();
@@ -40,7 +41,7 @@ export class MatchRoom {
   if(this.host===client.sessionId)this.host=this.players.find(p=>!p.bot)?.sessionId||null;this.sendLobby();
  }
  clearInput(client){const id=this.players.findIndex(p=>p.sessionId===client.sessionId);if(this.sim?.actors[id])this.sim.actors[id].input={...this.sim.actors[id].input,x:0,z:0,interact:false};if(this.sim?.actors[id])this.sim.actors[id].inputQueue.length=0;}
- info(){return {code:this.roomId,mode:'online',gameMode:this.gameMode,eventVersion:this.gameMode==='diretide'?DIRETIDE_VERSION:undefined,tileVersion:this.gameMode==='tiletide'?TILETIDE_VERSION:undefined,strikersVersion:this.gameMode==='strikers'?STRIKERS_VERSION:undefined,balloonVersion:this.gameMode==='balloon'?BALLOON_VERSION:undefined,public:this.public,phase:this.phase,map:this.map,host:this.host,countdown:this.countdown,players:this.players,match:this.phase==='loading'?this.sim?.snapshot():undefined};}
+ info(){return {code:this.roomId,mode:'online',gameMode:this.gameMode,eventVersion:this.gameMode==='diretide'?DIRETIDE_VERSION:undefined,tileVersion:this.gameMode==='tiletide'?TILETIDE_VERSION:undefined,strikersVersion:this.gameMode==='strikers'?STRIKERS_VERSION:undefined,splashVersion:this.gameMode==='splash'?SPLASH_VERSION:undefined,balloonVersion:this.gameMode==='balloon'?BALLOON_VERSION:undefined,public:this.public,phase:this.phase,map:this.map,host:this.host,countdown:this.countdown,players:this.players,match:this.phase==='loading'?this.sim?.snapshot():undefined};}
  sendLobby(client){const info=this.info();if(client)client.send('lobby',info);else this.broadcast('lobby',info);}
  control(action,direction){
   if(action==='cancel'&&this.phase==='countdown'){this.phase='waiting';this.countdown=0;this.sendLobby();return;}

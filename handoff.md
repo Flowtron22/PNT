@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.156**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.157**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.156` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.157` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -51,6 +51,21 @@ online all use internal mode ID `balloon`, rules version **14**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.157** adds **Events → Splash Area**, a four-player territory
+match inspired by Wonder Wave. The square 24 m arena uses a fixed shared
+Tile Tumble viewing angle and eight seeded, symmetrical boxes with three-segment
+bevels and matching movement/projectile cover. Highest painted floor coverage
+at 120 seconds wins; exact tied scores draw. Interact fires paintballs while held,
+aimed by movement. Slot 1 toggles submerge for fast own-paint refill; Slot 2 throws
+a larger paint can splash. Standard tools are disabled. Idle recovery prevents
+empty-tank deadlocks. Live coverage, ink and final percentages are shown.
+
+Training, couch and Steam online use mode `splash`, rules version **1**.
+Canonical paint seats survive guest remapping. Host snapshots retain the ownership
+map, counts, cover, RNG, projectiles, ink, cooldowns and bot goals. Controller
+navigation skips removed tool rows. See [Splash Area details](docs/SPLASH_AREA.md).
+
 
 Version **0.9.156** adds a radial burst of sand-colored smash smoke and a short
 camera shake when a Balloon Bash sphere touches down. Simultaneous landings
@@ -371,7 +386,18 @@ timing, results portraits, fullscreen logo and controller highlight behavior.
 
 ## Verification and next playtest
 
-The current 0.9.156 client passed **367 automated tests** (328 client and
+The 0.9.157 release passed **377 automated tests** (335 client and 42
+multiplayer), syntax checks and Steam development packaging. Rules tests cover
+territory replacement, exact counts, refill/can costs, swept collision, cover
+occlusion, countdown/timeout, draws, couch navigation and host restoration.
+A three-peer simulated Steam test covers public and room-code joining plus host
+migration with retained turf, layout and ink abilities. Packaged Electron checks
+at 1280 × 800 covered Events, training, coverage HUD, results and couch lobby
+without renderer errors. Actual Steam accounts, physical controllers and Steam
+Deck/Proton hardware have not been tested for this mode.
+
+
+The 0.9.156 client passed **367 automated tests** (328 client and
 39 multiplayer), syntax checks and the Steam development build.
 Packaged Electron checks confirmed eight puffs for one observed landing and
 no replay for a sphere first seen on the ground. The 1280 × 800 training check
@@ -411,7 +437,7 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.156 on every machine. In Balloon Bash, check
+Close older copies and use 0.9.157 on every machine. In Balloon Bash, check
 first and final pops, moving cover, new sphere drops, and host transfer.
 Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.
