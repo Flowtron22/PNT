@@ -5,24 +5,7 @@ const SEGMENTS = 48;
 const STAR_COLORS = [0xffdc47,0xff78be,0x60f2ff,0xb996ff,0xffad62];
 const STAR_SIZES = [.22,.47,.30,.62,.18,.39,.53,.26];
 
-function starGeometry() {
- const shape = new THREE.Shape();
- for (let i=0;i<10;i++) {
-  const angle = i*Math.PI/5+Math.PI/2;
-  const radius = i%2===0?.47:.26;
-  const x = Math.cos(angle)*radius, y = Math.sin(angle)*radius;
-  if (i===0) shape.moveTo(x,y);
-  else shape.lineTo(x,y);
- }
- shape.closePath();
- const geometry = new THREE.ExtrudeGeometry(shape,{
-  depth:.24,bevelSize:.045,bevelThickness:.065,bevelSegments:3,steps:1
- });
- geometry.center();
- return geometry;
-}
-
-export function createMenuWake(parent) {
+export function createMenuWake(parent,starGeometry) {
  const ribbon = new THREE.BufferGeometry();
  const position = new Float32Array(BANDS.length*(SEGMENTS+1)*6);
  const color = new Float32Array(BANDS.length*(SEGMENTS+1)*8);
@@ -45,10 +28,9 @@ export function createMenuWake(parent) {
  mesh.frustumCulled = false;
  mesh.renderOrder = 1;
  parent.add(mesh);
- const geometry = starGeometry();
  const stars = Array.from({length:16},(_,i)=>{
   const tint = STAR_COLORS[i%STAR_COLORS.length];
-  const star = new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({
+  const star = new THREE.Mesh(starGeometry,new THREE.MeshStandardMaterial({
    color:tint,emissive:tint,emissiveIntensity:.24,roughness:.46,transparent:true,depthWrite:false
   }));
   star.renderOrder = 2;
