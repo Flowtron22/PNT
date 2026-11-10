@@ -190,6 +190,9 @@ body.menu-view .menu-backdrop::after {
  background:linear-gradient(90deg,#17275060,transparent 43%,transparent 72%,#25365726);
  opacity:1;
 }
+#page-back:where(:not(:hover,.pad-focus)) {
+ background-color:#172750b8;
+}
 @keyframes menu-cloud-pan {
  from {transform:translateX(-5%)}
  to {transform:translateX(5%)}

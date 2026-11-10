@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.166**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.167**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.166` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.167` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -52,6 +52,22 @@ circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
 
+Version **0.9.167** restyles the shared menu with a saturated blue-to-cyan
+sky, pastel cloud banks, and curved wind ribbons. The riding cloud uses
+smooth, rounded lobes with lavender-blue shading. The Back button has
+a darker resting fill for contrast over bright clouds.
+
+Syntax checks and all 380 automated tests passed. The packaged Windows
+menu was checked at 1280 × 800 and 1920 × 1080 for Home, Tools, Costume,
+Settings, tool previews, sky panning, and reduced-motion sky styling.
+Physical controllers, Steam Deck/Proton, and live multiplayer remain pending.
+
+The built-in image generator produced [the menu sky](assets/pnt/ui/menu-cloudscape.png).
+The prompt requested a 16:9 sky inspired by the supplied Super Mario Bros.
+Wonder references, with saturated blue and aqua, smooth marshmallow lobes,
+pastel lilac and blush cloud banks, translucent wind ribbons, and an open
+center for the game UI. The entire frame is sky and clouds.
+
 Version **0.9.166** gives Home, Tools, and Costume a left-facing
 three-quarter view of the selected character in its standing idle.
 The cotton-like 3D cloud sways in place above a slowly panning
@@ -62,7 +78,7 @@ renderer was checked at 1280 × 800 and 1920 × 1080, including tool
 previews, return to standing idle, and the Reduced Motion sky style.
 Physical controllers, Steam Deck/Proton, and live multiplayer remain pending.
 
-The built-in image generator produced [the menu sky](assets/pnt/ui/menu-cloudscape.png).
+The built-in image generator produced the 0.9.166 menu sky.
 The prompt used the reference screenshot for mood and lighting and asked for a
 16:9 high-altitude blue sky, a clear cerulean center for the rider, peach-white
 cumulus towers, distant blue-violet wisps, and sunrays from the upper left.
@@ -519,7 +535,7 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.166 on every machine. In Balloon Bash, check
+Close older copies and use 0.9.167 on every machine. In Balloon Bash, check
 first and final pops, moving cover, new sphere drops, and host transfer.
 Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.
