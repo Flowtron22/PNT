@@ -30,27 +30,31 @@ export function createMenuFlight(canvas) {
   for (let i=0;i<39;i++) {
    const isCloud = i<12;
    const phase = (i*.618034+time*(isCloud?.185:.56)*(1+(i%5)*.08))%1;
-   // Moving through the scene reduces depth and pushes details outward from
-   // the vanishing point. The ship flies left, so traffic streams to the right.
-   const depth = 1.62-phase*1.37;
    const lane = (i%2===0?1:-1)*(.115+(i*13%19)*.014);
-   const x = width*(.23+(.065+(i*7%17)*.011)/depth+phase*.19);
-   const y = height*(.47+lane/depth);
    const opacity = Math.min(1,phase*8,(1-phase)*9);
    if (isCloud) {
+    const depth = 1.62-phase*1.37;
+    const x = width*(.23+(.065+(i*7%17)*.011)/depth+phase*.19);
+    const y = height*(.47+lane/depth);
     const size = width*(.033+(i%4)*.014)/depth;
     ink.globalAlpha = opacity*(.48+(i%3)*.12);
     ink.drawImage(cloud,x-size*.5,y-size*.28,size,size*.56);
    } else {
+    // Project the streaks from a near-left origin toward a far-right point.
+    const depth = .50+phase*1.20;
+    const x = width*(.86+(i%5)*.032-(.25+(i*7%17)*.012)/depth);
+    const y = height*(.47+lane/depth);
     const length = width*(.024+(i%4)*.010)/(depth*depth);
     const thickness = Math.max(1,height*.004/depth);
-    const rise = lane*length*.73;
+    const left = x-length;
+    const nearY = y+lane*length*.9;
     ink.globalAlpha = opacity*(.27+(i%3)*.12);
     ink.fillStyle = i%4===0?'#e6cbff':'#edfcff';
     ink.beginPath();
-    ink.moveTo(x-length,y-rise);
-    ink.quadraticCurveTo(x-length*.31,y-rise*.28-thickness,x,y);
-    ink.quadraticCurveTo(x-length*.24,y-rise*.17+thickness,x-length,y-rise);
+    ink.moveTo(left,nearY-thickness*.62);
+    ink.quadraticCurveTo(left+length*.32,nearY-thickness,x,y);
+    ink.quadraticCurveTo(left+length*.24,nearY+thickness,left,nearY+thickness*.62);
+    ink.quadraticCurveTo(left-thickness,nearY,left,nearY-thickness*.62);
     ink.fill();
    }
   }

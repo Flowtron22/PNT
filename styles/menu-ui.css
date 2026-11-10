@@ -183,18 +183,24 @@ body.menu-view .menu-backdrop {
 body.menu-view .menu-sky-pan {
  --sky-width:max(100vw,177.69vh);
  --sky-center:calc((100vw - var(--sky-width)) / 2);
- display:flex;
+ --sky-step:calc(var(--sky-width) * .72);
+ display:block;
  position:absolute;
  inset:0 auto 0 0;
- width:calc(var(--sky-width) * 3);
+ width:var(--sky-width);
  transform:translateX(var(--sky-center));
- animation:menu-cloud-pan 23s linear infinite;
+ animation:menu-cloud-pan 8.28s linear infinite;
 }
 .menu-sky-pan i {
- flex:0 0 var(--sky-width);
+ position:absolute;
+ inset:0 auto 0 0;
+ width:var(--sky-width);
  background:url("../assets/pnt/ui/menu-cloudscape.png") center / 100% 100% no-repeat;
+ mask-image:linear-gradient(90deg,transparent,#000 28%);
 }
-.menu-sky-pan i:nth-child(2) {transform:scaleX(-1)}
+.menu-sky-pan i:first-child {left:calc(-1 * var(--sky-step))}
+.menu-sky-pan i:nth-child(3) {left:var(--sky-step)}
+.menu-sky-pan i:last-child {left:calc(2 * var(--sky-step))}
 body.menu-view #menu-flight {
  display:block;
  position:absolute;
@@ -202,18 +208,29 @@ body.menu-view #menu-flight {
  width:100%;
  height:100%;
 }
+body.menu-view .menu-backdrop::before {
+ content:"";
+ position:absolute;
+ z-index:1;
+ inset:0 0 0 -114px;
+ background:repeating-linear-gradient(135deg,#ffffff0e 0 40px,transparent 40px 80px);
+ animation:menu-stripe-pan 2.4s linear infinite;
+}
 body.menu-view .menu-backdrop::after {
+ z-index:1;
  background:
   linear-gradient(90deg,#19152973,#19152932 34%,transparent 61%,#25365726),
   radial-gradient(ellipse at 20% 20%,#59407845,transparent 54%),
-  radial-gradient(ellipse at 75% 100%,#6d36bd36,transparent 65%),
-  repeating-linear-gradient(135deg,#ffffff0b 0 40px,transparent 40px 80px);
+  radial-gradient(ellipse at 75% 100%,#6d36bd36,transparent 65%);
  opacity:1;
 }
 #page-back:where(:not(:hover,.pad-focus)) {
  background-color:#172750b8;
 }
 @keyframes menu-cloud-pan {
- from {transform:translateX(calc(var(--sky-center) - var(--sky-width) * 2))}
+ from {transform:translateX(calc(var(--sky-center) - var(--sky-step)))}
  to {transform:translateX(var(--sky-center))}
+}
+@keyframes menu-stripe-pan {
+ to {transform:translateX(113.137085px)}
 }

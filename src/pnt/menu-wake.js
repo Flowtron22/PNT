@@ -1,21 +1,21 @@
 import * as THREE from 'three';
 
 const BANDS = [0xa99aff,0x66dfff,0x9be876,0xffdf68,0xffa858,0xff658d];
-const SEGMENTS = 32;
-const STAR_COLORS = [0xfff1a3,0xffffff,0xffbcef,0xb0f1ff];
+const SEGMENTS = 48;
+const STAR_COLORS = [0xffdc47,0xff78be,0x60f2ff,0xb996ff,0xffad62];
 
 function starTexture() {
  const canvas = document.createElement('canvas');
  canvas.width = canvas.height = 64;
  const ink = canvas.getContext('2d');
  ink.translate(32,32);
- ink.shadowBlur = 9;
+ ink.shadowBlur = 7;
  ink.shadowColor = 'white';
  ink.fillStyle = 'white';
  ink.beginPath();
  for (let i=0;i<10;i++) {
   const angle = i*Math.PI/5-Math.PI/2;
-  const radius = i%2===0?22:10;
+  const radius = i%2===0?25:11.5;
   ink.lineTo(Math.cos(angle)*radius,Math.sin(angle)*radius);
  }
  ink.closePath();
@@ -48,7 +48,7 @@ export function createMenuWake(parent) {
  mesh.frustumCulled = false;
  parent.add(mesh);
  const texture = starTexture();
- const stars = Array.from({length:18},(_,i)=>{
+ const stars = Array.from({length:25},(_,i)=>{
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
    map:texture,color:STAR_COLORS[i%STAR_COLORS.length],transparent:true,depthWrite:false,toneMapped:false
   }));
@@ -57,9 +57,9 @@ export function createMenuWake(parent) {
  });
  const wakePoint = new THREE.Vector3();
  function curve(progress,time) {
-  wakePoint.set(.24+.48*progress+.21*Math.sin(progress*7-time*4)*progress,
-   .48-.44*progress+.27*Math.sin(progress*8-time*3.7)*progress,
-   -1.63-progress*8.3);
+  wakePoint.set(.31+1.37*progress+.29*Math.sin(progress*10-time*3.5)*progress,
+   .47-.48*progress+.32*Math.sin(progress*11-time*3.3)*progress,
+   -1.02-progress*13.5);
  }
  return {
   update(time,reduced) {
@@ -67,9 +67,9 @@ export function createMenuWake(parent) {
    for (let i=0;i<=SEGMENTS;i++) {
     const progress = i/SEGMENTS;
     curve(progress,motion);
-    const width = (.32+.57*Math.sin(progress*Math.PI*.74))*(1-progress*.22);
-    const opacity = Math.min(1,progress*13,(1-progress)*2.6);
-    const glint = .83+.14*Math.sin(progress*22-motion*9);
+    const width = (.54+.96*Math.sin(progress*Math.PI*.74))*(1-progress*.20);
+    const opacity = Math.min(1,progress*17,(1-progress)*4.8);
+    const glint = .88+.11*Math.sin(progress*27-motion*8);
     for (let band=0;band<BANDS.length;band++) {
      for (let edge=0;edge<2;edge++) {
       const vertex = (band*(SEGMENTS+1)+i)*2+edge;
@@ -85,15 +85,15 @@ export function createMenuWake(parent) {
     const star = stars[i];
     star.visible = !reduced;
     if (reduced) continue;
-    const progress = (i*.618034+time*(.56+(i%4)*.095))%1;
+    const progress = (i*.618034+time*(.235+(i%4)*.032))%1;
     const side = i%2===0?1:-1;
     curve(progress,time);
     star.position.copy(wakePoint);
     star.position.x += side*progress*(.4+(i%3)*.34);
-    star.position.y += side*(.11+progress*(.28+(i%5)*.22));
+    star.position.y += side*(.18+progress*(.41+(i%5)*.27));
     star.material.rotation = i*.47+side*time*2;
-    star.material.opacity = Math.min(1,progress*10,(1-progress)*3);
-    star.scale.setScalar((.24+(i%4)*.095)*(.75+progress*.62));
+    star.material.opacity = Math.min(1,progress*15,(1-progress)*5);
+    star.scale.setScalar((.36+(i%4)*.13)*(.84+progress*.66));
    }
   }
  };
