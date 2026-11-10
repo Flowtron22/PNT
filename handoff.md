@@ -1,6 +1,6 @@
 # Police N Thief Steam playtest handoff
 
-Updated 10 November 2026 (Asia/Kuala_Lumpur).
+Updated 11 November 2026 (Asia/Kuala_Lumpur).
 
 ## Standing instructions for every chat
 
@@ -54,7 +54,7 @@ circular arena. Keep those identifiers stable when changing display names.
 
 Version **0.9.172** uses the supplied `sm_star.fbx` shape in the menu
 rainbow wake. The indexed runtime mesh is `assets/pnt/props/sm_star.glb`.
-The wake continues to apply its own colors, sizes, spacing, and tumble.
+The wake continues to apply its own colors, sizes, spacing, and tumble. The source and asset are in commit `b75f419`.
 
 Syntax checks and all 381 automated tests passed. The packaged Windows
 build loaded and rendered the new mesh at 1280 × 800 and 1920 × 1080.
