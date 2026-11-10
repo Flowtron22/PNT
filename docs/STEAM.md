@@ -26,8 +26,10 @@ PC and Steam Deck use the same Windows x64 package, with Proton on Deck.
 
 ## Private development playtest
 
-Current development package is **0.9.162** in
-`dist-steam/win64-dev-playtest-0.9.162`.
+Current development package is **0.9.163** in
+`dist-steam/win64-dev-playtest-0.9.163`.
+
+The windowed client opens at a fixed size. Use the in-game fullscreen toggle to fill the display.
 
 **Settings → Video → Render resolution** sets the maximum 3D resolution from
 720p to 4K after you select **Apply**. Auto follows the Low, Medium, High and

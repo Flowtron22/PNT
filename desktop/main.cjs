@@ -75,6 +75,8 @@ function launch() {
     window = new BrowserWindow({
       width: 1280,
       height: 800,
+      resizable: false,
+      maximizable: false,
       fullscreen: steam?.utils.isSteamRunningOnSteamDeck() || process.env.SteamDeck === '1' || process.argv.includes('--fullscreen'),
       autoHideMenuBar: true,
       icon: resolve(__dirname, 'pnt.ico'),
