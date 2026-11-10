@@ -179,21 +179,41 @@ body.menu-view .menu-backdrop {
  overflow:hidden;
  background:#397ec0;
 }
-body.menu-view .menu-backdrop::before {
- content:"";
+.menu-sky-pan,#menu-flight {display:none}
+body.menu-view .menu-sky-pan {
+ --sky-width:max(100vw,177.69vh);
+ --sky-center:calc((100vw - var(--sky-width)) / 2);
+ display:flex;
  position:absolute;
- inset:-3% -8%;
- background:url("../assets/pnt/ui/menu-cloudscape.png") center / cover no-repeat;
- animation:menu-cloud-pan 52s ease-in-out infinite alternate;
+ inset:0 auto 0 0;
+ width:calc(var(--sky-width) * 3);
+ transform:translateX(var(--sky-center));
+ animation:menu-cloud-pan 23s linear infinite;
+}
+.menu-sky-pan i {
+ flex:0 0 var(--sky-width);
+ background:url("../assets/pnt/ui/menu-cloudscape.png") center / 100% 100% no-repeat;
+}
+.menu-sky-pan i:nth-child(2) {transform:scaleX(-1)}
+body.menu-view #menu-flight {
+ display:block;
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
 }
 body.menu-view .menu-backdrop::after {
- background:linear-gradient(90deg,#17275060,transparent 43%,transparent 72%,#25365726);
+ background:
+  linear-gradient(90deg,#19152973,#19152932 34%,transparent 61%,#25365726),
+  radial-gradient(ellipse at 20% 20%,#59407845,transparent 54%),
+  radial-gradient(ellipse at 75% 100%,#6d36bd36,transparent 65%),
+  repeating-linear-gradient(135deg,#ffffff0b 0 40px,transparent 40px 80px);
  opacity:1;
 }
 #page-back:where(:not(:hover,.pad-focus)) {
  background-color:#172750b8;
 }
 @keyframes menu-cloud-pan {
- from {transform:translateX(-5%)}
- to {transform:translateX(5%)}
+ from {transform:translateX(calc(var(--sky-center) - var(--sky-width) * 2))}
+ to {transform:translateX(var(--sky-center))}
 }

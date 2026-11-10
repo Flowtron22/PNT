@@ -15,6 +15,8 @@ import {createBalloonView} from './balloon-view.js';
 import {updateBalloonLaunch,BALLOON_LAUNCH_SECONDS} from './balloon-launch.js';
 import {menuPreviewFrame} from './viewport.js';
 import {createMenuCloud} from './menu-cloud.js';
+import {createMenuFlight} from './menu-flight.js';
+import {createMenuWake} from './menu-wake.js';
 import {COLOR_COSTUMES,outfitColors,SKIN_COLORS,loadCostumeAppearances,saveCostumeAppearances,applyCostumeAppearance} from './costume-appearance.js';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -90,6 +92,7 @@ const leaveLobbyDialog=$('#leave-lobby-dialog');
 const scene=new THREE.Scene();scene.background=new THREE.Color('#70688f');scene.fog=new THREE.Fog('#70688f',38,85);
 const menuCloud=createMenuCloud(),menuCloudAnchor=new THREE.Vector3(0,0,0);
 menuCloud.visible=false;scene.add(menuCloud);
+const menuWake=createMenuWake(menuCloud),menuFlight=createMenuFlight($('#menu-flight'));
 const matchRoot=new THREE.Group(),shipPivot=new THREE.Vector3();scene.add(matchRoot);let furniturePhysics=null,shipAngle=0;
 const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
@@ -109,7 +112,7 @@ let ready=false,role='runner',quality=settings.quality;
 let oyenAppearance=loadOyenAppearance(localStorage),costumeAppearances=loadCostumeAppearances(localStorage);
 let costume=normalizeCostume(localStorage.getItem('pnt-costume'));
 let loadout=normalizeLoadout(localStorage.getItem('pnt-loadout'),localStorage.getItem('pnt-tool')),selectedTool=loadout[0];
-let round=null,avatars=[],preview=null,previewTime=0,cloudTime=0,templates={},clips={},ground=[],bounds=null,grid=null;
+let round=null,avatars=[],preview=null,previewTime=0,cloudTime=0,templates={},clips={},menuClips={},ground=[],bounds=null,grid=null;
 let paused=false,activePage='home',toastTime=0,lastFrame=performance.now(),busy=false,waterAnimation=null,sunkenLook=null;
 let sunkenStylized=localStorage.getItem('pnt-sunken-look')!=='original';
 const keys=new Set(),input={x:0,z:0},cameraTarget=new THREE.Vector3(),hazards=[];
@@ -156,7 +159,7 @@ async function ensureCostume(){const c=COSTUMES.find(c=>c.id===costume);if(templ
 function destroy(a){if(!a)return;a.detectionZone?.dispose();a.group.removeFromParent();a.anim.dispose();sunkenLook?.unregister(a.model);a.captureTint?.dispose();a.appearance?.dispose();const skeletons=new Set();a.model.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const skeleton of skeletons)skeleton.dispose();a.seatMarker?.material.map.dispose();for(const mesh of [a.ring,a.shadow,a.seatMarker].filter(Boolean)){mesh.geometry.dispose();mesh.material.dispose();}}
 function clearHazards(){gameFX.clear();for(const h of hazards)disposeHazard(h);hazards.length=0;}
 function menu(){selectedMode='classic';online?.leave();online=null;onlineLoading=false;onlineRevision++;onlineRoster='';onlineSnapshot=null;clearStageVerdict();resultPortrait?.dispose();resultPortrait=null;restoreMenuArena();room=null;returnToLobby=false;clearLobbyDisplays();round=null;paused=false;clearInput();clearHazards();for(const a of avatars)destroy(a);avatars=[];previewModel();show('menu');openPage('home');}
-function previewModel(){destroy(preview);preview=avatar(templates[costume],0,role);preview.group.position.set(0,1.025,0);preview.group.scale.setScalar(1.38);preview.ring.visible=preview.shadow.visible=false;menuCloud.add(preview.group);previewTime=0;labels();}
+function previewModel(){destroy(preview);preview=avatar(templates[costume],0,role,null,menuClips);preview.anim.play('menuIdle',{fade:0,rate:1/ANIMATION_PLAY_RATE});preview.group.position.set(0,1.025,0);preview.group.scale.setScalar(1.38);preview.ring.visible=preview.shadow.visible=false;menuCloud.add(preview.group);previewTime=0;labels();}
 function labels(){refreshControlHints();
  const splash=(round?.mode||room?.gameMode)==='splash';document.body.classList.toggle('splash-mode',splash);if(splash){for(let i=1;i<=2;i++){$('#tool-action-icon'+i).src='assets/pnt/maps/'+(i===1?'splash-refill':'splash-can')+'.svg';$('#tool-action'+i).setAttribute('aria-label',i===1?'Toggle submerge and refill':'Throw paint can');}return;}
  renderHomeWidgets(profile,loadout,costume);
@@ -339,12 +342,12 @@ function renderTools(){
  <div class="kit-body"><div id="tool-catalog" class="tool-catalog" aria-label="Tool catalog">${TOOLS.filter(t=>!event||kit.includes(t.id)).map(t=>choice(t.id,t.name,kit.includes(t.id)?'SLOT '+(kit.indexOf(t.id)+1):'',t.id===selectedTool,toolImage(t))).join('')}</div>
  <section class="tool-detail" aria-label="Selected tool details"><div class="tool-detail-title">${toolImage(selected)}<h2>${selected.name}</h2></div><div class="tool-stats"><span>${selected.cooldown}s<small>COOLDOWN</small></span><span>${types[selected.id]}<small>TOOL TYPE</small></span></div><p>${selected.description.replace(" 8 second cooldown.","")}</p>
  <button id="equip-slot1" class="primary equip-button" ${event||kit[0]===selectedTool?'disabled':''}>${kit[0]===selectedTool?'EQUIPPED IN SLOT 1':'EQUIP SLOT 1'}</button><button id="equip-slot2" class="primary equip-button" ${event||kit[1]===selectedTool?'disabled':''}>${kit[1]===selectedTool?'EQUIPPED IN SLOT 2':'EQUIP SLOT 2'}</button><button id="preview-tool" class="secondary">PREVIEW ${selected.key}</button></section></div>`;
- for(const b of document.querySelectorAll('#tool-catalog [data-choice]'))b.onclick=()=>{const controllerSelection=b.classList.contains('pad-focus');selectedTool=b.dataset.choice;previewTime=0;preview.anim.play('idle');renderTools();if(controllerSelection){const first=$('#equip-slot1'),second=$('#equip-slot2'),target=!first.disabled?first:!second.disabled?second:null;if(target)controllerMenu(document,'focus',target);}};
+ for(const b of document.querySelectorAll('#tool-catalog [data-choice]'))b.onclick=()=>{const controllerSelection=b.classList.contains('pad-focus');selectedTool=b.dataset.choice;previewTime=0;preview.anim.play('menuIdle',{rate:1/ANIMATION_PLAY_RATE});renderTools();if(controllerSelection){const first=$('#equip-slot1'),second=$('#equip-slot2'),target=!first.disabled?first:!second.disabled?second:null;if(target)controllerMenu(document,'focus',target);}};
  for(const b of document.querySelectorAll('[data-slot-detail]'))b.onclick=()=>{selectedTool=kit[Number(b.dataset.slotDetail)];renderTools();};
  for(const slot of [0,1])$('#equip-slot'+(slot+1)).onclick=()=>{if(event)return;loadout=equipTool(loadout,selectedTool,slot);localStorage.setItem('pnt-loadout',JSON.stringify(loadout));labels();renderTools();};
  $('#preview-tool').onclick=()=>demo(selected.clip);
 }
-function openPage(name){if(busy)return;bindingCapture=null;settingsPage=null;activePage=name;ui.menu.classList.toggle('oyen-customizing',name==='costume'&&(costume==='oyen'||COLOR_COSTUMES.includes(costume)));previewTime=0;preview?.anim.play('idle');$('#page-back').textContent=returnToLobby?'← LOBBY':'← BACK';ui.menu.dataset.page=name;$('#home').hidden=name!=='home';$('#home-widgets').hidden=name!=='home';$('#page').hidden=name==='home';$('#page').scrollTop=0;if(name==='home'){selectedMode='classic';labels();return;}
+function openPage(name){if(busy)return;bindingCapture=null;settingsPage=null;activePage=name;ui.menu.classList.toggle('oyen-customizing',name==='costume'&&(costume==='oyen'||COLOR_COSTUMES.includes(costume)));previewTime=0;preview?.anim.play('menuIdle',{rate:1/ANIMATION_PLAY_RATE});$('#page-back').textContent=returnToLobby?'← LOBBY':'← BACK';ui.menu.dataset.page=name;$('#home').hidden=name!=='home';$('#home-widgets').hidden=name!=='home';$('#page').hidden=name==='home';$('#page').scrollTop=0;if(name==='home'){selectedMode='classic';labels();return;}
  const modeTitle=selectedMode==='splash'?'SPLISH SPLASH':selectedMode==='diretide'?'PATTY PROWL':selectedMode==='tiletide'?'TILE TUMBLE':selectedMode==='strikers'?'SLIPPERY SHOOTS':selectedMode==='balloon'?'BALLOON BASH':null;$('#page-title').textContent={events:'EVENTS',play:modeTitle||'LET’S PLAY',online:modeTitle?modeTitle+' ONLINE':'SOLO ONLINE',join:'JOIN THE CHASE',tools:'TOOLS OF THE TRADE',costume:'YOUR LOOK',settings:'SETTINGS',credits:'CREDIT'}[name];
  $('#page-kicker').hidden=true;
  $('#page-kicker').textContent={play:'GATHER THE CREW',join:'FIND YOUR CREW',tools:'A LITTLE HELP FOR YOUR GETAWAY',costume:'LOOK GOOD. RUN FAST.',settings:'MAKE YOURSELF COMFORTABLE',credits:'MADE FOR A LITTLE TROUBLE'}[name];
@@ -591,7 +594,7 @@ function spot(x,z){let best=null,distance=Infinity;for(let iz=2;iz<grid.nz-2;iz+
   const y=grid.heights[iz*grid.nx+ix];if(!Number.isFinite(y)||grid.blocked?.[iz*grid.nx+ix])continue;const px=bounds.min.x+ix*grid.step,pz=bounds.min.z+iz*grid.step,d=(px-x)**2+(pz-z)**2;
   if(d<distance){distance=d;best=new THREE.Vector3(px,y,pz);}
 }if(!best)throw new Error('No walkable ground was found in the Mall export');return best;}
-function avatar(template,id,actorRole,player=null){
+function avatar(template,id,actorRole,player=null,animationClips=clips){
  const model=clone(template.scene),group=new THREE.Group();model.updateMatrixWorld(true);
  let box=new THREE.Box3().setFromObject(model),height=box.max.y-box.min.y;model.scale.multiplyScalar(1.55/height);model.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(model);const center=box.getCenter(new THREE.Vector3());model.position.add(new THREE.Vector3(-center.x,-box.min.y,-center.z));group.add(model);(round?matchRoot:scene).add(group);group.position.copy(spot((id-1.5)*2.7,id%2?4:-3));
  model.traverse(o=>{if(o.isMesh){o.frustumCulled=false;for(const m of Array.isArray(o.material)?o.material:[o.material])if(m)m.roughness=Math.max(.55,m.roughness||0);}});
@@ -600,7 +603,7 @@ function avatar(template,id,actorRole,player=null){
  const appearance=appearanceCostume==='oyen'?applyOyenAppearance(model,custom):COLOR_COSTUMES.includes(appearanceCostume)?applyCostumeAppearance(model,appearanceCostume,custom):null;
  const captureTint=createCaptureTint(model);sunkenLook?.register(model);
  const jetpackRig={model,group};prepareJetpackMount(jetpackRig);
- const anim=makeAnimator(model,clips,actorRole);
+ const anim=makeAnimator(model,animationClips,actorRole);
  const ring=new THREE.Mesh(new THREE.RingGeometry(.35,.42,24),new THREE.MeshBasicMaterial({color:id===0?0xff8a14:actorRole==='chaser'?0x2f5bff:0xffffff,transparent:true,opacity:.8,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.position.y=.025;group.add(ring);
  const shadow=new THREE.Mesh(new THREE.CircleGeometry(.35,20),new THREE.MeshBasicMaterial({color:0x09154b,transparent:true,opacity:.25,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.015;group.add(shadow);
  return {...jetpackRig,id,group,model,anim,ring,shadow,appearance,captureTint,velocity:0,grounded:true,speed:0,wander:id*2.2};
@@ -805,7 +808,7 @@ function updateStrikersHud(){
 
 function positionMatchCamera(){const view=matchView(menuCamera.aspect,stageFrame,round?.mode==='balloon'?{horizontal:.682,vertical:.731}:undefined),strikers=round?.mode==='strikers',zoom=strikers?.72:round?.mode==='tiletide'?.8:1,distance=view.distance*zoom;scene.fog.near=distance+20;scene.fog.far=distance+85;const far=distance+180;if(matchCamera.far!==far){matchCamera.far=far;matchCamera.updateProjectionMatrix();}const cameraZoom=round?.mode==='splash'?1.21:1.1;if(matchCamera.zoom!==cameraZoom){matchCamera.zoom=cameraZoom;matchCamera.updateProjectionMatrix();}matchCamera.position.copy(cameraTarget).add(new THREE.Vector3(...view.offset).multiplyScalar(zoom));const slide=strikers?-.55:0;matchCamera.position.x+=slide;const shake=reduced?{x:0,z:0}:shakeOffset(shakeTime,cameraShake*settings.cameraShake);matchCamera.position.x+=shake.x;matchCamera.position.z+=shake.z;matchCamera.lookAt(cameraTarget.x+slide,cameraTarget.y,cameraTarget.z);}
 
-async function boot(){beginLoading('GETTING READY');try{let done=0;const names=['thief','police','mall-slice'];const items=await Promise.all(names.map(async name=>{const value=await getGLB(name,`assets/pnt/${name}.glb`);progress(++done/4*70,`Loading ${name==='mall-slice'?'Mall promenade':name}…`);return value;}));templates={thief:items[0],police:items[1]};const response=await fetch('assets/pnt/animations/clips.json?v=idle-b1');if(!response.ok)throw new Error('Animation download failed');const data=await response.json();clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));progress(75,'Preparing the walkable arena…');const arena=items[2].scene;menuArena=arena;arena.updateMatrixWorld(true);const initial=new THREE.Box3().setFromObject(arena),center=initial.getCenter(new THREE.Vector3());arena.position.add(new THREE.Vector3(-center.x,-initial.min.y,-center.z));scene.add(arena);arena.updateMatrixWorld(true);setArenaSurface(arena);arena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){if(m.map)m.map.anisotropy=2;}}});bounds=new THREE.Box3().setFromObject(arena);buildGround();menuNavigation={ground,bounds,grid};await ensureCostume();progress(90,'Warming up characters and fonts…');previewModel();await document.fonts.ready;await renderer.compileAsync(scene,menuCamera);progress(100,'All set. Let’s play.');ready=true;document.body.dataset.assets='ready';ui.menu.hidden=true;endLoading();titleScreen.show();}catch(e){document.body.dataset.assets='error';loadError(e,()=>location.reload());}}
+async function boot(){beginLoading('GETTING READY');try{let done=0;const names=['thief','police','mall-slice'];const items=await Promise.all(names.map(async name=>{const value=await getGLB(name,`assets/pnt/${name}.glb`);progress(++done/4*70,`Loading ${name==='mall-slice'?'Mall promenade':name}…`);return value;}));templates={thief:items[0],police:items[1]};const response=await fetch('assets/pnt/animations/clips.json?v=menu-idle1');if(!response.ok)throw new Error('Animation download failed');const data=await response.json();clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));menuClips={...clips,menuIdle:THREE.AnimationClip.parse(data.menuIdle)};progress(75,'Preparing the walkable arena…');const arena=items[2].scene;menuArena=arena;arena.updateMatrixWorld(true);const initial=new THREE.Box3().setFromObject(arena),center=initial.getCenter(new THREE.Vector3());arena.position.add(new THREE.Vector3(-center.x,-initial.min.y,-center.z));scene.add(arena);arena.updateMatrixWorld(true);setArenaSurface(arena);arena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){if(m.map)m.map.anisotropy=2;}}});bounds=new THREE.Box3().setFromObject(arena);buildGround();menuNavigation={ground,bounds,grid};await ensureCostume();progress(90,'Warming up characters and fonts…');previewModel();await document.fonts.ready;await renderer.compileAsync(scene,menuCamera);progress(100,'All set. Let’s play.');ready=true;document.body.dataset.assets='ready';ui.menu.hidden=true;endLoading();titleScreen.show();}catch(e){document.body.dataset.assets='error';loadError(e,()=>location.reload());}}
 let previewLayout=null,previewLayoutTarget=null,previewLayoutKey='',previewLayoutNext=0;
 function frameMenuCharacter(p,dt,now){
  const key=activePage+':'+innerWidth+':'+innerHeight;
@@ -821,12 +824,13 @@ function frameMenuCharacter(p,dt,now){
  menuCamera.setViewOffset(innerWidth,innerHeight,innerWidth*.5-shot.x,innerHeight*.5-shot.y,innerWidth,innerHeight);
 }
 function updateMenuCloud(dt,now){
- if(previewTime>0){previewTime-=dt;if(previewTime<=0)preview.anim.play('idle');}
+ if(previewTime>0){previewTime-=dt;if(previewTime<=0)preview.anim.play('menuIdle',{rate:1/ANIMATION_PLAY_RATE});}
  preview.anim.update(dt);
  if(!reduced)cloudTime+=dt;
  const sway=reduced?0:Math.sin(cloudTime*1.25);
  menuCloud.position.x=sway*.085;
  menuCloud.rotation.set(0,-.69+sway*.065,sway*.035);
+ menuWake.update(cloudTime,reduced);
  frameMenuCharacter(menuCloudAnchor,dt,now);
 }
 function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed=Math.max(0,(now-lastFrame)/1000),dt=Math.min(elapsed,.05);lastFrame=now;updateController(now,dt);uiEffects.tick(dt);waterAnimation?.update(dt);tickStageVerdict(elapsed);haptics.update(round?.actors[0]?.effect,Math.min(elapsed,.1),!!round&&round.phase==='playing'&&!paused&&!busy&&!document.hidden&&round.actors[0].effectTime>0);if(resultPortrait&&!ui.results.hidden)resultPortrait.update(dt);
@@ -856,7 +860,7 @@ function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed
  }
  if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('#toast').textContent='';}updateMarkers();fpsCounter.hidden=!settings.showFps||ui.hud.hidden||busy;
  renderElapsed+=elapsed;
- if(renderGate(now,settings.fpsCap)){if(!ui.lobby.hidden&&!busy)renderLobbyCharacters(Math.min(renderElapsed,.1));else renderer.render(scene,round?matchCamera:menuCamera);fpsFrames++;renderElapsed=0;}
+ if(renderGate(now,settings.fpsCap)){if(!ui.menu.hidden)menuFlight.update(renderElapsed,innerWidth,innerHeight,reduced);if(!ui.lobby.hidden&&!busy)renderLobbyCharacters(Math.min(renderElapsed,.1));else renderer.render(scene,round?matchCamera:menuCamera);fpsFrames++;renderElapsed=0;}
  if(now-fpsSince>=1000){fpsCounter.textContent=Math.round(fpsFrames*1000/(now-fpsSince))+' FPS';fpsSince=now;fpsFrames=0;}
 }
 const phoneLandscape=desktop?{blocked:false}:configureLandscape({onChange:()=>{clearInput();resize();}});
