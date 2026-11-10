@@ -43,7 +43,7 @@ function updateHose(mesh,p,angle,reach,time){
  for(let i=0;i<=HOSE_STEPS;i++){
   const t=i/HOSE_STEPS,distance=nozzle+(reach-nozzle)*t;
   const y=.85+.14*Math.sin(t*Math.PI)-.79*t*t;
-  const radius=(.072+.037*t)*(1+.16*Math.sin(t*31-time*35));
+  const radius=(.072+.146*t*t)*(1+.16*Math.sin(t*31-time*35));
   for(let j=0;j<=HOSE_SIDES;j++){
    const phase=j/HOSE_SIDES*Math.PI*2;
    const across=Math.cos(phase)*radius;
@@ -52,6 +52,45 @@ function updateHose(mesh,p,angle,reach,time){
   }
  }
  positions.needsUpdate=true;
+}
+function createImpactDroplets(root){
+ const capacity=128,geometry=new THREE.BufferGeometry();
+ const positions=new THREE.BufferAttribute(new Float32Array(capacity*3),3);
+ const colors=new THREE.BufferAttribute(new Float32Array(capacity*3),3);
+ geometry.setAttribute('position',positions);geometry.setAttribute('color',colors);geometry.setDrawRange(0,0);
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=32;
+ const ctx=canvas.getContext('2d'),gradient=ctx.createRadialGradient(12,10,1,16,16,15);
+ gradient.addColorStop(0,'#fff');gradient.addColorStop(.72,'#fff');gradient.addColorStop(1,'transparent');
+ ctx.fillStyle=gradient;ctx.beginPath();ctx.arc(16,16,15,0,Math.PI*2);ctx.fill();
+ const sprite=new THREE.CanvasTexture(canvas);
+ const material=new THREE.PointsMaterial({size:.13,map:sprite,vertexColors:true,
+  transparent:true,alphaTest:.12,depthWrite:false,toneMapped:false});
+ const points=new THREE.Points(geometry,material);points.frustumCulled=false;root.add(points);
+ const pool=Array.from({length:capacity},()=>({life:0}));
+ const palette=SPLASH_COLORS.map(c=>new THREE.Color(c)),tint=new THREE.Color(),white=new THREE.Color('#fff');
+ let cursor=0;
+ return {
+  emit(x,z,seat){
+   const drop=pool[cursor];cursor=(cursor+1)%capacity;
+   const angle=Math.random()*Math.PI*2,speed=.45+Math.random()*2.9;
+   Object.assign(drop,{x,z,y:.07,vx:Math.cos(angle)*speed,vz:Math.sin(angle)*speed,
+    vy:1.15+Math.random()*2,life:.22+Math.random()*.21,seat,glint:Math.random()*.42});
+  },
+  update(dt){
+   let count=0;
+   for(const drop of pool){
+    if(drop.life<=0)continue;
+    drop.life-=dt;drop.vy-=10*dt;
+    drop.x+=drop.vx*dt;drop.z+=drop.vz*dt;drop.y+=drop.vy*dt;
+    if(drop.y<=.02||drop.life<=0){drop.life=0;continue;}
+    positions.setXYZ(count,drop.x,drop.y,drop.z);
+    tint.copy(palette[drop.seat]).lerp(white,drop.glint);
+    colors.setXYZ(count++,tint.r,tint.g,tint.b);
+   }
+   geometry.setDrawRange(0,count);positions.needsUpdate=colors.needsUpdate=true;
+  },
+  dispose(){points.removeFromParent();sprite.dispose();material.dispose();geometry.dispose();}
+ };
 }
 export function createSplashView(parent){
  const root=new THREE.Group();root.name='SplishSplash';parent.add(root);
@@ -98,6 +137,7 @@ export function createSplashView(parent){
   mesh.visible=false;root.add(mesh);return mesh;
  });
  const hoses=SPLASH_COLORS.map(color=>{const mesh=createHose(color);root.add(mesh);return mesh;});
+ const droplets=createImpactDroplets(root),impactTimers=[0,0,0,0];
  const guideMaterial=new THREE.MeshBasicMaterial({color:'#ffffff',toneMapped:false});
  const guide=new THREE.Group(),dotGeometry=new THREE.SphereGeometry(.048,7,5);
  for(let i=0;i<12;i++)guide.add(new THREE.Mesh(dotGeometry,guideMaterial));
@@ -108,7 +148,7 @@ export function createSplashView(parent){
  const cans=Array.from({length:4},(_,i)=>{const g=new THREE.Group(),body=new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.5,12),paintMats[i]),lid=new THREE.Mesh(new THREE.CylinderGeometry(.21,.21,.05,12),mat('#e6f1ff'));lid.position.y=.26;g.add(body,lid);root.add(g);return g;});
  const modelBases=new WeakMap();
  const seenBursts=new Set();let revision=-1,paintMap='',layout='',time=0;
- return {root,update(round,dt,avatars){time+=dt;const key=JSON.stringify(round.paintCover);if(key!==layout){layout=key;bakeGroundContact(lighting,round.paintCover);lightmap.needsUpdate=true;cover.traverse(o=>{if(o.isMesh){o.geometry.dispose();o.material.dispose();}});cover.clear();for(const b of round.paintCover){const m=new THREE.Mesh(boxGeometry(b.w,b.h,b.d),mat('#e4d7b9'));m.position.set(b.x,0,b.z);m.castShadow=m.receiveShadow=true;cover.add(m);const rim=new THREE.Mesh(boxGeometry(b.w-.05,.1,b.d-.05),mat('#99a9b8'));rim.position.set(b.x,b.h-.12,b.z);cover.add(rim);}}
+ return {root,update(round,dt,avatars,reduced=false){time+=dt;const key=JSON.stringify(round.paintCover);if(key!==layout){layout=key;bakeGroundContact(lighting,round.paintCover);lightmap.needsUpdate=true;cover.traverse(o=>{if(o.isMesh){o.geometry.dispose();o.material.dispose();}});cover.clear();for(const b of round.paintCover){const m=new THREE.Mesh(boxGeometry(b.w,b.h,b.d),mat('#e4d7b9'));m.position.set(b.x,0,b.z);m.castShadow=m.receiveShadow=true;cover.add(m);const rim=new THREE.Mesh(boxGeometry(b.w-.05,.1,b.d-.05),mat('#99a9b8'));rim.position.set(b.x,b.h-.12,b.z);cover.add(rim);}}
  if(revision!==round.paintRevision || paintMap!==round.paint){
   revision=round.paintRevision;paintMap=round.paint;coverage.fill(0);
   for(let i=0;i<paintMap.length;i++){
@@ -119,6 +159,7 @@ export function createSplashView(parent){
  }
  for(const mesh of launches)mesh.visible=false;
  for(const shot of round.paintShots){
+  if(shot.age<0)continue;
   const mesh=launches[shot.seat];mesh.visible=true;
   mesh.position.set(shot.x,shot.y,shot.z);
   mesh.rotation.set(shot.age*11,0,shot.age*5);
@@ -142,13 +183,21 @@ export function createSplashView(parent){
  for(const actor of round.actors){
   const avatar=avatars[actor.id],hose=hoses[actor.paintSeat];
   hose.visible=!!avatar&&actor.spraying===true&&round.phase==='playing';
-  if(!hose.visible)continue;
+  if(!hose.visible){impactTimers[actor.paintSeat]=0;continue;}
   const p=avatar.group.position,angle=actor.sprayAngle;
-  const {distance}=splashHoseTarget(round.paintCover,p,angle);
+  const {x,z,distance}=splashHoseTarget(round.paintCover,p,angle);
   updateHose(hose,p,angle,distance,time);
+  if(dt>0){
+   const interval=reduced?.11:.024;
+   impactTimers[actor.paintSeat]+=dt;
+   while(impactTimers[actor.paintSeat]>=interval){
+    impactTimers[actor.paintSeat]-=interval;droplets.emit(x,z,actor.paintSeat);
+   }
+  }
  }
+ droplets.update(dt);
  for(const b of round.paintBursts){if(seenBursts.has(b.id))continue;seenBursts.add(b.id);if(seenBursts.size>512)seenBursts.delete(seenBursts.values().next().value);const ripple=ripples.find(p=>p.age>=.45)||ripples[0];ripple.age=0;ripple.r=b.r;ripple.mesh.material.color.set(SPLASH_COLORS[b.seat]);ripple.mesh.position.set(b.x,.045,b.z);}
  for(const r of ripples){r.age+=dt;r.mesh.visible=r.age<.45;r.mesh.scale.setScalar(r.r*(.35+Math.min(1,r.age/.45)*.9));r.mesh.material.opacity=Math.max(0,.65*(1-r.age/.45));}
- for(const a of round.actors){const avatar=avatars[a.id],p=avatar?.group.position;if(!p)continue;if(!modelBases.has(avatar.model))modelBases.set(avatar.model,{scale:avatar.model.scale.y,y:avatar.model.position.y});const base=modelBases.get(avatar.model);avatar.model.scale.y=base.scale*(a.submerged?.22:1);avatar.model.position.y=base.y+(a.submerged?-.15:0);const ring=swimmers[a.paintSeat];ring.visible=a.diving;ring.position.set(p.x,.08,p.z);ring.scale.setScalar(1+Math.sin(time*8)*.08);const can=cans[a.paintSeat];can.visible=!a.submerged;can.position.set(p.x+Math.sin(avatar.group.rotation.y+.65)*.6,.8,p.z+Math.cos(avatar.group.rotation.y+.65)*.6);can.rotation.z=a.shotCooldown>.06?-.25:0;}
- },dispose(){tex.dispose();lightmap.dispose();const geometries=new Set(),materials=new Set();root.traverse(o=>{if(o.isMesh){geometries.add(o.geometry);materials.add(o.material);}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());root.removeFromParent();}};
+ for(const a of round.actors){const avatar=avatars[a.id],p=avatar?.group.position;if(!p)continue;if(!modelBases.has(avatar.model))modelBases.set(avatar.model,{scale:avatar.model.scale.y,y:avatar.model.position.y});const base=modelBases.get(avatar.model);avatar.model.scale.y=base.scale*(a.submerged?.22:1);avatar.model.position.y=base.y+(a.submerged?-.15:0);const ring=swimmers[a.paintSeat];ring.visible=a.diving;ring.position.set(p.x,.08,p.z);ring.scale.setScalar(1+Math.sin(time*8)*.08);const can=cans[a.paintSeat];can.visible=!a.submerged&&!launches[a.paintSeat].visible;const facing=avatar.group.rotation.y;can.position.set(p.x-Math.sin(facing)*.53,p.y+1.02,p.z-Math.cos(facing)*.53);can.rotation.set(-.16,facing,.08,'YXZ');}
+ },dispose(){droplets.dispose();tex.dispose();lightmap.dispose();const geometries=new Set(),materials=new Set();root.traverse(o=>{if(o.isMesh){geometries.add(o.geometry);materials.add(o.material);}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());root.removeFromParent();}};
 }

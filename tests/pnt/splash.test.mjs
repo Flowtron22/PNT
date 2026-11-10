@@ -38,7 +38,7 @@ test('cover moves across seeds and keeps the four spawn puddles clear',()=>{
 test('hose holds a continuous short aim and turns off when released',()=>{
  const r=round(),p=positions();r.paintCover=[];p[0]={x:0,z:-3};
  splashFire(r,0,p[0],0,true);
- assert.equal(r.paintShots.length,0);assert.equal(r.paintBursts.length,1);
+ assert.equal(r.paintShots.length,0);assert.equal(r.paintBursts.length,1);assert.equal(r.paintBursts[0].r,1.38);
  assert.ok(r.paintBursts[0].z-p[0].z>3&&r.paintBursts[0].z-p[0].z<3.4);
  splashFire(r,0,p[0],0,true);
  assert.equal(r.actors[0].spraying,true);assert.equal(r.paintBursts.length,1);
@@ -50,9 +50,10 @@ test('paint can clears cover on its arc and lands at the previewed point',()=>{
  const target=splashCanTarget(r.paintCover,p[0],Math.PI/2);
  assert.equal(target.x,2);
  assert.ok(splashAction(r,0,1,p[0],Math.PI/2));
+ assert.ok(r.paintShots[0].age<0&&r.actors[0].throwTime>0);
  for(let i=0;i<24;i++)stepSplash(r,1/60,p);
  assert.ok(r.paintShots[0].y>3.5);
- for(let i=0;i<31;i++)stepSplash(r,1/60,p);
+ for(let i=0;i<39;i++)stepSplash(r,1/60,p);
  assert.equal(r.paintShots.length,0);
  assert.equal(r.paintBursts[0].x,target.x);
  assert.ok(Math.abs(r.paintBursts[0].z-target.z)<1e-8);

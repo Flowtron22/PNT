@@ -1,7 +1,7 @@
 # Splish Splash
 
-Available from **Events → Splish Splash** in Steam playtest **0.9.159**.
-Training, couch and Steam online use mode ID `splash`, rules version `3`.
+Available from **Events → Splish Splash** in Steam playtest **0.9.160**.
+Training, couch and Steam online use mode ID `splash`, rules version `4`.
 
 Four individual players compete for the largest share of paintable floor in
 120 seconds. Repainting replaces the previous owner. Exact cell counts decide
@@ -11,8 +11,9 @@ Unpainted floor remains in the denominator; box footprints do not count.
 - Move to aim; hold Interact (default E / controller A) to run a continuous paint hose. Interact automatically surfaces before firing.
 - Slot 1 (default Q / X) toggles submerge. Move into your own paint to refill
   at 42 ink/second, then surface with the same button before shooting.
+- The 160-unit tank gives 60% more spray time. The stream paints twice the previous width and throws round droplets from its impact point.
 - Slot 2 (default W / Y) throws a paint can: 30 ink, five-second cooldown,
-  larger landing splash. Aim with movement and use the dotted arc and landing ring to line up the launch.
+  larger landing splash. The back-mounted can launches at the hit beat of the unarmed Hammer Smash animation. Aim with movement and use the dotted arc and landing ring to line up the launch.
 - A small five-ink/second idle recovery after .9 seconds prevents an empty-tank
   deadlock if all of a player's territory is overwritten.
 - Standard equipped tools do not apply. This mode has no damage or elimination.

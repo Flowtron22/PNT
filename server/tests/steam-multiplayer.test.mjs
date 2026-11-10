@@ -303,7 +303,7 @@ test('PattyTide keeps spawning candy and accepting input after a Steam host tran
 });
 
 test('Splash Area public discovery and host migration preserve turf, seed, ink actions and seat ownership', async t => {
- const connect=steamPeers(t),event={gameMode:'splash',splashVersion:3};
+ const connect=steamPeers(t),event={gameMode:'splash',splashVersion:4};
  const host=await connect(1n,'host',null,event);host.send('control',{action:'visibility',direction:'public'});await waitFor(()=>host.state.lobby.public);
  const next=await connect(2n,'public',null,event),guest=await connect(3n,'join',host.state.lobby.code,event),peers=[host,next,guest];
  host.send('control',{action:'add-bot'});host.send('control',{action:'start'});await waitFor(()=>peers.every(p=>p.state.lobby.match));for(const p of peers)p.send('ready');await waitFor(()=>guest.state.snapshot?.round.startRemaining===0);
@@ -311,5 +311,6 @@ test('Splash Area public discovery and host migration preserve turf, seed, ink a
  const {tick,round:before}=guest.state.snapshot,code=host.state.lobby.code;await host.connection.leave(host.key);
  await waitFor(()=>[next,guest].every(p=>p.state.migrated&&p.state.lobby.host===next.key));await waitFor(()=>guest.state.snapshot.tick>tick);
  const after=guest.state.snapshot.round;assert.equal(after.mode,'splash');assert.equal(after.profileId,before.profileId);assert.deepEqual(after.paintCover,before.paintCover);assert.ok(after.paintRevision>=before.paintRevision);assert.equal(after.actors[2].paintSeat,2);assert.equal(after.actors[2].cans,1);assert.equal(guest.state.lobby.code,code);assert.deepEqual(guest.state.lobby.players[2].loadout,[]);
+ await waitFor(()=>guest.state.snapshot.round.actors[2].throwTime===0);
  guest.send('tool',{slot:0});await waitFor(()=>guest.state.snapshot.round.actors[2].diving);assert.equal(guest.state.disconnect,undefined);
 });
