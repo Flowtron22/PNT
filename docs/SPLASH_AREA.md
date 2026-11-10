@@ -1,6 +1,6 @@
 # Splish Splash
 
-Available from **Events → Splish Splash** in Steam playtest **0.9.165**.
+Available from **Events → Splish Splash** in Steam playtest **0.9.166**.
 Training, couch and Steam online use mode ID `splash`, rules version `4`.
 
 Four individual players compete for the largest share of paintable floor in

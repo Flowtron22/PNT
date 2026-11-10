@@ -14,7 +14,7 @@ import {createBalloonRound,stepBalloon,resolveBalloonHammer,balloonBotGoal,creat
 import {createBalloonView} from './balloon-view.js';
 import {updateBalloonLaunch,BALLOON_LAUNCH_SECONDS} from './balloon-launch.js';
 import {menuPreviewFrame} from './viewport.js';
-import {createMenuCloud,createCloudRider} from './menu-cloud.js';
+import {createMenuCloud} from './menu-cloud.js';
 import {COLOR_COSTUMES,outfitColors,SKIN_COLORS,loadCostumeAppearances,saveCostumeAppearances,applyCostumeAppearance} from './costume-appearance.js';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -88,12 +88,12 @@ const $=s=>document.querySelector(s),canvas=$('#world');
 const ui={menu:$('#menu'),hud:$('#hud'),pause:$('#pause'),results:$('#results'),lobby:$('#lobby')};
 const leaveLobbyDialog=$('#leave-lobby-dialog');
 const scene=new THREE.Scene();scene.background=new THREE.Color('#70688f');scene.fog=new THREE.Fog('#70688f',38,85);
-const menuCloud=createMenuCloud(),menuCloudAnchor=new THREE.Vector3(-.2,-.19,0);
+const menuCloud=createMenuCloud(),menuCloudAnchor=new THREE.Vector3(0,0,0);
 menuCloud.visible=false;scene.add(menuCloud);
 const matchRoot=new THREE.Group(),shipPivot=new THREE.Vector3();scene.add(matchRoot);let furniturePhysics=null,shipAngle=0;
 const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
-const menuCamera=new THREE.PerspectiveCamera(40,1,.05,120),matchCamera=new THREE.PerspectiveCamera(30,1,.1,180);
+const menuCamera=new THREE.PerspectiveCamera(46,1,.05,120),matchCamera=new THREE.PerspectiveCamera(30,1,.1,180);
 matchCamera.zoom=1.1;matchCamera.updateProjectionMatrix();
 const hemisphere=new THREE.HemisphereLight(0xeaf4ff,0x6c728e,2.4);scene.add(hemisphere);
 const sunlight=new THREE.DirectionalLight(0xfff1df,3);sunlight.position.set(8,16,7);scene.add(sunlight);
@@ -109,7 +109,7 @@ let ready=false,role='runner',quality=settings.quality;
 let oyenAppearance=loadOyenAppearance(localStorage),costumeAppearances=loadCostumeAppearances(localStorage);
 let costume=normalizeCostume(localStorage.getItem('pnt-costume'));
 let loadout=normalizeLoadout(localStorage.getItem('pnt-loadout'),localStorage.getItem('pnt-tool')),selectedTool=loadout[0];
-let round=null,avatars=[],preview=null,previewTime=0,previewPoseWeight=1,cloudTime=0,templates={},clips={},ground=[],bounds=null,grid=null;
+let round=null,avatars=[],preview=null,previewTime=0,cloudTime=0,templates={},clips={},ground=[],bounds=null,grid=null;
 let paused=false,activePage='home',toastTime=0,lastFrame=performance.now(),busy=false,waterAnimation=null,sunkenLook=null;
 let sunkenStylized=localStorage.getItem('pnt-sunken-look')!=='original';
 const keys=new Set(),input={x:0,z:0},cameraTarget=new THREE.Vector3(),hazards=[];
@@ -156,7 +156,7 @@ async function ensureCostume(){const c=COSTUMES.find(c=>c.id===costume);if(templ
 function destroy(a){if(!a)return;a.detectionZone?.dispose();a.group.removeFromParent();a.anim.dispose();sunkenLook?.unregister(a.model);a.captureTint?.dispose();a.appearance?.dispose();const skeletons=new Set();a.model.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});for(const skeleton of skeletons)skeleton.dispose();a.seatMarker?.material.map.dispose();for(const mesh of [a.ring,a.shadow,a.seatMarker].filter(Boolean)){mesh.geometry.dispose();mesh.material.dispose();}}
 function clearHazards(){gameFX.clear();for(const h of hazards)disposeHazard(h);hazards.length=0;}
 function menu(){selectedMode='classic';online?.leave();online=null;onlineLoading=false;onlineRevision++;onlineRoster='';onlineSnapshot=null;clearStageVerdict();resultPortrait?.dispose();resultPortrait=null;restoreMenuArena();room=null;returnToLobby=false;clearLobbyDisplays();round=null;paused=false;clearInput();clearHazards();for(const a of avatars)destroy(a);avatars=[];previewModel();show('menu');openPage('home');}
-function previewModel(){destroy(preview);preview=avatar(templates[costume],0,role);preview.group.position.set(0,.36,0);preview.group.scale.setScalar(1.5);preview.group.rotation.y=.50;preview.ring.visible=preview.shadow.visible=false;preview.rider=createCloudRider(preview.model,preview.anim);menuCloud.add(preview.group);previewTime=0;previewPoseWeight=1;labels();}
+function previewModel(){destroy(preview);preview=avatar(templates[costume],0,role);preview.group.position.set(0,1.025,0);preview.group.scale.setScalar(1.38);preview.ring.visible=preview.shadow.visible=false;menuCloud.add(preview.group);previewTime=0;labels();}
 function labels(){refreshControlHints();
  const splash=(round?.mode||room?.gameMode)==='splash';document.body.classList.toggle('splash-mode',splash);if(splash){for(let i=1;i<=2;i++){$('#tool-action-icon'+i).src='assets/pnt/maps/'+(i===1?'splash-refill':'splash-can')+'.svg';$('#tool-action'+i).setAttribute('aria-label',i===1?'Toggle submerge and refill':'Throw paint can');}return;}
  renderHomeWidgets(profile,loadout,costume);
@@ -812,26 +812,21 @@ function frameMenuCharacter(p,dt,now){
  if(now>=previewLayoutNext||key!==previewLayoutKey){
   const panel=$(activePage==='home'?'#home':'#page').getBoundingClientRect();
   const right=activePage==='home'?$('#home-widgets').getBoundingClientRect().left:innerWidth;
-  previewLayoutTarget=menuPreviewFrame({width:innerWidth,height:innerHeight,left:panel.right,right,mode:activePage,bodyHeight:3.35,bodyWidth:4.05});
+  previewLayoutTarget=menuPreviewFrame({width:innerWidth,height:innerHeight,left:panel.right,right,mode:activePage,bodyHeight:3.55,bodyWidth:3.5,fov:menuCamera.fov});
   previewLayoutKey=key;previewLayoutNext=now+200;
  }
  if(!previewLayout)previewLayout={...previewLayoutTarget};
  const blend=1-Math.exp(-10*dt);for(const key of ['x','y','distance','focus'])previewLayout[key]+=(previewLayoutTarget[key]-previewLayout[key])*blend;
- const shot=previewLayout;menuCamera.position.set(p.x,p.y+shot.focus+shot.distance*.08,p.z+shot.distance);menuCamera.lookAt(p.x,p.y+shot.focus,p.z);
+ const shot=previewLayout;menuCamera.position.set(p.x,p.y+shot.focus+shot.distance*.14,p.z+shot.distance);menuCamera.lookAt(p.x,p.y+shot.focus,p.z);
  menuCamera.setViewOffset(innerWidth,innerHeight,innerWidth*.5-shot.x,innerHeight*.5-shot.y,innerWidth,innerHeight);
 }
 function updateMenuCloud(dt,now){
  if(previewTime>0){previewTime-=dt;if(previewTime<=0)preview.anim.play('idle');}
- const riding=preview.anim.current==='idle';
- const target=riding?1:0;
- previewPoseWeight+=(target-previewPoseWeight)*(reduced?1:1-Math.exp(-14*dt));
- preview.rider.update(dt,previewPoseWeight);
- // Stand on top of the cloud during explicit tool and dance previews.
- preview.group.position.y=THREE.MathUtils.lerp(1.06,.36,previewPoseWeight);
+ preview.anim.update(dt);
  if(!reduced)cloudTime+=dt;
  const sway=reduced?0:Math.sin(cloudTime*1.25);
  menuCloud.position.x=sway*.085;
- menuCloud.rotation.z=sway*.043;
+ menuCloud.rotation.set(0,-.69+sway*.065,sway*.035);
  frameMenuCharacter(menuCloudAnchor,dt,now);
 }
 function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed=Math.max(0,(now-lastFrame)/1000),dt=Math.min(elapsed,.05);lastFrame=now;updateController(now,dt);uiEffects.tick(dt);waterAnimation?.update(dt);tickStageVerdict(elapsed);haptics.update(round?.actors[0]?.effect,Math.min(elapsed,.1),!!round&&round.phase==='playing'&&!paused&&!busy&&!document.hidden&&round.actors[0].effectTime>0);if(resultPortrait&&!ui.results.hidden)resultPortrait.update(dt);
