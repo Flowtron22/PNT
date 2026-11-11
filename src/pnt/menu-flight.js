@@ -1,6 +1,7 @@
 const RAINBOW = ['#ff759b','#ffae71','#ffea85','#a6ed97','#86e5ff','#c4aaff'];
 const ASCENT_SECONDS = 2.8;
 const TRAIL_LENGTH = .44;
+const SPRINKLES = 78;
 
 export function createMenuFlight(canvas,random=Math.random) {
  const ink = canvas.getContext('2d');
@@ -59,12 +60,12 @@ export function createMenuFlight(canvas,random=Math.random) {
    ink.closePath();
    ink.fill();
   }
-  for (let i=0;i<46;i++) {
-   const age = (i/46+progress*1.8)%1;
+  for (let i=0;i<SPRINKLES;i++) {
+   const age = (i/SPRINKLES+progress*1.8)%1;
    const distance = age*TRAIL_LENGTH*1.17;
    const drift = ((i*17%23)/11-1)*bandWidth*(1+age*7);
    const px = x-dx*distance+nx*drift, py = y-dy*distance+ny*drift;
-   const size = Math.max(.65,height*(.0011+(i%7)*.00029))*(1-age*.6);
+   const size = Math.max(1,height*(.0017+(i%7)*.00044))*(1-age*.6);
    ink.globalAlpha = Math.sin(age*Math.PI)*(.42+.48*Math.sin(progress*36+i)**2);
    ink.fillStyle = i%3===0?'#fffde7':RAINBOW[i%RAINBOW.length];
    ink.beginPath();

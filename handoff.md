@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.174**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.175**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.174` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.175` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -51,6 +51,16 @@ online all use internal mode ID `balloon`, rules version **14**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.175** rolls the background jetpack flyer upward by 90°.
+The foreground rainbow follows a straight red edge that rises one screen
+pixel for every five pixels to the right. Both trails emit about 70% more
+sparkles, with roughly 55% larger particles. Foreground stars cycle 72% faster.
+
+Syntax checks and all 383 automated tests passed (341 client, 42 multiplayer).
+The offline packaged Windows check verified the flyby roll, the menu in
+windowed and fullscreen modes, and the current version and runtime files.
+Live Steam networking, physical controllers, and Steam Deck/Proton remain pending.
 
 Version **0.9.174** adds occasional background jetpack flybys on Home.
 The flyer climbs diagonally to the right on either of two paths, leaving
@@ -616,7 +626,7 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.174 on every machine. In Balloon Bash, check
+Close older copies and use 0.9.175 on every machine. In Balloon Bash, check
 first and final pops, moving cover, new sphere drops, and host transfer.
 Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.

@@ -857,7 +857,7 @@ function updateMenuFlyer(dt){
  const depth=Math.min(72,menuCamera.position.z*2.5);
  const z=menuFlightPoint.set(0,0,-depth).applyMatrix4(menuCamera.projectionMatrix).z;
  menuFlightPoint.set(2*pose.x-1,1-2*pose.y,z).unproject(menuCamera);
- group.rotation.set(-.18,1.1,-pose.roll-.14,'ZXY');
+ group.rotation.set(-.18,1.1,Math.PI/2-pose.roll-.14,'ZXY');
  anim.update(Math.min(dt,.1));
  jetpackNozzle.getWorldPosition(menuNozzleOffset).sub(group.position);
  group.position.copy(menuFlightPoint).sub(menuNozzleOffset);
