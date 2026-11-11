@@ -2,12 +2,16 @@ const RAINBOW = ['#ff759b','#ffae71','#ffea85','#a6ed97','#86e5ff','#c4aaff'];
 const ASCENT_SECONDS = 2.8;
 const TRAIL_LENGTH = .44;
 const SPRINKLES = 78;
+const SPIN_TURNS_PER_SECOND = 1.5;
+
+export const FLYER_COSTUMES = ['oyen','thief','police','raptor','pingu'];
 
 export function createMenuFlight(canvas,random=Math.random) {
  const ink = canvas.getContext('2d');
  let time = 0;
  let wait = 3+random()*4;
  let flyby = null;
+ let lastCostume;
 
  function draw(width,height) {
   ink.clearRect(0,0,width,height);
@@ -76,7 +80,10 @@ export function createMenuFlight(canvas,random=Math.random) {
    ink.fill();
   }
   ink.globalAlpha = 1;
-  return {x:x/width,y:y/height,roll:Math.atan2(dx,-dy)};
+  return {
+   x:x/width,y:y/height,roll:Math.atan2(dx,-dy),costume:flyby.costume,
+   spin:progress*ASCENT_SECONDS*SPIN_TURNS_PER_SECOND*2*Math.PI
+  };
  }
 
  return {
@@ -103,8 +110,10 @@ export function createMenuFlight(canvas,random=Math.random) {
     if (wait>0) return null;
     const right = random()<.5;
     const startX = (right?.78:.18)+(random()-.5)*.045;
-    flyby = {progress:0,startX,endX:startX+(right?.25:.36),endY:right?.12:-.12};
     wait = 9+random()*9;
+    const costumes = FLYER_COSTUMES.filter(costume=>costume!==lastCostume);
+    lastCostume = costumes[Math.floor(random()*costumes.length)];
+    flyby = {progress:0,startX,endX:startX+(right?.25:.36),endY:right?.12:-.12,costume:lastCostume};
    }
    flyby.progress += dt/ASCENT_SECONDS;
    if (flyby.progress>1+TRAIL_LENGTH) {

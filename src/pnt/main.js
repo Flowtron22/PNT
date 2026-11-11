@@ -15,7 +15,7 @@ import {createBalloonView} from './balloon-view.js';
 import {updateBalloonLaunch,BALLOON_LAUNCH_SECONDS} from './balloon-launch.js';
 import {menuPreviewFrame} from './viewport.js';
 import {createMenuCloud} from './menu-cloud.js';
-import {createMenuFlight} from './menu-flight.js';
+import {createMenuFlight,FLYER_COSTUMES} from './menu-flight.js';
 import {createMenuWake} from './menu-wake.js';
 import {COLOR_COSTUMES,outfitColors,SKIN_COLORS,loadCostumeAppearances,saveCostumeAppearances,applyCostumeAppearance} from './costume-appearance.js';
 import * as THREE from 'three';
@@ -93,8 +93,10 @@ const scene=new THREE.Scene();scene.background=new THREE.Color('#70688f');scene.
 const menuCloud=createMenuCloud(),menuCloudAnchor=new THREE.Vector3(0,0,0);
 menuCloud.visible=false;scene.add(menuCloud);
 let menuWake,menuFlyer;
+const menuFlyers={};
 const menuFlight=createMenuFlight($('#menu-flight'));
 const menuFlightPoint=new THREE.Vector3(),menuNozzleOffset=new THREE.Vector3();
+const menuSpinAxis=new THREE.Vector3(),menuSpin=new THREE.Quaternion();
 const matchRoot=new THREE.Group(),shipPivot=new THREE.Vector3();scene.add(matchRoot);let furniturePhysics=null,shipAngle=0;
 const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
@@ -811,7 +813,22 @@ function updateStrikersHud(){
 
 function positionMatchCamera(){const view=matchView(menuCamera.aspect,stageFrame,round?.mode==='balloon'?{horizontal:.682,vertical:.731}:undefined),strikers=round?.mode==='strikers',zoom=strikers?.72:round?.mode==='tiletide'?.8:1,distance=view.distance*zoom;scene.fog.near=distance+20;scene.fog.far=distance+85;const far=distance+180;if(matchCamera.far!==far){matchCamera.far=far;matchCamera.updateProjectionMatrix();}const cameraZoom=round?.mode==='splash'?1.21:1.1;if(matchCamera.zoom!==cameraZoom){matchCamera.zoom=cameraZoom;matchCamera.updateProjectionMatrix();}matchCamera.position.copy(cameraTarget).add(new THREE.Vector3(...view.offset).multiplyScalar(zoom));const slide=strikers?-.55:0;matchCamera.position.x+=slide;const shake=reduced?{x:0,z:0}:shakeOffset(shakeTime,cameraShake*settings.cameraShake);matchCamera.position.x+=shake.x;matchCamera.position.z+=shake.z;matchCamera.lookAt(cameraTarget.x+slide,cameraTarget.y,cameraTarget.z);}
 
-async function boot(){beginLoading('GETTING READY');try{let done=0;const names=['thief','police','mall-slice','props/sm_star','props/jetpack'];const items=await Promise.all(names.map(async name=>{const value=await getGLB(name==='props/jetpack'?'propJet':name,`assets/pnt/${name}.glb`);progress(++done/names.length*70,`Loading ${name==='mall-slice'?'Mall promenade':name==='props/sm_star'?'star mesh':name}…`);return value;}));templates={thief:items[0],police:items[1],propJet:items[4]};menuWake=createMenuWake(menuCloud,items[3].scene.getObjectByName('sm_star').geometry);const response=await fetch('assets/pnt/animations/clips.json?v=menu-idle1');if(!response.ok)throw new Error('Animation download failed');const data=await response.json();clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));menuClips={...clips,menuIdle:THREE.AnimationClip.parse(data.menuIdle)};progress(75,'Preparing the walkable arena…');const arena=items[2].scene;menuArena=arena;arena.updateMatrixWorld(true);const initial=new THREE.Box3().setFromObject(arena),center=initial.getCenter(new THREE.Vector3());arena.position.add(new THREE.Vector3(-center.x,-initial.min.y,-center.z));scene.add(arena);arena.updateMatrixWorld(true);setArenaSurface(arena);arena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){if(m.map)m.map.anisotropy=2;}}});bounds=new THREE.Box3().setFromObject(arena);buildGround();menuNavigation={ground,bounds,grid};await ensureCostume();progress(90,'Warming up characters and fonts…');previewModel();prepareMenuFlyer();await document.fonts.ready;await renderer.compileAsync(scene,menuCamera);progress(100,'All set. Let’s play.');ready=true;document.body.dataset.assets='ready';ui.menu.hidden=true;endLoading();titleScreen.show();}catch(e){document.body.dataset.assets='error';loadError(e,()=>location.reload());}}
+async function boot(){beginLoading('GETTING READY');try{
+ let done=0;
+ const assets=[
+  ['thief','thief','Thief'],['police','police','Police'],['mall-slice','mall-slice','Mall promenade'],
+  ['star','props/sm_star','star mesh'],['propJet','props/jetpack','jetpack'],
+  ...COSTUMES.filter(c=>c.file&&FLYER_COSTUMES.includes(c.id)).map(c=>[c.id,`costumes/${c.file}`,c.name])
+ ];
+ const models=Object.fromEntries(await Promise.all(assets.map(async([id,file,label])=>{
+  const model=await getGLB(id,`assets/pnt/${file}.glb`);
+  progress(++done/assets.length*70,`Loading ${label}…`);
+  return [id,model];
+ })));
+ const {star,'mall-slice':mall,...costumeAndProps}=models;
+ templates=costumeAndProps;
+ menuWake=createMenuWake(menuCloud,star.scene.getObjectByName('sm_star').geometry);
+ const response=await fetch('assets/pnt/animations/clips.json?v=menu-idle1');if(!response.ok)throw new Error('Animation download failed');const data=await response.json();clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));menuClips={...clips,menuIdle:THREE.AnimationClip.parse(data.menuIdle)};progress(75,'Preparing the walkable arena…');const arena=mall.scene;menuArena=arena;arena.updateMatrixWorld(true);const initial=new THREE.Box3().setFromObject(arena),center=initial.getCenter(new THREE.Vector3());arena.position.add(new THREE.Vector3(-center.x,-initial.min.y,-center.z));scene.add(arena);arena.updateMatrixWorld(true);setArenaSurface(arena);arena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){if(m.map)m.map.anisotropy=2;}}});bounds=new THREE.Box3().setFromObject(arena);buildGround();menuNavigation={ground,bounds,grid};await ensureCostume();progress(90,'Warming up characters and fonts…');previewModel();FLYER_COSTUMES.forEach(prepareMenuFlyer);await document.fonts.ready;await renderer.compileAsync(scene,menuCamera);progress(100,'All set. Let’s play.');ready=true;document.body.dataset.assets='ready';ui.menu.hidden=true;endLoading();titleScreen.show();}catch(e){document.body.dataset.assets='error';loadError(e,()=>location.reload());}}
 let previewLayout=null,previewLayoutTarget=null,previewLayoutKey='',previewLayoutNext=0;
 function frameMenuCharacter(p,dt,now){
  const key=activePage+':'+innerWidth+':'+innerHeight;
@@ -836,28 +853,33 @@ function updateMenuCloud(dt,now){
  frameMenuCharacter(menuCloudAnchor,dt,now);
  menuWake.update(cloudTime,reduced,menuCamera,canvas.height);
 }
-function prepareMenuFlyer(){
- const costume=Math.random()<.5?'police':'thief';
+function prepareMenuFlyer(costume){
  const flyer=avatar(templates[costume],1,costume==='police'?'chaser':'runner',null,{idle:clips.idle,jet:clips.jet});
  flyer.group.visible=flyer.ring.visible=flyer.shadow.visible=false;
  if(!attachHeldJetpack(flyer,prop('propJet',.8))){destroy(flyer);return;}
  flyer.anim.play('jet',{fade:0});
  flyer.group.name='MenuJetpackFlyby';
- menuFlyer=flyer;
+ flyer.group.userData.costume=costume;
+ menuFlyers[costume]=flyer;
 }
 function updateMenuFlyer(dt){
  const home=activePage==='home'&&menuCloud.visible&&!busy;
  if(ui.menu.hidden)menuFlight.clearFlyby();
  const pose=ui.menu.hidden?null:menuFlight.update(dt,innerWidth,innerHeight,reduced,home);
- if(!menuFlyer)return;
+ const flyer=pose&&menuFlyers[pose.costume];
+ if(menuFlyer&&menuFlyer!==flyer)menuFlyer.group.visible=false;
+ menuFlyer=flyer;
+ if(!flyer)return;
  const {group,anim,jetpackNozzle}=menuFlyer;
- group.visible=!!pose;
- if(!pose)return;
+ group.visible=true;
  // Place the nozzle on the 2D trail at a depth well behind the cloud rider.
  const depth=Math.min(72,menuCamera.position.z*2.5);
  const z=menuFlightPoint.set(0,0,-depth).applyMatrix4(menuCamera.projectionMatrix).z;
  menuFlightPoint.set(2*pose.x-1,1-2*pose.y,z).unproject(menuCamera);
  group.rotation.set(-.18,1.1,Math.PI/2-pose.roll-.14,'ZXY');
+ // Rotate about the direction of travel in the camera plane.
+ menuSpinAxis.set(Math.sin(pose.roll),Math.cos(pose.roll),0).applyQuaternion(menuCamera.quaternion);
+ group.quaternion.premultiply(menuSpin.setFromAxisAngle(menuSpinAxis,pose.spin));
  anim.update(Math.min(dt,.1));
  jetpackNozzle.getWorldPosition(menuNozzleOffset).sub(group.position);
  group.position.copy(menuFlightPoint).sub(menuNozzleOffset);

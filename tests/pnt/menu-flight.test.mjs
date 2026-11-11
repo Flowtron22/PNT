@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createMenuFlight} from '../../src/pnt/menu-flight.js';
 
-function setup(lane) {
+function setup(lane,costumeRoll=0) {
  const gradient = {addColorStop(){}};
  const context = {
   gradients:0, clearRect(){}, beginPath(){}, moveTo(){}, lineTo(){},
@@ -10,7 +10,7 @@ function setup(lane) {
   createLinearGradient(){this.gradients++;return gradient;}
  };
  const canvas = {getContext:()=>context};
- const rolls = [0,lane,.5,0];
+ const rolls = [0,lane,.5,0,costumeRoll, lane,.5,0,costumeRoll];
  return {context,flight:createMenuFlight(canvas,()=>rolls.shift()??0)};
 }
 
@@ -26,6 +26,27 @@ test('home flybys follow either upward-right lane and leave a six-band trail',()
   assert.equal(context.gradients,12);
   for (let frame=0;frame<45;frame++) flight.update(.1,1280,800,false,true);
   assert.equal(flight.update(.1,1280,800,false,true),null);
+ }
+});
+
+test('each flyby picks one of five costumes and spins continuously during ascent',()=>{
+ const costumes = ['oyen','thief','police','raptor','pingu'];
+ for (const [index,costume] of costumes.entries()) {
+  const {flight} = setup(.9,(index+.5)/costumes.length);
+  let first;
+  for (let frame=0;frame<30;frame++) first = flight.update(.1,1280,800,false,true);
+  assert.equal(first.costume,costume);
+  const next = flight.update(.1,1280,800,false,true);
+  assert.equal(next.costume,costume);
+  assert(Math.abs(next.spin-first.spin-.1*1.5*2*Math.PI)<1e-10);
+
+  let last = next;
+  for (let frame=0;frame<45&&last;frame++) last = flight.update(.1,1280,800,false,true);
+  assert.equal(last,null);
+  let second;
+  for (let frame=0;frame<100&&!second;frame++) second = flight.update(.1,1280,800,false,true);
+  assert(costumes.includes(second?.costume));
+  assert.notEqual(second.costume,costume);
  }
 });
 
