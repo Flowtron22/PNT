@@ -1,6 +1,6 @@
 # Police N Thief Steam playtest handoff
 
-Updated 11 November 2026 (Asia/Kuala_Lumpur).
+Updated 12 November 2026 (Asia/Kuala_Lumpur).
 
 ## Standing instructions for every chat
 
@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.179**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.180**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.179` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.180` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -51,6 +51,21 @@ online all use internal mode ID `balloon`, rules version **14**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.180** fixes the Steam lobby transition after a match. The next
+online action waits for the previous lobby membership to clear. Public
+matchmaking refreshes a quick search that finds no joinable room before it
+creates one, and rechecks the mode, build and visibility after joining.
+
+Syntax checks and all 387 automated tests passed (344 client, 43 multiplayer).
+A simulated Steam match reached results, then two guests joined the same host
+in Patty Prowl by public matchmaking and room code. The simulation delayed
+both departures and omitted the new lobby from the first public search.
+The Windows package was verified with App ID 480, both version labels, current
+assets and lobby code. With one signed-in Steam account, the packaged client
+created and left a public Classic lobby, then used Find Public Match to open
+a public Patty Prowl lobby. The reported guest sequence still needs a live
+two-account check. Physical controllers and Steam Deck/Proton remain pending.
 
 Version **0.9.179** removes the portrait from the Home profile card and
 gives the player name, rank, XP, and stats the full width. Home flybys
@@ -675,7 +690,10 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.179 on every machine. In Balloon Bash, check
+Close older copies and use 0.9.180 on every machine. After results, have the
+host open a public lobby in another mode while the guest returns to the menu.
+Test an immediate Find Public Match in the new mode, then repeat by room code.
+In Balloon Bash, check
 first and final pops, moving cover, new sphere drops, and host transfer.
 Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.

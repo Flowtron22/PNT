@@ -1,4 +1,5 @@
 import {performance} from 'node:perf_hooks';
+import {setTimeout as delay} from 'node:timers/promises';
 import {deflateRawSync, inflateRawSync} from 'node:zlib';
 import {MatchRoom} from './match-room.mjs';
 import {MatchSimulation} from './simulation.mjs';
@@ -133,7 +134,25 @@ class HostedRoom extends MatchRoom {
 export function steamMultiplayer(steam, version, emit, invite) {
   const self = String(steam.localplayer.getSteamId().steamId64);
   const protocol = CHANNEL_VERSION + ':' + version;
-  let active, attempt = 0, opening = false, openingKey, openingDone;
+  let active, attempt = 0, opening = false, openingKey, openingDone, departingLobby;
+
+  function leaveLobby(lobby) {
+    departingLobby = lobby;
+    lobby.leave();
+  }
+
+  async function waitForLobbyDeparture() {
+    if (!departingLobby) return;
+    const deadline = performance.now() + 2000;
+    while (departingLobby.getMembers().some(member => String(member.steamId64) === self)) {
+      if (performance.now() >= deadline) {
+        departingLobby.leave();
+        throw new Error('Steam is still leaving the previous lobby. Try again in a moment.');
+      }
+      await delay(50);
+    }
+    departingLobby = null;
+  }
 
   function close(notify = false) {
     attempt++;
@@ -143,7 +162,7 @@ export function steamMultiplayer(steam, version, emit, invite) {
     try {
       session.hosted?.dispose();
     } finally {
-      session.lobby.leave();
+      leaveLobby(session.lobby);
     }
     if (notify) emit({key: session.key, type: 'disconnect'});
   }
@@ -377,30 +396,46 @@ export function steamMultiplayer(steam, version, emit, invite) {
       let finishOpening;
       openingDone = new Promise(resolve => { finishOpening = resolve; });
       let lobby, session;
+      const checkCanceled = () => {
+        if (attempt !== current) throw new Error('Steam lobby request canceled.');
+      };
       try {
+        await waitForLobbyDeparture();
+        checkCanceled();
         let host = mode === 'host';
         if (mode === 'join') {
           lobby = await steam.matchmaking.joinLobby(target);
         } else if (mode === 'public') {
-          const candidates = await steam.matchmaking.getLobbies();
-          const available = candidates.filter(item => item.getData('pnt') === protocol && item.getData('visibility') === 'public' &&
-            item.getData('mode') === gameMode && item.getMemberCount() < 4n);
-          for (const candidate of available) {
-            if (attempt !== current) throw new Error('Steam lobby request canceled.');
-            try {
-              lobby = await candidate.join();
-            } catch {
-              continue; // The room may have filled or locked since discovery.
+          const matches = item => item.getData('pnt') === protocol && item.getData('visibility') === 'public' &&
+            item.getData('mode') === gameMode;
+          const searchStarted = performance.now();
+          for (let search = 0; search < 2; search++) {
+            const candidates = await steam.matchmaking.getLobbies();
+            checkCanceled();
+            for (const candidate of candidates.filter(matches)) {
+              try {
+                lobby = await candidate.join();
+              } catch {
+                checkCanceled();
+                continue; // The room may have filled or locked since discovery.
+              }
+              checkCanceled();
+              if (matches(lobby)) break;
+              leaveLobby(lobby);
+              lobby = null;
+              await waitForLobbyDeparture();
+              checkCanceled();
             }
-            if (lobby.getData('visibility') === 'public') break;
-            lobby.leave();
-            lobby = null;
+            // Steam batches metadata writes. Refresh a quick miss before creating a room.
+            if (lobby || search === 1 || performance.now() - searchStarted > 5000) break;
+            await delay(350);
+            checkCanceled();
           }
           host = !lobby;
         }
         // Invisible Steam lobbies support direct joins by ID. PNT's list filters by visibility.
         if (host) lobby = await steam.matchmaking.createLobby(INVISIBLE, 4);
-        if (attempt !== current) throw new Error('Steam lobby request canceled.');
+        checkCanceled();
         if (host) {
           if (!lobby.mergeFullData({pnt: protocol, mode: gameMode, visibility: mode === 'public' ? 'public' : 'private'})) {
             throw new Error('Steam could not advertise the lobby.');
@@ -418,12 +453,12 @@ export function steamMultiplayer(steam, version, emit, invite) {
           session.hosted = new HostedRoom(lobby, (id, type, data) => send(session, id, type, data));
           await session.hosted.onCreate({...profile, public: mode === 'public'});
         }
-        if (attempt !== current) throw new Error('Steam lobby request canceled.');
+        checkCanceled();
         active = session;
         return self;
       } catch (error) {
         session?.hosted?.dispose();
-        lobby?.leave();
+        if (lobby) leaveLobby(lobby);
         throw error;
       } finally {
         opening = false;

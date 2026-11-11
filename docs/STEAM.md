@@ -26,8 +26,8 @@ PC and Steam Deck use the same Windows x64 package, with Proton on Deck.
 
 ## Private development playtest
 
-Current development package is **0.9.179** in
-`dist-steam/win64-dev-playtest-0.9.179`.
+Current development package is **0.9.180** in
+`dist-steam/win64-dev-playtest-0.9.180`.
 
 The windowed client opens at a fixed size. Toggle fullscreen in Settings → Video, or press F11 or Alt+Enter.
 
@@ -69,7 +69,9 @@ Steam online use the same four-player free-for-all rules and fixed Hammer/Banana
 kit. See the [mode notes](BALLOON_BASH.md).
 
 **Find Public Match** searches Steam for a lobby with the same PNT build and
-game mode and creates a public lobby when the search finds none.
+game mode. It refreshes a quick search that finds no joinable room before
+creating a public lobby. After leaving a room, the next online action waits for
+Steam to clear local membership in the previous room.
 See Valve's [Spacewar example](https://partner.steamgames.com/doc/sdk/api/example)
 and [lobby documentation](https://partner.steamgames.com/doc/features/multiplayer/matchmaking).
 
@@ -100,6 +102,9 @@ For an offline packaging check, run `npm run build:steam -- --smoke-test`.
 ## Device checks
 
 - Test a host and a guest on separate Steam accounts and internet connections.
+- After results, have the host create a public room in a different mode. The guest
+  should return to the menu and immediately use Find Public Match in that mode.
+  Repeat with the new room code.
 - Check the invite overlay, join by room code, and host transfer in the lobby and in a match.
 - In Deck Gaming Mode, check gamepad navigation, fullscreen at 1280 × 800,
   HUD readability, and suspend and resume.

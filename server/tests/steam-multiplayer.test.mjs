@@ -10,9 +10,10 @@ registerHooks({resolve(specifier, context, next) {
   return next(specifier, context);
 }});
 const {steamMultiplayer} = await import('../steam-multiplayer.mjs');
+const {MatchSimulation} = await import('../simulation.mjs');
 const {DIRETIDE_VERSION} = await import('../../src/pnt/diretide-rules.js');
 
-function fakeSteamNetwork({hideMemberAfterTransfer} = {}) {
+function fakeSteamNetwork({hideMemberAfterTransfer, switchingGuests = []} = {}) {
   const lobbies = new Map();
   const users = new Map();
   let nextLobbyId = 109775243304509900n;
@@ -22,6 +23,7 @@ function fakeSteamNetwork({hideMemberAfterTransfer} = {}) {
     const incoming = [], callbacks = new Map();
     let dropFirstPacket = id === 2n;
     let dropFirstSnapshot = id === 1n;
+    let departing = false, missNextSearch = false;
     const delayedFragments = [];
     users.set(id, incoming);
 
@@ -30,12 +32,22 @@ function fakeSteamNetwork({hideMemberAfterTransfer} = {}) {
         id: record.id,
         join: () => joinLobby(record.id),
         leave() {
-          record.members.delete(id);
-          if (record.owner === id) {
-            record.owner = record.members.keys().next().value;
-            record.transferTime = performance.now();
+          const removeMember = () => {
+            departing = false;
+            record.members.delete(id);
+            if (record.owner === id) {
+              record.owner = record.members.keys().next().value;
+              record.transferTime = performance.now();
+            }
+            if (!record.members.size) lobbies.delete(record.id);
+          };
+          if (switchingGuests.includes(id) && record.owner !== id) {
+            departing = true;
+            missNextSearch = true;
+            setTimeout(removeMember, 150);
+          } else {
+            removeMember();
           }
-          if (!record.members.size) lobbies.delete(record.id);
         },
         getOwner: () => ({steamId64: record.owner}),
         getMembers() {
@@ -52,6 +64,7 @@ function fakeSteamNetwork({hideMemberAfterTransfer} = {}) {
     }
 
     async function joinLobby(lobbyId) {
+      if (departing) throw new Error('Still leaving the previous lobby');
       const record = lobbies.get(lobbyId);
       if (!record?.joinable || record.members.size >= 4) throw new Error('Lobby unavailable');
       record.members.add(id);
@@ -67,13 +80,19 @@ function fakeSteamNetwork({hideMemberAfterTransfer} = {}) {
       matchmaking: {
         joinLobby,
         async createLobby(type) {
+          if (departing) throw new Error('Still leaving the previous lobby');
           const lobbyId = ++nextLobbyId;
           const record = {id: lobbyId, owner: id, members: new Set([id]), type, joinable: true, data: {}};
           lobbies.set(lobbyId, record);
           return lobbyFor(record);
         },
         async getLobbies() {
-          const available = [...lobbies.values()].filter(lobby => lobby.type === 3 && lobby.joinable).map(lobbyFor);
+          if (departing) throw new Error('Still leaving the previous lobby');
+          if (missNextSearch) {
+            missNextSearch = false;
+            return []; // The new public room has yet to appear in Steam's list.
+          }
+          const available = [...lobbies.values()].filter(lobby => lobby.type === 3 && lobby.joinable && lobby.members.size < 4).map(lobbyFor);
           if (id === 5n && available.length) {
             return [{...available[0], join: async () => { throw new Error('Lobby filled'); }}, ...available];
           }
@@ -267,6 +286,43 @@ test('Public matchmaking and room-code guests stay in a public match after the h
   await waitFor(() => peers.every(peer => peer.state.lobby.players.length === 3));
   for (const {state} of peers) {
     assert.equal(state.lobby.code, eventCode);
+    assert.equal(state.lobby.gameMode, event.gameMode);
+    assert.equal(state.lobby.host, host.key);
+  }
+});
+
+test('Guests can immediately join the same host in another mode after results', async t => {
+  const step = MatchSimulation.prototype.step;
+  t.mock.method(MatchSimulation.prototype, 'step', function (dt) {
+    this.round.startRemaining = 0;
+    this.round.remaining = .001;
+    step.call(this, dt);
+  });
+  const connect = steamPeers(t, {switchingGuests: [12n, 13n]});
+  const host = await connect(11n, 'host');
+  const publicGuest = await connect(12n, 'join', host.state.lobby.code);
+  const codeGuest = await connect(13n, 'join', host.state.lobby.code);
+  const peers = [host, publicGuest, codeGuest];
+  host.send('control', {action: 'add-bot'});
+  host.send('control', {action: 'start'});
+  await waitFor(() => peers.every(peer => peer.state.lobby.match));
+  for (const peer of peers) peer.send('ready');
+  await waitFor(() => peers.every(peer => peer.state.lobby.phase === 'finished' && peer.state.snapshot?.round.phase === 'finished'));
+  const previousCode = host.state.lobby.code;
+
+  await host.connection.leave(host.key);
+  const event = {gameMode: 'diretide'};
+  await host.enter('host', null, event);
+  host.send('control', {action: 'visibility', direction: 'public'});
+  await waitFor(() => host.state.lobby.public);
+  const nextCode = host.state.lobby.code;
+  assert.notEqual(nextCode, previousCode);
+
+  await Promise.all([publicGuest.connection.leave(publicGuest.key), codeGuest.connection.leave(codeGuest.key)]);
+  await Promise.all([publicGuest.enter('public', null, event), codeGuest.enter('join', nextCode, event)]);
+  await waitFor(() => peers.every(peer => peer.state.lobby.players.length === 3));
+  for (const {state} of peers) {
+    assert.equal(state.lobby.code, nextCode);
     assert.equal(state.lobby.gameMode, event.gameMode);
     assert.equal(state.lobby.host, host.key);
   }
