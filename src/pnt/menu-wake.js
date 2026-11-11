@@ -4,6 +4,49 @@ const BANDS = [0xa99aff,0x66dfff,0x9be876,0xffdf68,0xffa858,0xff658d];
 const SEGMENTS = 48;
 const STAR_COLORS = [0xffdc47,0xff78be,0x60f2ff,0xb996ff,0xffad62];
 const STAR_SIZES = [.22,.47,.30,.62,.18,.39,.53,.26];
+const SPRINKLES = 108;
+
+function createSprinkles(parent) {
+ const geometry = new THREE.BufferGeometry();
+ const position = new THREE.BufferAttribute(new Float32Array(SPRINKLES*3),3).setUsage(THREE.DynamicDrawUsage);
+ const glint = new THREE.BufferAttribute(new Float32Array(SPRINKLES*2),2).setUsage(THREE.DynamicDrawUsage);
+ const colors = new Float32Array(SPRINKLES*3);
+ const tint = new THREE.Color();
+ for (let i=0;i<SPRINKLES;i++) {
+  tint.setHex(i%3===0?0xfff5cf:STAR_COLORS[i%STAR_COLORS.length]).toArray(colors,i*3);
+ }
+ geometry.setAttribute('position',position);
+ geometry.setAttribute('glint',glint);
+ geometry.setAttribute('tint',new THREE.BufferAttribute(colors,3));
+ const material = new THREE.ShaderMaterial({
+  transparent:true,depthWrite:false,toneMapped:false,
+  uniforms:{screenHeight:{value:800}},
+  vertexShader:`
+   attribute vec2 glint;
+   attribute vec3 tint;
+   uniform float screenHeight;
+   varying vec4 sparkle;
+   void main(){
+    sparkle=vec4(tint,glint.y);
+    gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
+    gl_PointSize=max(1.0,glint.x*screenHeight);
+   }`,
+  fragmentShader:`
+   varying vec4 sparkle;
+   void main(){
+    vec2 p=abs(gl_PointCoord*2.0-1.0);
+    float halo=1.0-smoothstep(0.0,0.92,length(p));
+    float crossShape=1.0-smoothstep(0.08,0.66,min(p.x,p.y)*3.1+max(p.x,p.y)*0.55);
+    gl_FragColor=vec4(mix(sparkle.rgb,vec3(1.0),crossShape*0.66),sparkle.a*(halo*0.38+crossShape*0.62));
+    #include <colorspace_fragment>
+   }`
+ });
+ const points = new THREE.Points(geometry,material);
+ points.frustumCulled = false;
+ points.renderOrder = 3;
+ parent.add(points);
+ return points;
+}
 
 export function createMenuWake(parent,starGeometry) {
  const ribbon = new THREE.BufferGeometry();
@@ -37,6 +80,7 @@ export function createMenuWake(parent,starGeometry) {
   parent.add(star);
   return star;
  });
+ const sprinkles = createSprinkles(parent);
  const anchor = new THREE.Vector3();
  const wakePoint = new THREE.Vector3();
  const toParent = new THREE.Matrix4();
@@ -44,10 +88,10 @@ export function createMenuWake(parent,starGeometry) {
  const tilt = new THREE.Quaternion();
  const tumble = new THREE.Euler();
  return {
-  update(time,reduced,camera) {
+  update(time,reduced,camera,screenHeight) {
    const motion = reduced?0:time;
    camera.updateMatrixWorld();
-   anchor.set(-.27,.34,-1.29);
+   anchor.set(-.42,.08,-1.13);
    parent.localToWorld(anchor).project(camera);
    toParent.copy(parent.matrixWorld).invert();
    parent.getWorldQuaternion(cameraFacing).invert().multiply(camera.quaternion);
@@ -63,7 +107,8 @@ export function createMenuWake(parent,starGeometry) {
    };
    for (let i=0;i<=SEGMENTS;i++) {
     const progress = i/SEGMENTS;
-    const width = THREE.MathUtils.lerp(.42,.12,Math.min(1,progress*1.03));
+    const spread = THREE.MathUtils.smoothstep(progress,0,.16);
+    const width = THREE.MathUtils.lerp(.24,.42,spread)*(1-progress*.71);
     const opacity = Math.min(1,progress*24,(1-progress)*8);
     const glint = .88+.11*Math.sin(progress*27-motion*8);
     for (let band=0;band<BANDS.length;band++) {
@@ -89,6 +134,20 @@ export function createMenuWake(parent,starGeometry) {
     star.material.opacity = Math.min(1,progress*15,(1-progress)*5);
     star.scale.setScalar(STAR_SIZES[(i*3)%STAR_SIZES.length]*(1-progress*.16));
    }
+   sprinkles.visible = !reduced;
+   if (reduced) return;
+   sprinkles.material.uniforms.screenHeight.value = screenHeight;
+   const dust = sprinkles.geometry.attributes;
+   for (let i=0;i<SPRINKLES;i++) {
+    const progress = (i*.618034+time*(.31+(i%5)*.025))%1;
+    const drift = ((i*17%31)/15-1)*(.19+progress*.19);
+    const flutter = Math.sin(time*2.7+i*2.4)*.022;
+    project(progress,0,drift+flutter).toArray(dust.position.array,i*3);
+    const flicker = .25+.75*Math.sin(time*(3+i%5)+i*.73)**2;
+    const fade = Math.min(1,progress*14,(1-progress)*5);
+    dust.glint.setXY(i,(.003+(i%9)*.00067)*(1-progress*.38),flicker*fade);
+   }
+   dust.position.needsUpdate = dust.glint.needsUpdate = true;
   }
  };
 }

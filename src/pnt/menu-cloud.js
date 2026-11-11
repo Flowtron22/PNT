@@ -69,7 +69,10 @@ export function createMenuCloud() {
  }
  const cloud = new THREE.Mesh(geometry,material);
  cloud.position.copy(surface.position);
- cloud.scale.copy(surface.scale);
+ // Grow the cloud around the rider's footing, leaving the feet on the surface.
+ cloud.position.y = 1.025+(cloud.position.y-1.025)*1.12;
+ cloud.position.z *= 1.16;
+ cloud.scale.copy(surface.scale).multiply(new THREE.Vector3(1.18,1.12,1.16));
  surface.geometry.dispose();
  rig.add(cloud);
  return rig;

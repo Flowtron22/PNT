@@ -92,8 +92,9 @@ const leaveLobbyDialog=$('#leave-lobby-dialog');
 const scene=new THREE.Scene();scene.background=new THREE.Color('#70688f');scene.fog=new THREE.Fog('#70688f',38,85);
 const menuCloud=createMenuCloud(),menuCloudAnchor=new THREE.Vector3(0,0,0);
 menuCloud.visible=false;scene.add(menuCloud);
-let menuWake;
+let menuWake,menuFlyer;
 const menuFlight=createMenuFlight($('#menu-flight'));
+const menuFlightPoint=new THREE.Vector3(),menuNozzleOffset=new THREE.Vector3();
 const matchRoot=new THREE.Group(),shipPivot=new THREE.Vector3();scene.add(matchRoot);let furniturePhysics=null,shipAngle=0;
 const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
@@ -810,7 +811,7 @@ function updateStrikersHud(){
 
 function positionMatchCamera(){const view=matchView(menuCamera.aspect,stageFrame,round?.mode==='balloon'?{horizontal:.682,vertical:.731}:undefined),strikers=round?.mode==='strikers',zoom=strikers?.72:round?.mode==='tiletide'?.8:1,distance=view.distance*zoom;scene.fog.near=distance+20;scene.fog.far=distance+85;const far=distance+180;if(matchCamera.far!==far){matchCamera.far=far;matchCamera.updateProjectionMatrix();}const cameraZoom=round?.mode==='splash'?1.21:1.1;if(matchCamera.zoom!==cameraZoom){matchCamera.zoom=cameraZoom;matchCamera.updateProjectionMatrix();}matchCamera.position.copy(cameraTarget).add(new THREE.Vector3(...view.offset).multiplyScalar(zoom));const slide=strikers?-.55:0;matchCamera.position.x+=slide;const shake=reduced?{x:0,z:0}:shakeOffset(shakeTime,cameraShake*settings.cameraShake);matchCamera.position.x+=shake.x;matchCamera.position.z+=shake.z;matchCamera.lookAt(cameraTarget.x+slide,cameraTarget.y,cameraTarget.z);}
 
-async function boot(){beginLoading('GETTING READY');try{let done=0;const names=['thief','police','mall-slice','props/sm_star'];const items=await Promise.all(names.map(async name=>{const value=await getGLB(name,`assets/pnt/${name}.glb`);progress(++done/4*70,`Loading ${name==='mall-slice'?'Mall promenade':name==='props/sm_star'?'star mesh':name}…`);return value;}));templates={thief:items[0],police:items[1]};menuWake=createMenuWake(menuCloud,items[3].scene.getObjectByName('sm_star').geometry);const response=await fetch('assets/pnt/animations/clips.json?v=menu-idle1');if(!response.ok)throw new Error('Animation download failed');const data=await response.json();clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));menuClips={...clips,menuIdle:THREE.AnimationClip.parse(data.menuIdle)};progress(75,'Preparing the walkable arena…');const arena=items[2].scene;menuArena=arena;arena.updateMatrixWorld(true);const initial=new THREE.Box3().setFromObject(arena),center=initial.getCenter(new THREE.Vector3());arena.position.add(new THREE.Vector3(-center.x,-initial.min.y,-center.z));scene.add(arena);arena.updateMatrixWorld(true);setArenaSurface(arena);arena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){if(m.map)m.map.anisotropy=2;}}});bounds=new THREE.Box3().setFromObject(arena);buildGround();menuNavigation={ground,bounds,grid};await ensureCostume();progress(90,'Warming up characters and fonts…');previewModel();await document.fonts.ready;await renderer.compileAsync(scene,menuCamera);progress(100,'All set. Let’s play.');ready=true;document.body.dataset.assets='ready';ui.menu.hidden=true;endLoading();titleScreen.show();}catch(e){document.body.dataset.assets='error';loadError(e,()=>location.reload());}}
+async function boot(){beginLoading('GETTING READY');try{let done=0;const names=['thief','police','mall-slice','props/sm_star','props/jetpack'];const items=await Promise.all(names.map(async name=>{const value=await getGLB(name==='props/jetpack'?'propJet':name,`assets/pnt/${name}.glb`);progress(++done/names.length*70,`Loading ${name==='mall-slice'?'Mall promenade':name==='props/sm_star'?'star mesh':name}…`);return value;}));templates={thief:items[0],police:items[1],propJet:items[4]};menuWake=createMenuWake(menuCloud,items[3].scene.getObjectByName('sm_star').geometry);const response=await fetch('assets/pnt/animations/clips.json?v=menu-idle1');if(!response.ok)throw new Error('Animation download failed');const data=await response.json();clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));menuClips={...clips,menuIdle:THREE.AnimationClip.parse(data.menuIdle)};progress(75,'Preparing the walkable arena…');const arena=items[2].scene;menuArena=arena;arena.updateMatrixWorld(true);const initial=new THREE.Box3().setFromObject(arena),center=initial.getCenter(new THREE.Vector3());arena.position.add(new THREE.Vector3(-center.x,-initial.min.y,-center.z));scene.add(arena);arena.updateMatrixWorld(true);setArenaSurface(arena);arena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){if(m.map)m.map.anisotropy=2;}}});bounds=new THREE.Box3().setFromObject(arena);buildGround();menuNavigation={ground,bounds,grid};await ensureCostume();progress(90,'Warming up characters and fonts…');previewModel();prepareMenuFlyer();await document.fonts.ready;await renderer.compileAsync(scene,menuCamera);progress(100,'All set. Let’s play.');ready=true;document.body.dataset.assets='ready';ui.menu.hidden=true;endLoading();titleScreen.show();}catch(e){document.body.dataset.assets='error';loadError(e,()=>location.reload());}}
 let previewLayout=null,previewLayoutTarget=null,previewLayoutKey='',previewLayoutNext=0;
 function frameMenuCharacter(p,dt,now){
  const key=activePage+':'+innerWidth+':'+innerHeight;
@@ -833,7 +834,33 @@ function updateMenuCloud(dt,now){
  menuCloud.position.x=sway*.085;
  menuCloud.rotation.set(0,-.69+sway*.065,sway*.035);
  frameMenuCharacter(menuCloudAnchor,dt,now);
- menuWake.update(cloudTime,reduced,menuCamera);
+ menuWake.update(cloudTime,reduced,menuCamera,canvas.height);
+}
+function prepareMenuFlyer(){
+ const costume=Math.random()<.5?'police':'thief';
+ const flyer=avatar(templates[costume],1,costume==='police'?'chaser':'runner',null,{idle:clips.idle,jet:clips.jet});
+ flyer.group.visible=flyer.ring.visible=flyer.shadow.visible=false;
+ if(!attachHeldJetpack(flyer,prop('propJet',.8))){destroy(flyer);return;}
+ flyer.anim.play('jet',{fade:0});
+ flyer.group.name='MenuJetpackFlyby';
+ menuFlyer=flyer;
+}
+function updateMenuFlyer(dt){
+ const home=activePage==='home'&&menuCloud.visible&&!busy;
+ if(ui.menu.hidden)menuFlight.clearFlyby();
+ const pose=ui.menu.hidden?null:menuFlight.update(dt,innerWidth,innerHeight,reduced,home);
+ if(!menuFlyer)return;
+ const {group,anim,jetpackNozzle}=menuFlyer;
+ group.visible=!!pose;
+ if(!pose)return;
+ // Place the nozzle on the 2D trail at a depth well behind the cloud rider.
+ const depth=Math.min(72,menuCamera.position.z*2.5);
+ const z=menuFlightPoint.set(0,0,-depth).applyMatrix4(menuCamera.projectionMatrix).z;
+ menuFlightPoint.set(2*pose.x-1,1-2*pose.y,z).unproject(menuCamera);
+ group.rotation.set(-.18,1.1,-pose.roll-.14,'ZXY');
+ anim.update(Math.min(dt,.1));
+ jetpackNozzle.getWorldPosition(menuNozzleOffset).sub(group.position);
+ group.position.copy(menuFlightPoint).sub(menuNozzleOffset);
 }
 function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed=Math.max(0,(now-lastFrame)/1000),dt=Math.min(elapsed,.05);lastFrame=now;updateController(now,dt);uiEffects.tick(dt);waterAnimation?.update(dt);tickStageVerdict(elapsed);haptics.update(round?.actors[0]?.effect,Math.min(elapsed,.1),!!round&&round.phase==='playing'&&!paused&&!busy&&!document.hidden&&round.actors[0].effectTime>0);if(resultPortrait&&!ui.results.hidden)resultPortrait.update(dt);
  tileCallout.update(round?.safeTile,round?.mode==='tiletide'&&round.tileStage==='run'&&!ui.hud.hidden,dt);
@@ -862,7 +889,7 @@ function frame(now=performance.now()){requestAnimationFrame(frame);const elapsed
  }
  if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('#toast').textContent='';}updateMarkers();fpsCounter.hidden=!settings.showFps||ui.hud.hidden||busy;
  renderElapsed+=elapsed;
- if(renderGate(now,settings.fpsCap)){if(!ui.menu.hidden)menuFlight.update(renderElapsed,innerWidth,innerHeight,reduced);if(!ui.lobby.hidden&&!busy)renderLobbyCharacters(Math.min(renderElapsed,.1));else renderer.render(scene,round?matchCamera:menuCamera);fpsFrames++;renderElapsed=0;}
+ if(renderGate(now,settings.fpsCap)){updateMenuFlyer(renderElapsed);if(!ui.lobby.hidden&&!busy)renderLobbyCharacters(Math.min(renderElapsed,.1));else renderer.render(scene,round?matchCamera:menuCamera);fpsFrames++;renderElapsed=0;}
  if(now-fpsSince>=1000){fpsCounter.textContent=Math.round(fpsFrames*1000/(now-fpsSince))+' FPS';fpsSince=now;fpsFrames=0;}
 }
 const phoneLandscape=desktop?{blocked:false}:configureLandscape({onChange:()=>{clearInput();resize();}});
