@@ -8,7 +8,7 @@ export function renderHomeWidgets(profile,loadout,costume){
  $('profile-wins').textContent=profile.wins.toLocaleString();$('profile-matches').textContent=profile.played.toLocaleString();$('profile-next-label').textContent=view.next?'NEXT RANK':'TOP RANK';$('profile-next').textContent=view.next?'LV '+view.next:view.rank;
  $('profile-portrait').src=`assets/pnt/portraits/${costume}.png`;$('profile-portrait').alt=outfit.name;
  if(!$('profile-splat').childElementCount)$('profile-splat').innerHTML=starSVG({seed:17,cls:'iw-fa',r:62,arms:8,drops:0});
- $('home-tool-icon').src=`assets/pnt/${tools[0].icon}.png`;$('home-tool-name').textContent=tools[0].name;$('home-tool-kind').textContent='TOOL SLOT 1';
- $('home-second-icon').src=`assets/pnt/${tools[1].icon}.png`;$('home-second-name').textContent=tools[1].name;$('home-costume-icon').src=`assets/pnt/portraits/${costume}.png`;$('home-costume-name').textContent=outfit.name;
+ $('home-tool-icon').src=`assets/pnt/ui/tools/${tools[0].icon}.png`;$('home-tool-name').textContent=tools[0].name;$('home-tool-kind').textContent='TOOL SLOT 1';
+ $('home-second-icon').src=`assets/pnt/ui/tools/${tools[1].icon}.png`;$('home-second-name').textContent=tools[1].name;$('home-costume-icon').src=`assets/pnt/ui/costumes/${costume}.png`;$('home-costume-name').textContent=outfit.name;
  $('home-kit-main').setAttribute('aria-label','Change tools. Slot 1: '+tools[0].name);$('home-kit-second').setAttribute('aria-label','Change tools. Slot 2: '+tools[1].name);$('home-kit-costume').setAttribute('aria-label','Change costume: '+outfit.name);
 }

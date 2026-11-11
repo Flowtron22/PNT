@@ -167,7 +167,7 @@ function previewModel(){destroy(preview);preview=avatar(templates[costume],0,rol
 function labels(){refreshControlHints();
  const splash=(round?.mode||room?.gameMode)==='splash';document.body.classList.toggle('splash-mode',splash);if(splash){for(let i=1;i<=2;i++){$('#tool-action-icon'+i).src='assets/pnt/maps/'+(i===1?'splash-refill':'splash-can')+'.svg';$('#tool-action'+i).setAttribute('aria-label',i===1?'Toggle submerge and refill':'Throw paint can');}return;}
  renderHomeWidgets(profile,loadout,costume);
- modeLoadout(round?.mode||room?.gameMode,loadout).forEach((id,slot)=>{const tool=TOOLS.find(t=>t.id===id);$('#tool-action-label'+(slot+1)).textContent=tool.key;$('#tool-action-icon'+(slot+1)).src='assets/pnt/'+tool.icon+'.png';$('#tool-action'+(slot+1)).setAttribute('aria-label','Use slot '+(slot+1)+': '+tool.name);});
+ modeLoadout(round?.mode||room?.gameMode,loadout).forEach((id,slot)=>{const tool=TOOLS.find(t=>t.id===id);$('#tool-action-label'+(slot+1)).textContent=tool.key;$('#tool-action-icon'+(slot+1)).src='assets/pnt/ui/tools/'+tool.icon+'.png';$('#tool-action'+(slot+1)).setAttribute('aria-label','Use slot '+(slot+1)+': '+tool.name);});
 }
 function demo(name){const loop=['idle','thiefRun','policeRun','jet','bustedIdle','dance'].includes(name);previewTime=loop?0:(clips[name]?.duration||1)/ANIMATION_PLAY_RATE;preview?.anim.play(name,{loop,restart:true});}
 function goBack(){
@@ -336,7 +336,7 @@ function updateOnlineMatch(dt){
 }
 
 function choice(id,name,sub,selected,icon=''){return `<button class="choice${selected?' selected':''}" data-choice="${id}" aria-pressed="${selected}">${icon}<strong>${name}</strong><small>${sub}</small></button>`;}
-function toolImage(t){return `<img src="assets/pnt/${t.icon}.png" alt="">`;}
+function toolImage(t){return `<img src="assets/pnt/ui/tools/${t.icon}.png" alt="">`;}
 function renderTools(){
  if(selectedMode==='splash'){$('#page-content').innerHTML='<p>Splish Splash has no equipped tools. Hold Interact to spray. Slot 1 toggles submerge/refill; Slot 2 throws a paint can.</p>';return;}
  const event=['diretide','tiletide','strikers','balloon','splash'].includes(selectedMode),kit=modeLoadout(selectedMode,loadout);if(event&&!kit.includes(selectedTool))selectedTool='hammer';
@@ -376,7 +376,7 @@ function openPage(name){if(busy)return;bindingCapture=null;settingsPage=null;act
  }else if(name==='tools'){
   renderTools();
  }else if(name==='costume'){
-  content.innerHTML=`<section id="oyen-options"></section><div class="wardrobe-grid">${COSTUMES.map(c=>choice(c.id,c.name,c.id===costume?'EQUIPPED':'',c.id===costume,'<img src="assets/pnt/portraits/'+c.id+'.png" alt="">')).join('')}</div><button id="costume-dance" class="secondary">SHOW YOUR MOVES</button>`;
+  content.innerHTML=`<section id="oyen-options"></section><div class="wardrobe-grid">${COSTUMES.map(c=>choice(c.id,c.name,c.id===costume?'EQUIPPED':'',c.id===costume,'<img src="assets/pnt/ui/costumes/'+c.id+'.png" alt="">')).join('')}</div><button id="costume-dance" class="secondary">SHOW YOUR MOVES</button>`;
   for(const b of content.querySelectorAll('[data-choice]'))b.onclick=()=>selectCostume(b.dataset.choice);$('#costume-dance').onclick=()=>demo('dance');renderCostumeOptions();
  }else if(name==='settings'){
   settingsPage=mountSettings(content,{getSettings:()=>settings,onChange:changeSetting,hapticsSupported:haptics.supported||controller.supported,

@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.177**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.178**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.177` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.178` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -51,6 +51,20 @@ online all use internal mode ID `balloon`, rules version **14**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.178** replaces the five tool medallions and nine costume
+inventory thumbnails with the approved full-color artwork. ImageGen
+isolated the icons from the draft designs. The game uses individual
+256 × 256 transparent PNGs in `assets/pnt/ui/tools/` and
+`assets/pnt/ui/costumes/`. The updated art appears in the inventories,
+loadout displays, costume pickers and tool HUD. Profile, crew and results
+portraits continue to identify the actual characters.
+
+Syntax checks and all 385 automated tests passed (343 client, 42 multiplayer).
+The packaged Windows client loaded all 14 icons in the menus, equipped a
+tool and a costume, showed the new loadout in the training lobby, and
+displayed the tool icons in the match HUD. The wardrobe was also checked
+in fullscreen. Live Steam, physical controllers and Steam Deck/Proton remain pending.
 
 Version **0.9.177** imports the supplied `sk_chr_idleA_mainmenu.fbx` for
 the cloud rider and `sk_chr_jetpack_mainmenu.fbx` for the five background
@@ -649,7 +663,7 @@ The original host then opened a public PattyTide lobby. After leaving the old
 match, both guests joined it directly using their original join methods.
 See the [Steam multiplayer regression tests](server/tests/steam-multiplayer.test.mjs).
 
-Close older copies and use 0.9.177 on every machine. In Balloon Bash, check
+Close older copies and use 0.9.178 on every machine. In Balloon Bash, check
 first and final pops, moving cover, new sphere drops, and host transfer.
 Live Steam testing still needs to cover the leave prompt, guest movement, tool timing,
 costume and seat sync, and host transfer followed by joining another mode.
