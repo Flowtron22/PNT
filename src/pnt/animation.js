@@ -50,16 +50,17 @@ export function makeAnimator(model,clips,role){
   const kick=kickClip(model,actions.idle.getClip());
   if(kick.tracks.length)actions.kick=mixer.clipAction(kick);
  }
+ const defaultClip=actions.idle?'idle':Object.keys(actions)[0];
  let current=null;
  const api={mixer,actions,role,current:null,
   play(name,{loop=true,fade=.12,restart=false,rate=1}={}){
-   if(!actions[name])name='idle';actions[name].setEffectiveTimeScale(ANIMATION_PLAY_RATE*rate);if(current===name&&!restart)return;
+   if(!actions[name])name=defaultClip;actions[name].setEffectiveTimeScale(ANIMATION_PLAY_RATE*rate);if(current===name&&!restart)return;
    const previous=actions[current],next=actions[name];next.reset();next.enabled=true;next.clampWhenFinished=!loop;next.setLoop(loop?THREE.LoopRepeat:THREE.LoopOnce,loop?Infinity:1);next.setEffectiveWeight(1);next.play();
    if(previous){previous.fadeOut(fade);next.fadeIn(fade);}current=name;api.current=name;
   },
   update(dt){mixer.update(dt);},
   dispose(){mixer.stopAllAction();mixer.uncacheRoot(model);}
- };api.play('idle');return api;
+ };api.play(defaultClip);return api;
 }
 export function animationFor(actor,moving,airborne){
  if(actor.caught)return actor.caughtTime<.5?(airborne?'airStunned':'busted'):'bustedIdle';

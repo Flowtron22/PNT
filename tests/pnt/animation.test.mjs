@@ -4,7 +4,7 @@ import {readFileSync,readdirSync} from 'node:fs';
 import {registerHooks} from 'node:module';
 import * as THREE from '../../vendor/three/build/three.module.js';
 registerHooks({resolve(s,c,next){return s==='three'?{url:new URL('../../vendor/three/build/three.module.js',import.meta.url).href,shortCircuit:true}:next(s,c);}});
-const {makeAnimator,animationFor}=await import('../../src/pnt/animation.js');
+const {makeAnimator,animationFor,ANIMATION_PLAY_RATE}=await import('../../src/pnt/animation.js');
 const data=JSON.parse(readFileSync(new URL('../../assets/pnt/animations/clips.json',import.meta.url)));
 const clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));
 function rig(file){
@@ -49,6 +49,26 @@ test('flight adds thirty degrees forward pitch without changing source clips or 
  }
  anim.play('jet',{fade:0});anim.update(.2);anim.play('idle',{fade:0});anim.update(.001);
  assert.ok(model.quaternion.angleTo(new THREE.Quaternion())<.001);anim.dispose();
+});
+test('the separate menu flight clip keeps its authored root and timing on all flyer costumes',()=>{
+ const menuJet=THREE.AnimationClip.parse(data.menuJet);
+ const menuIdle=THREE.AnimationClip.parse(data.menuIdle);
+ assert(!('menuJet' in clips)&&!('menuIdle' in clips));
+ assert(Math.abs(menuJet.duration-.4)<1e-6);
+ assert(Math.abs(menuIdle.duration-8.7333336)<1e-6);
+ const rootRotation=menuJet.tracks.find(t=>t.name==='Bip001.quaternion');
+ assert(menuJet.tracks.some(t=>t.name==='Bip001.position'));
+ for(const file of ['thief.glb','police.glb','costumes/oyen.glb','costumes/raptor.glb','costumes/pingu.glb']){
+  const model=rig(file),anim=makeAnimator(model,{menuJet},'runner');
+  assert.equal(anim.current,'menuJet');
+  anim.play('menuJet',{rate:1/ANIMATION_PLAY_RATE});
+  anim.update(.12);
+  const action=anim.actions.menuJet;
+  assert.equal(action.getEffectiveTimeScale(),1);
+  assert.equal(action.time,.12);
+  assert.deepEqual(action.getClip().tracks.find(t=>t.name===rootRotation.name).values,rootRotation.values);
+  anim.dispose();
+ }
 });
 test('banana root spins around world up rather than flipping head over heels',()=>{
  const track=clips.banana.tracks.find(t=>t.name==='Bip001.quaternion'),initial=new THREE.Quaternion().fromArray(track.values).invert();let biggestTurn=0;

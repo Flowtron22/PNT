@@ -828,7 +828,12 @@ async function boot(){beginLoading('GETTING READY');try{
  const {star,'mall-slice':mall,...costumeAndProps}=models;
  templates=costumeAndProps;
  menuWake=createMenuWake(menuCloud,star.scene.getObjectByName('sm_star').geometry);
- const response=await fetch('assets/pnt/animations/clips.json?v=menu-idle1');if(!response.ok)throw new Error('Animation download failed');const data=await response.json();clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));menuClips={...clips,menuIdle:THREE.AnimationClip.parse(data.menuIdle)};progress(75,'Preparing the walkable arena…');const arena=mall.scene;menuArena=arena;arena.updateMatrixWorld(true);const initial=new THREE.Box3().setFromObject(arena),center=initial.getCenter(new THREE.Vector3());arena.position.add(new THREE.Vector3(-center.x,-initial.min.y,-center.z));scene.add(arena);arena.updateMatrixWorld(true);setArenaSurface(arena);arena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){if(m.map)m.map.anisotropy=2;}}});bounds=new THREE.Box3().setFromObject(arena);buildGround();menuNavigation={ground,bounds,grid};await ensureCostume();progress(90,'Warming up characters and fonts…');previewModel();FLYER_COSTUMES.forEach(prepareMenuFlyer);await document.fonts.ready;await renderer.compileAsync(scene,menuCamera);progress(100,'All set. Let’s play.');ready=true;document.body.dataset.assets='ready';ui.menu.hidden=true;endLoading();titleScreen.show();}catch(e){document.body.dataset.assets='error';loadError(e,()=>location.reload());}}
+ const response=await fetch('assets/pnt/animations/clips.json?v=menu-clips2');
+ if(!response.ok)throw new Error('Animation download failed');
+ const data=await response.json();
+ clips=Object.fromEntries(Object.entries(data.clips).map(([name,clip])=>[name,THREE.AnimationClip.parse(clip)]));
+ menuClips={...clips,menuIdle:THREE.AnimationClip.parse(data.menuIdle),menuJet:THREE.AnimationClip.parse(data.menuJet)};
+ progress(75,'Preparing the walkable arena…');const arena=mall.scene;menuArena=arena;arena.updateMatrixWorld(true);const initial=new THREE.Box3().setFromObject(arena),center=initial.getCenter(new THREE.Vector3());arena.position.add(new THREE.Vector3(-center.x,-initial.min.y,-center.z));scene.add(arena);arena.updateMatrixWorld(true);setArenaSurface(arena);arena.traverse(o=>{if(o.isMesh){if(solidForGameplay(o))ground.push(o);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){if(m.map)m.map.anisotropy=2;}}});bounds=new THREE.Box3().setFromObject(arena);buildGround();menuNavigation={ground,bounds,grid};await ensureCostume();progress(90,'Warming up characters and fonts…');previewModel();FLYER_COSTUMES.forEach(prepareMenuFlyer);await document.fonts.ready;await renderer.compileAsync(scene,menuCamera);progress(100,'All set. Let’s play.');ready=true;document.body.dataset.assets='ready';ui.menu.hidden=true;endLoading();titleScreen.show();}catch(e){document.body.dataset.assets='error';loadError(e,()=>location.reload());}}
 let previewLayout=null,previewLayoutTarget=null,previewLayoutKey='',previewLayoutNext=0;
 function frameMenuCharacter(p,dt,now){
  const key=activePage+':'+innerWidth+':'+innerHeight;
@@ -854,10 +859,10 @@ function updateMenuCloud(dt,now){
  menuWake.update(cloudTime,reduced,menuCamera,canvas.height);
 }
 function prepareMenuFlyer(costume){
- const flyer=avatar(templates[costume],1,costume==='police'?'chaser':'runner',null,{idle:clips.idle,jet:clips.jet});
+ const flyer=avatar(templates[costume],1,costume==='police'?'chaser':'runner',null,{menuJet:menuClips.menuJet});
  flyer.group.visible=flyer.ring.visible=flyer.shadow.visible=false;
  if(!attachHeldJetpack(flyer,prop('propJet',.8))){destroy(flyer);return;}
- flyer.anim.play('jet',{fade:0});
+ flyer.anim.play('menuJet',{rate:1/ANIMATION_PLAY_RATE});
  flyer.group.name='MenuJetpackFlyby';
  flyer.group.userData.costume=costume;
  menuFlyers[costume]=flyer;
