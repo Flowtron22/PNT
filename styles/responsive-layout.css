@@ -8,8 +8,7 @@
 #home .nav-button i{width:calc(var(--u)*1.8);height:calc(var(--u)*1.8);font-size:calc(var(--u)*1.8)}
 #home .nav-button b{font-size:calc(var(--u)*1.8)}
 #home-widgets{--u:min(1vw,1.777778vh);left:auto;right:max(env(safe-area-inset-right,0px),calc(var(--u)*3.2));top:calc(var(--u)*2.6);bottom:calc(var(--u)*5);width:calc(var(--u)*27)}
-#home-widgets .iw-profile{padding:calc(var(--u)*1.3) calc(var(--u)*1.5);gap:calc(var(--u)*1) calc(var(--u)*1.2);grid-template-columns:auto 1fr}
-#home-widgets .iw-profile__avatar{width:calc(var(--u)*6);height:calc(var(--u)*6)}
+#home-widgets .iw-profile{padding:calc(var(--u)*1.3) calc(var(--u)*1.5);gap:calc(var(--u)*1)}
 #home-widgets .iw-profile__name{font-size:max(14px,calc(var(--u)*2))}
 #home-widgets :is(.iw-profile__rank,.iw-profile__xpnum,.iw-profile__stats span,.iw-kitcard__label,.iw-kitcard__kind){font-size:max(7px,calc(var(--u)*.65))}
 #home-widgets .iw-profile__stats{gap:calc(var(--u)*.7)}

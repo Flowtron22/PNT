@@ -1,10 +1,34 @@
 const RAINBOW = ['#ff759b','#ffae71','#ffea85','#a6ed97','#86e5ff','#c4aaff'];
 const ASCENT_SECONDS = 2.8;
 const TRAIL_LENGTH = .44;
+const TRAIL_SEGMENTS = 12;
 const SPRINKLES = 78;
 const SPIN_TURNS_PER_SECOND = 1.5;
 
 export const FLYER_COSTUMES = ['oyen','thief','police','raptor','pingu'];
+
+// The first two routes launch from the bottom. The arcs enter from the sides.
+const ROUTES = [
+ {start:[.78,1.08],control:[.905,.60],end:[1.03,.12]},
+ {start:[.18,1.08],control:[.36,.48],end:[.54,-.12]},
+ {start:[-.08,.73],control:[.55,.57],end:[.88,-.13]},
+ {start:[1.08,.67],control:[.91,.27],end:[.30,-.07]}
+];
+
+function sampleRoute(flyby,progress,width,height) {
+ const {start,control,end} = flyby.route;
+ const t = Math.max(0,Math.min(1,progress)), u = 1-t;
+ const dx = 2*(u*(control[0]-start[0])+t*(end[0]-control[0]))*width;
+ const dy = 2*(u*(control[1]-start[1])+t*(end[1]-control[1]))*height;
+ const length = Math.hypot(dx,dy);
+ // The trail can extend past either endpoint. Continue along its tangent there.
+ const extension = progress-t;
+ return {
+  x:(u*u*start[0]+2*u*t*control[0]+t*t*end[0]+flyby.offsetX)*width+extension*dx,
+  y:(u*u*start[1]+2*u*t*control[1]+t*t*end[1])*height+extension*dy,
+  dx,dy,nx:-dy/length,ny:dx/length
+ };
+}
 
 export function createMenuFlight(canvas,random=Math.random) {
  const ink = canvas.getContext('2d');
@@ -40,27 +64,30 @@ export function createMenuFlight(canvas,random=Math.random) {
  }
 
  function drawFlyby(width,height) {
-  const {progress,startX,endX,endY} = flyby;
-  const dx = (endX-startX)*width;
-  const dy = (endY-1.08)*height;
-  const length = Math.hypot(dx,dy);
-  const nx = -dy/length, ny = dx/length;
-  const x = startX*width+dx*progress, y = 1.08*height+dy*progress;
-  const tailX = x-dx*TRAIL_LENGTH, tailY = y-dy*TRAIL_LENGTH;
+  const {progress} = flyby;
+  const trail = Array.from({length:TRAIL_SEGMENTS+1},(_,i)=>
+   sampleRoute(flyby,progress-TRAIL_LENGTH*(1-i/TRAIL_SEGMENTS),width,height)
+  );
+  const tail = trail[0], head = trail[TRAIL_SEGMENTS];
   const bandWidth = Math.max(1.7,height*.004);
   for (let band=0;band<RAINBOW.length;band++) {
    const tint = RAINBOW[band];
-   const offset = (band-(RAINBOW.length-1)/2)*bandWidth;
-   const fade = ink.createLinearGradient(tailX,tailY,x,y);
+   const offset = (band-RAINBOW.length/2)*bandWidth;
+   const fade = ink.createLinearGradient(tail.x,tail.y,head.x,head.y);
    fade.addColorStop(0,tint+'00');
    fade.addColorStop(.55,tint+'80');
    fade.addColorStop(1,tint+'cc');
    ink.fillStyle = fade;
    ink.beginPath();
-   ink.moveTo(tailX+nx*(offset-bandWidth/2)*.24,tailY+ny*(offset-bandWidth/2)*.24);
-   ink.lineTo(x+nx*(offset-bandWidth/2),y+ny*(offset-bandWidth/2));
-   ink.lineTo(x+nx*(offset+bandWidth/2),y+ny*(offset+bandWidth/2));
-   ink.lineTo(tailX+nx*(offset+bandWidth/2)*.24,tailY+ny*(offset+bandWidth/2)*.24);
+   ink.moveTo(tail.x+tail.nx*offset*.24,tail.y+tail.ny*offset*.24);
+   for (let i=1;i<=TRAIL_SEGMENTS;i++) {
+    const point = trail[i], spread = offset*(.24+.76*i/TRAIL_SEGMENTS);
+    ink.lineTo(point.x+point.nx*spread,point.y+point.ny*spread);
+   }
+   for (let i=TRAIL_SEGMENTS;i>=0;i--) {
+    const point = trail[i], spread = (offset+bandWidth)*(.24+.76*i/TRAIL_SEGMENTS);
+    ink.lineTo(point.x+point.nx*spread,point.y+point.ny*spread);
+   }
    ink.closePath();
    ink.fill();
   }
@@ -68,7 +95,8 @@ export function createMenuFlight(canvas,random=Math.random) {
    const age = (i/SPRINKLES+progress*1.8)%1;
    const distance = age*TRAIL_LENGTH*1.17;
    const drift = ((i*17%23)/11-1)*bandWidth*(1+age*7);
-   const px = x-dx*distance+nx*drift, py = y-dy*distance+ny*drift;
+   const point = sampleRoute(flyby,progress-distance,width,height);
+   const px = point.x+point.nx*drift, py = point.y+point.ny*drift;
    const size = Math.max(1,height*(.0017+(i%7)*.00044))*(1-age*.6);
    ink.globalAlpha = Math.sin(age*Math.PI)*(.42+.48*Math.sin(progress*36+i)**2);
    ink.fillStyle = i%3===0?'#fffde7':RAINBOW[i%RAINBOW.length];
@@ -81,7 +109,7 @@ export function createMenuFlight(canvas,random=Math.random) {
   }
   ink.globalAlpha = 1;
   return {
-   x:x/width,y:y/height,roll:Math.atan2(dx,-dy),costume:flyby.costume,
+   x:head.x/width,y:head.y/height,roll:Math.atan2(head.dx,-head.dy),costume:flyby.costume,
    spin:progress*ASCENT_SECONDS*SPIN_TURNS_PER_SECOND*2*Math.PI
   };
  }
@@ -108,12 +136,12 @@ export function createMenuFlight(canvas,random=Math.random) {
    if (!flyby) {
     wait -= dt;
     if (wait>0) return null;
-    const right = random()<.5;
-    const startX = (right?.78:.18)+(random()-.5)*.045;
+    const route = ROUTES[Math.floor(random()*ROUTES.length)];
+    const offsetX = (random()-.5)*.045;
     wait = 9+random()*9;
     const costumes = FLYER_COSTUMES.filter(costume=>costume!==lastCostume);
     lastCostume = costumes[Math.floor(random()*costumes.length)];
-    flyby = {progress:0,startX,endX:startX+(right?.25:.36),endY:right?.12:-.12,costume:lastCostume};
+    flyby = {progress:0,route,offsetX,costume:lastCostume};
    }
    flyby.progress += dt/ASCENT_SECONDS;
    if (flyby.progress>1+TRAIL_LENGTH) {
