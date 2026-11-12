@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.180**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.181**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.180` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.181` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -51,6 +51,24 @@ online all use internal mode ID `balloon`, rules version **14**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.181** adds **Events → Galah Panjang** in Training, Couch Play, and
+Steam Solo Online. The mode uses Patty Prowl's Grassfield with a painted
+two-lane court, three sections, and dashed turnaround and finish lines.
+Blue (P1 and P3) and Red (P2 and P4) each take a 45-second turn running.
+One point goes to each runner who crosses and returns without being tagged.
+The lead guard moves along the blue front and center lines. The line guard
+uses the red crossbars and joins them via the sidelines. Contact tags runners
+and the match can be played with movement controls alone. The Steam mode ID
+is `galah` and its rules version is **1**.
+
+Syntax checks and all 390 automated tests passed (344 client, 46 multiplayer).
+Simulated Steam peers verified mode-specific public discovery, court snapshots,
+and host transfer. The offline Windows smoke build showed the court at windowed
+and fullscreen sizes, completed both Training halves through results, and
+started Couch Play with a keyboard, emulated controller, and two bots.
+Live Steam with multiple accounts, physical controllers, and Steam Deck/Proton
+remain pending.
 
 Version **0.9.180** fixes the Steam lobby transition after a match. The next
 online action waits for the previous lobby membership to clear. Public

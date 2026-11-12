@@ -8,7 +8,8 @@ export const TILE_EVENT_MAPS=[{id:'grassfield',name:'TUMBLE GARDEN',available:tr
 export const STRIKER_EVENT_MAPS=[{id:'slipperystriker',name:'SLIPPERY SHOOTS',available:true,description:'Slippery Shoots · 2v2 ice rink',image:'slipperystriker.svg'}];
 export const BALLOON_EVENT_MAPS=[{id:'grassfield',name:'SAND RING',available:true,description:'Balloon Bash · last balloon standing',image:'balloonbash.png'}];
 export const SPLASH_EVENT_MAPS=[{id:'grassfield',name:'SPLISH SPLASH',available:true,description:'Paint the most turf · 2 minutes',image:'splash.svg'}];
-export const lobbyMaps=room=>room?.gameMode==='splash'?SPLASH_EVENT_MAPS:room?.gameMode==='diretide'?EVENT_MAPS:room?.gameMode==='tiletide'?TILE_EVENT_MAPS:room?.gameMode==='strikers'?STRIKER_EVENT_MAPS:room?.gameMode==='balloon'?BALLOON_EVENT_MAPS:MAPS;
+const GALAH_EVENT_MAPS=[{id:'grassfield',name:'GRASSFIELD COURT',available:true,description:'Galah Panjang · 2v2',image:'grassfield.png'}];
+export const lobbyMaps=room=>room?.gameMode==='galah'?GALAH_EVENT_MAPS:room?.gameMode==='splash'?SPLASH_EVENT_MAPS:room?.gameMode==='diretide'?EVENT_MAPS:room?.gameMode==='tiletide'?TILE_EVENT_MAPS:room?.gameMode==='strikers'?STRIKER_EVENT_MAPS:room?.gameMode==='balloon'?BALLOON_EVENT_MAPS:MAPS;
 export const BOTS=[{name:'Bot Anas',costume:'pumpkin'},{name:'Bot Min',costume:'raptor'},{name:'Bot Amim',costume:'racer'}];
 export const PREFERENCES=['none','chaser','runner'];
 export function createLobby(costume='thief',gameMode='classic'){

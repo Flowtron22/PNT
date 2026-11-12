@@ -16,7 +16,7 @@ export function updateSmokeCoverage(round,positions,clouds){
  for(const actor of round.actors){const p=xyz(positions[actor.id]);actor.inSmoke=clouds.some(cloud=>{if(cloud.time<=0)return false;const q=xyz(cloud.position);return Math.hypot(p[0]-q[0],p[2]-q[2])<=SMOKE_RADIUS&&Math.abs(p[1]-q[1])<2.2;});if(actor.inSmoke&&['stunned','airStunned','banana'].includes(actor.effect)){actor.effect=null;actor.effectTime=0;}}
 }
 export function activateTool(round,id,slot,tool='hammer'){
- if(round.mode==='splash')return false;
+ if(['splash','galah'].includes(round.mode))return false;
  if(['diretide','tiletide','strikers','balloon','splash'].includes(round.mode)&&!['hammer','banana'].includes(tool))return false;
  const a=round.actors[id];if(![0,1].includes(slot)||!TOOL_COOLDOWNS[tool]||!canAct(round,id)||a.inSmoke||a.toolCooldowns[slot]>0)return false;a.toolCooldowns[slot]=TOOL_COOLDOWNS[tool];if(round.mode==='strikers')a.itemsUsed=(a.itemsUsed||0)+1;return true;
 }

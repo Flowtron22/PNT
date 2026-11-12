@@ -12,6 +12,7 @@ registerHooks({resolve(specifier, context, next) {
 const {steamMultiplayer} = await import('../steam-multiplayer.mjs');
 const {MatchSimulation} = await import('../simulation.mjs');
 const {DIRETIDE_VERSION} = await import('../../src/pnt/diretide-rules.js');
+const {GALAH_VERSION} = await import('../../src/pnt/galah-rules.js');
 
 function fakeSteamNetwork({hideMemberAfterTransfer, switchingGuests = []} = {}) {
   const lobbies = new Map();
@@ -236,6 +237,31 @@ test('Steam peers join the host, honor host controls and readiness, and receive 
     }
     guest.send('input', {frames: [{seq: 2, x: 1, z: 0}]});
     await waitFor(() => survivor.state.snapshot.poses[1].ack === 2);
+});
+
+test('Galah Panjang advertises its own Steam mode and keeps court roles through a host transfer', async t => {
+  const connect = steamPeers(t);
+  const profile = {gameMode:'galah', galahVersion:GALAH_VERSION};
+  const host = await connect(1n, 'public', null, profile);
+  const classic = await connect(3n, 'public');
+  const guest = await connect(2n, 'public', null, profile);
+  assert.notEqual(classic.state.lobby.code, host.state.lobby.code);
+  assert.equal(guest.state.lobby.code, host.state.lobby.code);
+  assert.equal(guest.state.lobby.galahVersion, GALAH_VERSION);
+  host.send('control', {action:'add-bot'});
+  host.send('control', {action:'add-bot'});
+  host.send('control', {action:'start'});
+  await waitFor(() => guest.state.lobby.match);
+  assert.equal(guest.state.lobby.match.map, 'grassfield');
+  host.send('ready');
+  guest.send('ready');
+  await waitFor(() => guest.state.snapshot?.round.startRemaining === 0);
+  const checkpoint = guest.state.snapshot;
+  await host.connection.leave(host.key);
+  await waitFor(() => guest.state.migrated && guest.state.snapshot.tick > checkpoint.tick);
+  assert.equal(guest.state.snapshot.round.profileId, checkpoint.round.profileId);
+  assert.deepEqual(guest.state.snapshot.round.actors.map(a => a.galahRole), checkpoint.round.actors.map(a => a.galahRole));
+  assert.equal(guest.state.lobby.gameMode, 'galah');
 });
 
 test('Public matchmaking and room-code guests stay in a public match after the host leaves', async t => {

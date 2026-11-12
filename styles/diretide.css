@@ -1,10 +1,11 @@
 /* Event pages share the existing menu/lobby layout and input controls. */
 .event-nav{background:#7641a4!important;color:#fff!important}
-#menu[data-page=events] .page-panel{left:4vw;right:4vw;top:5vh;bottom:5vh;width:auto;max-width:none;overflow:hidden}
+#menu[data-page=events] .page-panel{left:4vw;right:4vw;top:5vh;bottom:5vh;width:auto;max-width:none;overflow-y:auto}
 #menu[data-page=events] #character-label{display:none}
 body.diretide-mode #character-label{display:none}
 #menu[data-page=events] #page-title{margin-bottom:14px}
-.event-card-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.5vw,26px);max-width:1720px;margin:0 auto;padding:8px 12px 24px}
+.event-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(12px,1.5vw,26px);max-width:1720px;margin:0 auto;padding:8px 12px 24px}
+@media(min-width:1101px){.event-card-grid .event-mode-card{height:clamp(190px,31vh,350px);aspect-ratio:auto}}
 .event-mode-card{position:relative;display:flex;flex-direction:column;min-width:0;aspect-ratio:1.08/1;padding:0;overflow:hidden;border:6px solid #fff;border-radius:clamp(22px,2.4vw,40px);background:#171329;color:#fff;text-align:left;box-shadow:0 9px 0 #090713,0 20px 38px #08051188;transform:rotate(-.7deg);transition:transform .35s cubic-bezier(.22,1,.36,1),border-color .2s,box-shadow .2s}
 .event-mode-card:nth-child(2){transform:rotate(.7deg)}.event-mode-card:hover,.event-mode-card:focus-visible,.event-mode-card.pad-focus{transform:translateY(-8px) rotate(0) scale(1.015);border-color:#ff8a14;box-shadow:0 9px 0 #9b4e0a,0 25px 48px #080511aa;outline:none}
 .event-mode-art{position:relative;display:block;flex:0 0 63%;min-height:0;overflow:hidden;background:#24334f}
@@ -16,7 +17,7 @@ body.diretide-mode #character-label{display:none}
 .patty-card .event-mode-art>strong{font-size:clamp(28px,22cqw,82px)}
 .patty-card .event-mode-art>strong>span{display:block;white-space:nowrap}
 .balloon-card .event-mode-art>img{transform:scale(1.45);transform-origin:50% 65%}
-.event-mode-body{display:flex;flex:1;min-height:0;flex-direction:column;padding:clamp(20px,2vw,32px) clamp(16px,2vw,32px)}
+.event-mode-body{display:flex;flex:1;min-height:0;flex-direction:column;padding:clamp(12px,1.25vw,24px) clamp(16px,2vw,32px)}
 .event-mode-body>p{margin:0;font:700 clamp(11px,1vw,17px)/1.45 Rubik;color:#e7e2ef}
 .event-mode-meta{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:12px}.event-mode-meta i{padding:7px 10px;border-radius:999px;background:#ffffff12;font:900 clamp(7px,.7vw,11px)/1 Rubik;font-style:normal;letter-spacing:.07em;white-space:nowrap}.event-mode-meta b{margin-left:auto;padding:9px 13px;border-radius:999px;background:#ff8a14;color:#171329;font:900 clamp(8px,.8vw,12px)/1 Rubik;white-space:nowrap}
 .tiletide-card .event-mode-art{background:#186ad2}.tiletide-card:hover,.tiletide-card:focus-visible,.tiletide-card.pad-focus{border-color:#59e6f1;box-shadow:0 9px 0 #147d98,0 25px 48px #080511aa}.tiletide-card .event-mode-meta b{background:#59e6f1}
@@ -62,6 +63,12 @@ body[data-assets=ready] #home .main-nav{gap:calc(var(--u)*.65)}
 .strikers-score.blue{background:#075d9f}
 .strikers-score.red{background:#aa203c}
 #hud .hud-top:has(.strikers-score) #role-label{min-width:0;font-size:clamp(8px,1.1vw,14px);max-width:20vw}
+.galah-card .event-mode-art>strong{font-size:clamp(23px,3vw,62px)}
+.galah-guide{max-width:48ch;margin:1rem auto;color:#fff;font:700 clamp(12px,1.1vw,16px)/1.5 Rubik,sans-serif}
+#galah-status{display:none}
+.galah-mode #hud>.actions{display:none}
+.galah-mode #role-label[data-galah-team=red]{background:#aa203c}
+.galah-mode #galah-status{position:absolute;top:clamp(62px,10vh,90px);left:50%;translate:-50% 0;display:block;max-width:calc(100% - 32px);width:max-content;padding:6px 12px;border-radius:9px;background:#171329ed;color:#fff;text-align:center;font:900 clamp(10px,1.25vw,15px)/1.3 Rubik,sans-serif;pointer-events:none}
 .strikers-result-scores{position:absolute;top:3%;right:4%;width:57%;height:32%;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border-radius:18px;overflow:hidden}
 .strikers-result-team{display:flex;align-items:center;justify-content:space-around;gap:6px;padding:clamp(5px,1.5vw,20px);background:linear-gradient(145deg,#156ca8,#10294f)}
 .strikers-result-team.team-0{flex-direction:row-reverse}
