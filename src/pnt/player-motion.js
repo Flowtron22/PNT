@@ -22,7 +22,7 @@ export function advanceActor(actor,state,dx,dz,dt,{grid,map,tilt=0,speed,furnitu
  if(actor.wasFlying&&!flying){const landing=actor.flightLanding||nearestLanding(grid,p.x,p.z);if(landing){p.x=landing.x;p.z=landing.z;p.y=Math.max(p.y,landing.y);actor.vx=actor.vz=actor.slideX=0;}else if(respawn)p.copy(typeof respawn==='function'?respawn():respawn);actor.flightLanding=null;previous.copy(p);}
  if(flying&&!actor.wasFlying){actor.flightFloor=p.y;actor.flightLanding=null;}actor.wasFlying=flying;
  if(state.effectTime>0&&['stunned','airStunned','kick'].includes(state.effect))actor.vx=actor.vz=actor.slideX=0;
- environmentVelocity(actor,dx,dz,speed,dt,{map,grounded:actor.grounded,flying,locked,tilt});const nx=p.x+(actor.vx+(actor.slideX||0))*dt,nz=p.z+actor.vz*dt;
+ environmentVelocity(actor,dx,dz,speed,dt,{map,grounded:actor.grounded,flying,locked,tilt,response:state.galahRole?2.5:1});const nx=p.x+(actor.vx+(actor.slideX||0))*dt,nz=p.z+actor.vz*dt;
  const at=(x,z)=>sampleGround(grid,x,z),ground=at(p.x,p.z),walkY=Number.isFinite(ground)?ground:p.y,walkable=(x,z)=>{const h=at(x,z);return Number.isFinite(h)&&h-walkY<.5&&walkY-h<1.2;};let moved=false;
  const inside=(x,z)=>state.galahRole?galahCanMove(state.galahRole,x,z):state.team==null||strikerInsidePitch(x,z,.28);
  const canMove=(x,z)=>flying||(inside(x,z)&&icebergGroundPathClear(grid,p.x,p.z,x,z)&&walkable(x,z)&&canTraverse(grid,p.x,p.z,x,z));
@@ -32,7 +32,14 @@ export function advanceActor(actor,state,dx,dz,dt,{grid,map,tilt=0,speed,furnitu
  if(state.balloons&&!state.caught&&!flying){const radius=Math.hypot(p.x,p.z);if(radius>.12){const pull=.95+.45*Math.min(1,radius/BALLOON_ARENA_RADIUS);p.x-=p.x/radius*pull*dt;p.z-=p.z/radius*pull*dt;}const after=Math.hypot(p.x,p.z),limit=BALLOON_ARENA_RADIUS-.42;if(after>limit){p.x*=limit/after;p.z*=limit/after;actor.vx=actor.vz=actor.slideX=0;}}
  if(state.balloons&&!state.caught&&!flying){slideBalloonSpheres(state,previous,p);const radius=Math.hypot(p.x,p.z),limit=BALLOON_ARENA_RADIUS-.42;if(radius>limit){p.x*=limit/radius;p.z*=limit/radius;}moved=Math.hypot(p.x-previous.x,p.z-previous.z)>.001;}
  if(state.paintCover){slideSplashCover(state,previous,p);moved=Math.hypot(p.x-previous.x,p.z-previous.z)>.001;}
- if(!locked&&magnitude>.06&&moved&&Math.hypot(actor.vx,actor.vz)>.01){const angle=Math.atan2(actor.vx,actor.vz);actor.group.rotation.y+=Math.atan2(Math.sin(angle-actor.group.rotation.y),Math.cos(angle-actor.group.rotation.y))*Math.min(1,dt*14);}
+ if(!locked&&magnitude>.06){
+  const travelling=moved&&Math.hypot(actor.vx,actor.vz)>.01;
+  if(travelling||state.galahRole){
+   const angle=travelling?Math.atan2(actor.vx,actor.vz):Math.atan2(dx,dz);
+   const turn=state.galahRole?1-Math.exp(-34*dt):Math.min(1,dt*14);
+   actor.group.rotation.y+=Math.atan2(Math.sin(angle-actor.group.rotation.y),Math.cos(angle-actor.group.rotation.y))*turn;
+  }
+ }
  const rawGround=at(p.x,p.z),h=rawGround;
  if(flying){if(!Number.isFinite(actor.flightFloor)||safeLandingCell(grid,p.x,p.z))actor.flightFloor=Number.isFinite(rawGround)?rawGround:p.y;const base=actor.flightLanding?.y??actor.flightFloor??p.y,target=base+1.8*Math.min(1,state.effectTime/.5),blend=actor.flightLanding?Math.min(1,dt/Math.max(dt,state.effectTime)):1-Math.exp(-6*dt);p.y+=(target-p.y)*blend;actor.velocity=0;}else{actor.velocity=(actor.velocity||0)-16*dt;p.y+=actor.velocity*dt;}
  if(!flying&&Number.isFinite(h)&&(p.y<=h||actor.grounded&&Math.abs(p.y-h)<.55)){p.y+=(h-p.y)*(1-Math.exp(-30*dt));actor.velocity=0;actor.grounded=true;}else actor.grounded=false;

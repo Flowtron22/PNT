@@ -26,8 +26,8 @@ PC and Steam Deck use the same Windows x64 package, with Proton on Deck.
 
 ## Private development playtest
 
-Current development package is **0.9.181** in
-`dist-steam/win64-dev-playtest-0.9.181`.
+Current development package is **0.9.182** in
+`dist-steam/win64-dev-playtest-0.9.182`.
 
 The windowed client opens at a fixed size. Toggle fullscreen in Settings → Video, or press F11 or Alt+Enter.
 
@@ -72,7 +72,8 @@ For **Galah Panjang**, use **Events → Galah Panjang**. Seats 1 and 3 play Blue
 and seats 2 and 4 play Red. Each team gets one 45-second turn to run. Each runner
 who crosses the far dashed line and returns over the home dashed line scores one
 point. Guards tag on contact. The lead guard uses the blue front and center
-lines, and the line guard patrols the three red lines via the sidelines.
+lines, and the line guard patrols the two red lines via the sidelines.
+The painted court has four boxes arranged in two lanes.
 Use movement controls to run or guard. Training and Couch Play fill the court
 with bots, and Solo Online uses Galah Panjang matchmaking.
 

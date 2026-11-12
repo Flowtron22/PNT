@@ -1,16 +1,17 @@
-export const GALAH_VERSION = 1;
+export const GALAH_VERSION = 2;
 export const GALAH_HALF_SECONDS = 45;
-export const GALAH_WIDTH = 3.6;
-export const GALAH_END = 5.4;
-export const GALAH_CROSSBARS = [-1.8, 1.8, GALAH_END];
+export const GALAH_WIDTH = 5.1;
+export const GALAH_END = 7.6;
+export const GALAH_CROSSBARS = [0, GALAH_END];
 export const GALAH_ROLE_LABELS = {runner:'Runner', leader:'Lead guard', guard:'Line guard'};
 export const GALAH_STATUS_LABELS = {outbound:'Cross the court', returning:'Return home', tagged:'Tagged', scored:'Scored', timeout:'Time up'};
 export const GALAH_GUIDE = 'Runners cross the far line and return home to score. Guards tag by touch. The lead guard uses the blue front and center lines. The line guard uses the red crossbars and connects via the sidelines. Swap roles after each team’s turn.';
 
 export const GALAH_RUN_LINE = GALAH_END + .52;
-const RUNWAY_END = GALAH_END + 1.15;
-const RAIL_MARGIN = .21;
+export const GALAH_RUNWAY_END = GALAH_END + 1.15;
+const RAIL_MARGIN = .32;
 const TAG_RANGE = .8;
+const laneCenter = id => (id < 2 ? -.5 : .5) * GALAH_WIDTH;
 
 export function createGalahRound(base) {
  const actors = base.actors.map(actor => ({...actor, role:'runner', team:actor.id % 2, circuits:0}));
@@ -30,8 +31,8 @@ function prepareHalf(round, half) {
 
 export function galahSpawn(actor) {
  if (actor.galahRole === 'leader') return [0, -GALAH_END];
- if (actor.galahRole === 'guard') return [0, GALAH_CROSSBARS[1]];
- return [actor.id < 2 ? -2.1 : 2.1, -GALAH_END - .9];
+ if (actor.galahRole === 'guard') return [0, GALAH_CROSSBARS[0]];
+ return [laneCenter(actor.id), -GALAH_END - .9];
 }
 
 export function placeGalahPlayer(actor, state, heightAt) {
@@ -44,7 +45,7 @@ export function placeGalahPlayer(actor, state, heightAt) {
 
 export function galahCanMove(role, x, z) {
  const near = (value, target) => Math.abs(value - target) <= RAIL_MARGIN;
- if (role === 'runner') return Math.abs(x) <= GALAH_WIDTH - .24 && Math.abs(z) <= RUNWAY_END;
+ if (role === 'runner') return Math.abs(x) <= GALAH_WIDTH - .24 && Math.abs(z) <= GALAH_RUNWAY_END;
  if (Math.abs(x) > GALAH_WIDTH || Math.abs(z) > GALAH_END) return false;
  if (role === 'leader') return near(z, -GALAH_END) || near(x, 0);
  return z >= GALAH_CROSSBARS[0] - RAIL_MARGIN &&
@@ -105,7 +106,7 @@ export function galahBotInput(round, id, actors) {
  const actor = round.actors[id], point = actors[id].group.position;
  const opponents = round.actors.filter(other => other.team !== actor.team);
  if (actor.galahRole === 'runner') {
-  const lane = id < 2 ? -2.2 : 2.2;
+  const lane = laneCenter(id);
   const direction = actor.galahStatus === 'returning' ? -1 : 1;
   return botMove(point, lane, direction * (GALAH_RUN_LINE + .22));
  }

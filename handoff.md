@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.181**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.182**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.181` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.182` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -51,6 +51,23 @@ online all use internal mode ID `balloon`, rules version **14**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.182** doubles the Galah Panjang court area on Grassfield to
+10.2 × 15.2 game units. Two rows and two lanes form four boxes. The line
+guard patrols the middle and far red lines via the sidelines. The camera
+uses twice the previous zoom setting and fits both runways and all four
+players. Galah movement responds faster when starting, stopping, and
+reversing, and wider guard paths give players more room to turn at junctions.
+The Steam mode ID is `galah` and its rules version is **2**.
+
+Syntax checks and all 392 automated tests passed (344 client, 48 multiplayer).
+Tests covered court traversal, camera framing at 16:9, 16:10, and 4:3,
+quick reversals, sideline turns, and simulated Steam host migration. The
+Windows smoke build showed the full court in Training in windowed and
+fullscreen layouts, and started Couch Play with an emulated controller.
+The Steam package was verified with App ID 480, current runtime, version
+labels, and game code. Live Steam multiplayer, physical controllers, and
+Steam Deck/Proton remain pending.
 
 Version **0.9.181** adds **Events → Galah Panjang** in Training, Couch Play, and
 Steam Solo Online. The mode uses Patty Prowl's Grassfield with a painted

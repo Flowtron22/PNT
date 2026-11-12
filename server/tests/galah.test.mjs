@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {registerHooks} from 'node:module';
-import {GALAH_END, GALAH_RUN_LINE, galahCanMove} from '../../src/pnt/galah-rules.js';
+import {GALAH_WIDTH, GALAH_END, GALAH_RUN_LINE, GALAH_RUNWAY_END, GALAH_CROSSBARS, galahCanMove} from '../../src/pnt/galah-rules.js';
+import {canTraverse} from '../../src/pnt/collision.js';
+import {PerspectiveCamera, Vector3} from '../../vendor/three/build/three.module.js';
 import {localSnapshot} from '../../src/pnt/multiplayer.js';
 
 registerHooks({resolve(specifier, context, next) {
@@ -9,6 +11,7 @@ registerHooks({resolve(specifier, context, next) {
  return next(specifier, context);
 }});
 const {MatchSimulation} = await import('../simulation.mjs');
+const {galahCameraView, GALAH_CAMERA_LIFT, GALAH_CAMERA_ZOOM} = await import('../../src/pnt/galah-view.js');
 const players = Array.from({length:4}, (_, id) => ({sessionId:String(id), bot:false}));
 
 test('Galah guards stay on their own rails and cannot use classic tools', async () => {
@@ -17,9 +20,10 @@ test('Galah guards stay on their own rails and cannot use classic tools', async 
  assert.equal(sim.tool(1, 0), false);
  assert.equal(galahCanMove('leader', 2, -GALAH_END), true);
  assert.equal(galahCanMove('leader', 2, 0), false);
- assert.equal(galahCanMove('guard', 0, -1.8), true);
- assert.equal(galahCanMove('guard', 3.5, 0), true);
- assert.equal(galahCanMove('guard', 0, 0), false);
+ assert.deepEqual(GALAH_CROSSBARS, [0, GALAH_END]);
+ assert.equal(galahCanMove('guard', 0, 0), true);
+ assert.equal(galahCanMove('guard', GALAH_WIDTH - .15, 3), true);
+ assert.equal(galahCanMove('guard', 0, 3), false);
  const lead = sim.actors[1].group.position;
  for (let i = 1; i <= 60; i++) {
   sim.input(1, {seq:i,x:1,z:0});
@@ -30,7 +34,45 @@ test('Galah guards stay on their own rails and cannot use classic tools', async 
   sim.input(1, {seq:i,x:0,z:1});
   sim.step();
  }
- assert.ok(lead.z < -5.19);
+ assert.ok(lead.z < -GALAH_END + .33);
+});
+
+test('the four-box court stays traversable and its runways fit the zoomed camera', async () => {
+ const sim = await MatchSimulation.create('grassfield', players, 'galah');
+ assert.ok(Math.abs((GALAH_WIDTH * GALAH_END) / (3.6 * 5.4) - 2) < .01);
+ for (let x = -GALAH_WIDTH; x <= GALAH_WIDTH; x += .2) {
+  for (let z = -GALAH_RUNWAY_END; z <= GALAH_RUNWAY_END; z += .2) {
+   assert.ok(canTraverse(sim.grid,x,z,x+.08,z+.08), 'blocked court cell at '+[x,z]);
+  }
+ }
+ for (const aspect of [16/9, 16/10, 4/3]) {
+  const camera = new PerspectiveCamera(30,aspect,.1,180);
+  camera.zoom = GALAH_CAMERA_ZOOM;
+  camera.updateProjectionMatrix();
+  camera.position.fromArray(galahCameraView(aspect).offset);
+  camera.position.y += GALAH_CAMERA_LIFT;
+  camera.lookAt(0,GALAH_CAMERA_LIFT,0);
+  camera.updateMatrixWorld();
+  for (const x of [-GALAH_WIDTH, GALAH_WIDTH]) {
+   for (const z of [-GALAH_RUNWAY_END, GALAH_RUNWAY_END]) {
+    const point = new Vector3(x,1.6,z).project(camera);
+    assert.ok(Math.abs(point.x) < .94 && point.y > -.91 && point.y < .78);
+   }
+  }
+ }
+});
+
+test('Galah runners reverse quickly and the line guard can turn onto the sideline', async () => {
+ const sim = await MatchSimulation.create('grassfield', players, 'galah');
+ const runner = sim.actors[0], guard = sim.actors[3];
+ for (let seq = 1; seq <= 120; seq++) {
+  sim.input(3,{seq,x:seq <= 85 ? 1 : 0,z:seq <= 85 ? 0 : 1});
+  if (seq > 100) sim.input(0,{seq,x:seq <= 114 ? 1 : -1,z:0});
+  sim.step();
+ }
+ assert.ok(guard.group.position.x > GALAH_WIDTH-.32 && guard.group.position.z > 1.5);
+ assert.ok(runner.vx < -4);
+ assert.ok(Math.abs(runner.group.rotation.y + Math.PI/2) < .25);
 });
 
 test('Galah scores a complete circuit once and resumes the role swap after host restore', async () => {

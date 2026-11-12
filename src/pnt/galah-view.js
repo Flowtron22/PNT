@@ -1,5 +1,28 @@
 import * as THREE from 'three';
-import {GALAH_WIDTH, GALAH_END, GALAH_CROSSBARS, GALAH_RUN_LINE} from './galah-rules.js';
+import {GALAH_WIDTH, GALAH_END, GALAH_CROSSBARS, GALAH_RUN_LINE, GALAH_RUNWAY_END} from './galah-rules.js';
+import {matchView} from './camera-rig.js';
+
+export const GALAH_CAMERA_LIFT = .7;
+export const GALAH_CAMERA_ZOOM = 2.2;
+
+export function galahCameraView(aspect) {
+ const base = matchView(aspect);
+ const [x, y] = base.offset;
+ const horizontal = -x / base.distance, vertical = y / base.distance;
+ const tangent = Math.tan(base.fov * Math.PI / 360) / GALAH_CAMERA_ZOOM;
+ let distance = base.distance;
+ // Fit the runways and avatars at the tighter zoom, with room for the HUD.
+ for (const courtX of [-GALAH_WIDTH - .45, GALAH_WIDTH + .45]) {
+  for (const height of [-GALAH_CAMERA_LIFT, 1.8 - GALAH_CAMERA_LIFT]) {
+   const depth = horizontal * courtX - vertical * height;
+   const screenY = vertical * courtX + horizontal * height;
+   distance = Math.max(distance,
+    (GALAH_RUNWAY_END + .45) / (tangent * aspect * .94) - depth,
+    Math.abs(screenY) / (tangent * (screenY > 0 ? .78 : .91)) - depth);
+  }
+ }
+ return {distance, offset:[-distance * horizontal, distance * vertical, 0]};
+}
 
 export function createGalahCourt(parent, heightAt) {
  const root = new THREE.Group();
@@ -38,7 +61,8 @@ export function createGalahCourt(parent, heightAt) {
  line(-w,-end,w,-end,blue);
  for (const z of GALAH_CROSSBARS) line(-w,z,w,z,red);
  for (const z of [-GALAH_RUN_LINE, GALAH_RUN_LINE]) {
-  for (let dash = -5; dash <= 5; dash++) {
+  const dashes = Math.floor((w - .3) / .6);
+  for (let dash = -dashes; dash <= dashes; dash++) {
    const x = dash * .6;
    line(x-.15,z,x+.15,z,white,.08);
   }
