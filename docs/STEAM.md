@@ -26,8 +26,8 @@ PC and Steam Deck use the same Windows x64 package, with Proton on Deck.
 
 ## Private development playtest
 
-Current development package is **0.9.183** in
-`dist-steam/win64-dev-playtest-0.9.183`.
+Current development package is **0.9.184** in
+`dist-steam/win64-dev-playtest-0.9.184`.
 
 The windowed client opens at a fixed size. Toggle fullscreen in Settings → Video, or press F11 or Alt+Enter.
 
@@ -76,8 +76,8 @@ lines, and the line guard patrols the two red lines via the sidelines.
 The painted court has four boxes arranged in two lanes.
 Use movement controls to run or guard. Training and Couch Play fill the court
 with bots, and Solo Online uses Galah Panjang matchmaking.
-Players coast briefly after releasing movement. A tag plays Classic's capture
-smoke and caught animation.
+Players coast about two game units when releasing movement at full speed.
+A tag plays Classic's capture smoke and caught animation.
 
 **Find Public Match** searches Steam for a lobby with the same PNT build and
 game mode. It refreshes a quick search that finds no joinable room before

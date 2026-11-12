@@ -12,7 +12,7 @@ registerHooks({resolve(specifier, context, next) {
  return next(specifier, context);
 }});
 const {MatchSimulation} = await import('../simulation.mjs');
-const {galahCameraView, GALAH_CAMERA_LIFT, GALAH_CAMERA_ZOOM} = await import('../../src/pnt/galah-view.js');
+const {galahCameraView, GALAH_CAMERA_LIFT, GALAH_CAMERA_ZOOM, presentGalahCapture} = await import('../../src/pnt/galah-view.js');
 const players = Array.from({length:4}, (_, id) => ({sessionId:String(id), bot:false}));
 
 test('Galah guards stay on their own rails and cannot use classic tools', async () => {
@@ -86,11 +86,11 @@ test('Galah runners glide after releasing movement', async () => {
  const releaseX = runner.group.position.x;
  sim.input(0,{seq:31,x:0,z:0});
  for (let i = 0; i < 12; i++) sim.step();
- assert.ok(runner.vx > 1.5);
- assert.ok(runner.group.position.x > releaseX + .6);
- for (let i = 0; i < 90; i++) sim.step();
+ assert.ok(runner.vx > 2.8);
+ assert.ok(runner.group.position.x > releaseX + .75);
+ for (let i = 0; i < 145; i++) sim.step();
  assert.ok(runner.vx < .01);
- assert.ok(runner.group.position.x < releaseX + 1.3);
+ assert.ok(runner.group.position.x > releaseX + 1.7 && runner.group.position.x < releaseX + 2.2);
 });
 
 test('Galah scores a complete circuit once and resumes the role swap after host restore', async () => {
@@ -111,21 +111,23 @@ test('Galah scores a complete circuit once and resumes the role swap after host 
  assert.equal(sim.round.half, 0);
  assert.equal(sim.round.actors[2].caught, true);
  assert.equal(sim.round.actors[2].caughtTime, 0);
- assert.deepEqual(sim.events, [{id:1,type:'capture',actor:2,position:partner.group.position.toArray(),policePosition:lead.group.position.toArray()}]);
+ const capture = {position:partner.group.position.toArray(),guardPosition:lead.group.position.toArray()};
+ assert.deepEqual(sim.round.actors[2].galahCapture,capture);
  const checkpoint = JSON.parse(JSON.stringify(sim.snapshot()));
  const restored = await MatchSimulation.restore(checkpoint, players);
  assert.deepEqual(restored.snapshot(), checkpoint);
  const caughtGuest = localSnapshot(checkpoint, players, '2');
  assert.equal(caughtGuest.round.actors[0].caught, true);
- assert.equal(caughtGuest.events[0].actor, 0);
+ assert.deepEqual(caughtGuest.round.actors[0].galahCapture,capture);
  for (let i = 0; i < CAPTURE_LOCK_SECONDS * 60 - 1; i++) restored.step();
  assert.equal(restored.round.half, 0);
- assert.equal(restored.events.length, 1);
+ assert.deepEqual(restored.round.actors[2].galahCapture,capture);
  restored.step();
  assert.equal(restored.round.half, 1);
  assert.equal(restored.round.startRemaining, 3);
  assert.deepEqual(restored.round.actors.map(a => a.galahRole), ['leader','runner','guard','runner']);
  assert.equal(restored.round.actors[2].caught, false);
+ assert.equal(restored.round.actors[2].galahCapture, null);
  const guest = localSnapshot(restored.snapshot(), players, '3');
  assert.equal(guest.round.actors[0].team, 1);
  assert.equal(guest.round.actors[0].galahRole, 'runner');
@@ -141,4 +143,22 @@ test('Galah scores a complete circuit once and resumes the role swap after host 
  assert.equal(restored.round.phase, 'finished');
  assert.equal(restored.round.winnerTeam, 0);
  assert.deepEqual(restored.round.score,[1,0]);
+});
+
+test('Galah capture smoke plays once from each match snapshot, including after a rematch', async () => {
+ const avatar = {}, avatars = [avatar], effects = [], sounds = [];
+ const fx = {capture:(runner,guard)=>effects.push([runner.toArray(),guard.toArray()])};
+ const audio = {capture:id=>sounds.push(id)};
+ for (let match = 0; match < 2; match++) {
+  const sim = await MatchSimulation.create('grassfield', players, 'galah');
+  sim.actors[2].group.position.copy(sim.actors[1].group.position);
+  sim.step();
+  const snapshot = localSnapshot(JSON.parse(JSON.stringify(sim.snapshot())), players, '2');
+  const tagged = snapshot.round.actors[0];
+  presentGalahCapture(snapshot.round.profileId,avatar,tagged,avatars,fx,audio);
+  presentGalahCapture(snapshot.round.profileId,avatar,{...tagged},avatars,fx,audio);
+ }
+ assert.equal(effects.length,2);
+ assert.deepEqual(effects[0],effects[1]);
+ assert.deepEqual(sounds,[0,0]);
 });

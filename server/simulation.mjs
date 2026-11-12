@@ -154,11 +154,7 @@ export class MatchSimulation {
    const botEdge=this.round.mode==='tiletide'&&this.players[actor.id].bot&&state.effect!=='banana'?actor.group.position.clone():null;advanceActor(actor,state,x,z,dt,{map:this.map,grid:this.grid,tilt,speed:state.caught?0:movementSpeed(state.role,this.map,!this.players[actor.id].bot,flying),furniture:this.physics,respawn:actor.spawn});if(botEdge&&!tileStageContains(this.round,actor.group.position)){actor.group.position.copy(botEdge);actor.vx=actor.vz=actor.slideX=actor.speed=0;}
    wishes.push({id:actor.id,wants:input.interact===true});
   }
-  if(this.round.mode==='galah'){
-   finishGalahTick(this.round,this.actors,dt,(x,z)=>sampleGround(this.grid,x,z),
-    (id,position,guardPosition)=>this.event('capture',{actor:id,position:position.toArray(),policePosition:guardPosition.toArray()}));
-   return;
-  }
+  if(this.round.mode==='galah'){finishGalahTick(this.round,this.actors,dt,(x,z)=>sampleGround(this.grid,x,z));return;}
   this.physics?.step(dt,this.actors);
   for(const hazard of this.hazards)hazard.time-=dt;this.smokeCoverage();for(const hazard of this.hazards){if(hazard.type==='banana'&&hazard.time>0)for(const state of this.round.actors){const event=['diretide','tiletide','strikers','balloon','splash'].includes(this.round.mode),friendly=this.round.mode==='strikers'?state.team===this.round.actors[hazard.owner]?.team:state.id===hazard.owner;if((event?friendly:state.role===hazard.role)||state.caught||state.inSmoke||state.effectTime>0)continue;if(this.actors[state.id].group.position.distanceTo(hazard.position)<.8){this.effect(state,'banana',this.round.mode==='tiletide'?TILE_BANANA_SECONDS:this.round.mode==='balloon'?BALLOON_BANANA_SECONDS:event?EVENT_BANANA_SECONDS:2);hazard.time=0;break;}}}this.hazards=this.hazards.filter(h=>h.time>0);
   this.smokeCoverage();const cop=this.actors.find(a=>this.round.actors[a.id].role==='chaser');for(const state of this.round.actors.filter(a=>!['diretide','tiletide','strikers','balloon','splash'].includes(this.round.mode)&&a.role==='runner')){const p=cop.group.position,q=this.actors[state.id].group.position;if(detectThiefAt(this.round,cop.id,state.id,dt,p,q,this.sight(p,q))){cop.vx=cop.vz=cop.slideX=cop.speed=0;this.event('capture',{actor:state.id,position:q.toArray(),policePosition:p.toArray()});this.actors[state.id].mark=null;}}

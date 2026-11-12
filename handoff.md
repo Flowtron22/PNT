@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.183**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.184**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.183` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.184` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -51,6 +51,23 @@ online all use internal mode ID `balloon`, rules version **14**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.184** increases Galah Panjang's full-speed stopping glide
+to about two game units. Capture smoke and sound now play from the
+runner's active tag state once per match, including when the first
+rendered snapshot already contains the tag. The Steam mode ID is `galah`
+and its rules version is **4**.
+
+Syntax checks and all 394 automated tests passed (344 client, 50 multiplayer).
+Simulated Steam peers verified host transfer, a rematch, and the second
+match's capture state. The Windows smoke build showed the capture smoke
+and caught animation in two consecutive Training matches via Play Again,
+with the court checked in windowed and fullscreen layouts. The reported
+missing smoke also did not reproduce in a 0.9.183 Windows Training rematch.
+The Windows x64 Steam package was verified with
+App ID 480, runtime files, version labels, and current gameplay code.
+Live Steam multiplayer, physical controllers, and Steam Deck/Proton remain
+pending.
 
 Version **0.9.183** doubles the width of the Galah Panjang blue and red
 court markings. Players coast about one game unit from full speed after

@@ -239,7 +239,7 @@ test('Steam peers join the host, honor host controls and readiness, and receive 
     await waitFor(() => survivor.state.snapshot.poses[1].ack === 2);
 });
 
-test('Galah Panjang advertises its own Steam mode and keeps court roles through a host transfer', async t => {
+test('Galah Panjang preserves court roles through host transfer and publishes the next match’s capture', async t => {
   const connect = steamPeers(t);
   const profile = {gameMode:'galah', galahVersion:GALAH_VERSION};
   const host = await connect(1n, 'public', null, profile);
@@ -262,6 +262,30 @@ test('Galah Panjang advertises its own Steam mode and keeps court roles through 
   assert.equal(guest.state.snapshot.round.profileId, checkpoint.round.profileId);
   assert.deepEqual(guest.state.snapshot.round.actors.map(a => a.galahRole), checkpoint.round.actors.map(a => a.galahRole));
   assert.equal(guest.state.lobby.gameMode, 'galah');
+  const step = MatchSimulation.prototype.step;
+  t.mock.method(MatchSimulation.prototype, 'step', function (dt) {
+    if (this.round.profileId === checkpoint.round.profileId) {
+      this.round.startRemaining = 0;
+      this.round.remaining = dt;
+    } else if (this.round.mode === 'galah' && !this.round.startRemaining && !this.round.actors[0].caught) {
+      this.actors[0].group.position.copy(this.actors[1].group.position);
+    }
+    return step.call(this,dt);
+  });
+  await waitFor(() => guest.state.lobby.phase === 'finished');
+  guest.send('control', {action:'rematch'});
+  await waitFor(() => guest.state.lobby.phase === 'waiting');
+  const newcomer = await connect(4n, 'join', guest.state.lobby.code, profile);
+  guest.send('control', {action:'start'});
+  await waitFor(() => newcomer.state.lobby.match && guest.state.lobby.match);
+  const rematch = newcomer.state.lobby.match.round;
+  assert.notEqual(rematch.profileId, checkpoint.round.profileId);
+  assert.ok(rematch.actors.every(actor => actor.galahCapture === null));
+  newcomer.send('ready');
+  guest.send('ready');
+  await waitFor(() => newcomer.state.snapshot?.round.actors[0].galahCapture);
+  assert.equal(newcomer.state.snapshot.round.profileId, rematch.profileId);
+  assert.equal(newcomer.state.snapshot.round.actors[0].caught, true);
 });
 
 test('Public matchmaking and room-code guests stay in a public match after the host leaves', async t => {

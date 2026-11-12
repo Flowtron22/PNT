@@ -1,6 +1,6 @@
 import {CAPTURE_LOCK_SECONDS} from './capture-timing.js';
 
-export const GALAH_VERSION = 3;
+export const GALAH_VERSION = 4;
 export const GALAH_HALF_SECONDS = 45;
 export const GALAH_WIDTH = 5.1;
 export const GALAH_END = 7.6;
@@ -30,6 +30,7 @@ function prepareHalf(round, half) {
   actor.galahStatus = actor.galahRole === 'runner' ? 'outbound' : null;
   actor.caught = false;
   actor.caughtTime = 0;
+  actor.galahCapture = null;
  }
 }
 
@@ -68,7 +69,7 @@ export function beginGalahTick(round, dt) {
  }
 }
 
-export function finishGalahTick(round, actors, dt, heightAt, onCapture) {
+export function finishGalahTick(round, actors, dt, heightAt) {
  const guards = round.actors.filter(actor => actor.galahRole !== 'runner');
  const runners = round.actors.filter(actor => actor.galahRole === 'runner');
  for (const runner of runners) if (runner.caught) runner.caughtTime += dt;
@@ -82,8 +83,11 @@ export function finishGalahTick(round, actors, dt, heightAt, onCapture) {
    runner.galahStatus = 'tagged';
    runner.caught = true;
    runner.caughtTime = 0;
+   runner.galahCapture = {
+    position:point.toArray(),
+    guardPosition:actors[tagger.id].group.position.toArray()
+   };
    Object.assign(actors[runner.id], {vx:0, vz:0, slideX:0, speed:0});
-   onCapture(runner.id, point, actors[tagger.id].group.position);
   } else if (runner.galahStatus === 'outbound' && point.z >= GALAH_RUN_LINE) runner.galahStatus = 'returning';
   else if (runner.galahStatus === 'returning' && point.z <= -GALAH_RUN_LINE) {
    runner.galahStatus = 'scored';

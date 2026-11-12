@@ -1,9 +1,20 @@
 import * as THREE from 'three';
 import {GALAH_WIDTH, GALAH_END, GALAH_CROSSBARS, GALAH_RUN_LINE, GALAH_RUNWAY_END} from './galah-rules.js';
 import {matchView} from './camera-rig.js';
+import {CAPTURE_SMOKE_SECONDS} from './capture-timing.js';
 
 export const GALAH_CAMERA_LIFT = .7;
 export const GALAH_CAMERA_ZOOM = 2.2;
+
+// The active tag travels with the caught pose, including the first snapshot
+// after loading a match. Each avatar plays it once for that match.
+export function presentGalahCapture(roundId, actor, state, actors, fx, audio) {
+ if (!state.galahCapture || state.caughtTime >= CAPTURE_SMOKE_SECONDS || actor.galahCaptureRound === roundId) return;
+ actor.galahCaptureRound = roundId;
+ const {position, guardPosition} = state.galahCapture;
+ fx.capture(new THREE.Vector3(...position), new THREE.Vector3(...guardPosition));
+ audio.capture(state.id, actors);
+}
 
 export function galahCameraView(aspect) {
  const base = matchView(aspect);
