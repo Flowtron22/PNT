@@ -12,8 +12,8 @@ export function movementSpeed(role,map,human=true,flying=false){return (role==='
 // Map-local movement shared by authoritative server, practice and client prediction.
 export function advanceActor(actor,state,dx,dz,dt,{grid,map,tilt=0,speed,furniture=null,respawn=null}){
  if(state.galahRole){
-  if(state.galahRole!=='runner')speed*=.84;
-  else if(!galahRunnerActive(state))speed=0;
+  if(state.galahStatus==='timeout'||state.galahRole==='runner'&&!galahRunnerActive(state))speed=0;
+  else if(state.galahRole!=='runner')speed*=.84;
  }
  if(map==='grassfield'||map==='slipperystriker')speed*=state.team===0||state.team===1?strikerSpeedMultiplier(state):pattySpeedMultiplier(state.candy);
  if(state.ink!==undefined)speed*=state.submerged?1.35:state.diving?.55:1;

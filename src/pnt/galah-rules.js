@@ -1,36 +1,48 @@
 import {CAPTURE_LOCK_SECONDS} from './capture-timing.js';
 
-export const GALAH_VERSION = 5;
-export const GALAH_HALF_SECONDS = 45;
+export const GALAH_VERSION = 6;
+export const GALAH_ROUNDS = 3;
+export const GALAH_TURN_SECONDS = 45;
+export const GALAH_OVERTIME_SECONDS = 20;
 export const GALAH_WIDTH = 6.2;
 export const GALAH_END = GALAH_WIDTH;
 export const GALAH_CROSSBARS = [0, GALAH_END];
 export const GALAH_ROLE_LABELS = {runner:'Runner', leader:'Lead guard', guard:'Line guard'};
-export const GALAH_STATUS_LABELS = {outbound:'Cross the court', returning:'Return home', tagged:'Tagged', scored:'Scored', timeout:'Time up'};
-export const GALAH_GUIDE = 'Runners cross the far line and return home to score. Guards tag by touch. The lead guard uses the blue front and center lines. The line guard uses the red crossbars and connects via the sidelines. Swap roles after each team’s turn.';
+export const GALAH_STATUS_LABELS = {outbound:'Cross the court', returning:'Return home', tagged:'Tagged · retrying', scored:'Point scored · retrying', timeout:'Time up'};
+export const GALAH_GUIDE = 'Both teams attack for 45 seconds in each of three rounds. Cross the far line and return home to score, then run again. Tags send runners back to the start. The lead guard patrols the blue lines and the line guard patrols the red lines via the sidelines. Guard roles rotate each round. A tie gives both teams one 20-second overtime attack.';
 
 export const GALAH_RUN_LINE = GALAH_END + .52;
 export const GALAH_RUNWAY_END = GALAH_END + 1.15;
 const RAIL_MARGIN = .32;
 const TAG_RANGE = .8;
+const SCORE_RETRY_SECONDS = .65;
 const laneCenter = id => (id < 2 ? -.5 : .5) * GALAH_WIDTH;
+export const galahRoundNumber = turn => Math.floor(turn / 2) + 1;
+export const galahAttackingTeam = turn => (turn + galahRoundNumber(turn) - 1) % 2;
 
 export function createGalahRound(base) {
  const actors = base.actors.map(actor => ({...actor, role:'runner', team:actor.id % 2, circuits:0}));
- const round = {...base, mode:'galah', playerRole:'runner', actors, caches:[], totalMoney:0, score:[0,0], winnerTeam:null, elapsed:0};
- prepareHalf(round, 0);
+ const round = {...base, mode:'galah', playerRole:'runner', actors, caches:[], totalMoney:0, score:[0,0], winnerTeam:null, elapsed:0, galahCaptureId:0};
+ prepareTurn(round, 0);
  return round;
 }
 
-function prepareHalf(round, half) {
- round.half = half;
- round.remaining = GALAH_HALF_SECONDS;
+function resetRunnerState(actor, status) {
+ actor.galahStatus = status;
+ actor.galahRetry = 0;
+ actor.caught = false;
+ actor.caughtTime = 0;
+ actor.galahCapture = null;
+}
+
+function prepareTurn(round, turn) {
+ round.turn = turn;
+ round.remaining = turn < GALAH_ROUNDS * 2 ? GALAH_TURN_SECONDS : GALAH_OVERTIME_SECONDS;
+ const attacking = galahAttackingTeam(turn);
+ const rotated = galahRoundNumber(turn) % 2 === 0;
  for (const actor of round.actors) {
-  actor.galahRole = actor.team === half ? 'runner' : actor.id < 2 ? 'leader' : 'guard';
-  actor.galahStatus = actor.galahRole === 'runner' ? 'outbound' : null;
-  actor.caught = false;
-  actor.caughtTime = 0;
-  actor.galahCapture = null;
+  actor.galahRole = actor.team === attacking ? 'runner' : (actor.id >= 2) === rotated ? 'leader' : 'guard';
+  resetRunnerState(actor, actor.galahRole === 'runner' ? 'outbound' : null);
  }
 }
 
@@ -72,40 +84,57 @@ export function beginGalahTick(round, dt) {
 export function finishGalahTick(round, actors, dt, heightAt) {
  const guards = round.actors.filter(actor => actor.galahRole !== 'runner');
  const runners = round.actors.filter(actor => actor.galahRole === 'runner');
- for (const runner of runners) if (runner.caught) runner.caughtTime += dt;
- for (const runner of runners.filter(galahRunnerActive)) {
-  const point = actors[runner.id].group.position;
+ const active = round.remaining > 0;
+ for (const runner of runners) {
+  const actor = actors[runner.id];
+  if (runner.caught) runner.caughtTime += dt;
+  if (runner.galahRetry > 0) runner.galahRetry = Math.max(0, runner.galahRetry - dt);
+  if (!active) continue;
+  if (!galahRunnerActive(runner)) {
+   if (runner.galahRetry <= 1e-8 && round.remaining > dt + 1e-8) {
+    resetRunnerState(runner, 'outbound');
+    placeGalahPlayer(actor, runner, heightAt);
+   }
+   continue;
+  }
+  const point = actor.group.position;
   const tagger = guards.find(guard => {
    const other = actors[guard.id].group.position;
    return Math.hypot(point.x - other.x, point.z - other.z) <= TAG_RANGE;
   });
   if (tagger) {
    runner.galahStatus = 'tagged';
+   runner.galahRetry = CAPTURE_LOCK_SECONDS;
    runner.caught = true;
    runner.caughtTime = 0;
    runner.galahCapture = {
+    id:++round.galahCaptureId,
     position:point.toArray(),
     guardPosition:actors[tagger.id].group.position.toArray()
    };
-   Object.assign(actors[runner.id], {vx:0, vz:0, slideX:0, speed:0});
+   Object.assign(actor, {vx:0, vz:0, slideX:0, speed:0});
   } else if (runner.galahStatus === 'outbound' && point.z >= GALAH_RUN_LINE) runner.galahStatus = 'returning';
   else if (runner.galahStatus === 'returning' && point.z <= -GALAH_RUN_LINE) {
    runner.galahStatus = 'scored';
+   runner.galahRetry = SCORE_RETRY_SECONDS;
+   Object.assign(actor, {vx:0, vz:0, slideX:0, speed:0});
    runner.circuits++;
    round.score[runner.team]++;
   }
  }
- round.elapsed += dt;
- round.remaining = Math.max(0, round.remaining - dt);
- if (round.remaining > 1e-8 && runners.some(galahRunnerActive)) return;
- for (const runner of runners.filter(galahRunnerActive)) runner.galahStatus = 'timeout';
+ round.elapsed += Math.min(dt, round.remaining);
+ const remaining = round.remaining - dt;
+ round.remaining = remaining < 1e-8 ? 0 : remaining;
+ if (round.remaining > 0) return;
+ for (const actor of round.actors) if (!actor.caught) actor.galahStatus = 'timeout';
  if (runners.some(runner => runner.caught && runner.caughtTime < CAPTURE_LOCK_SECONDS - 1e-8)) return;
- if (round.half === 0) {
-  prepareHalf(round, 1);
+ const [blue, red] = round.score;
+ const nextTurn = round.turn + 1, regulationTurns = GALAH_ROUNDS * 2;
+ if (nextTurn < regulationTurns || (nextTurn === regulationTurns && blue === red) || nextTurn === regulationTurns + 1) {
+  prepareTurn(round, nextTurn);
   round.startRemaining = 3;
   for (const actor of round.actors) placeGalahPlayer(actors[actor.id], actor, heightAt);
  } else {
-  const [blue, red] = round.score;
   round.phase = 'finished';
   round.winnerTeam = blue === red ? null : blue > red ? 0 : 1;
   round.reason = blue === red ? 'draw' : 'circuits';

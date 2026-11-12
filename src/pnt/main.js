@@ -1,5 +1,5 @@
 import {createSplashRound,createSplashArenaData,stepSplash,splashAction,splashFire,splashBotInput,SPLASH_SPAWNS,splashCoverage,SPLASH_COLORS,SPLASH_INK_CAPACITY} from './splash-rules.js';
-import {createGalahRound,placeGalahPlayer,beginGalahTick,finishGalahTick,galahBotInput,GALAH_GUIDE,GALAH_ROLE_LABELS,GALAH_STATUS_LABELS} from './galah-rules.js';
+import {createGalahRound,placeGalahPlayer,beginGalahTick,finishGalahTick,galahBotInput,galahAttackingTeam,galahRoundNumber,GALAH_ROUNDS,GALAH_GUIDE,GALAH_ROLE_LABELS,GALAH_STATUS_LABELS} from './galah-rules.js';
 import {createGalahCourt,presentGalahCapture,galahCameraView,GALAH_CAMERA_LIFT,GALAH_CAMERA_ZOOM} from './galah-view.js';
 import {createSplashView} from './splash-view.js';
 import {applyIceBlockCollision} from './collision.js';
@@ -306,14 +306,14 @@ function receiveOnlineTool(event,profileId){
 }
 function receiveOnlineSnapshot(snapshot,initial=false){
  onlineSnapshot=snapshot;if(!online)return;if(!round){if(!onlineLoading)void beginOnlineMatch(snapshot);return;}if(round.profileId!==snapshot.round.profileId)return;
- const swapped=round.mode==='galah'&&round.half!==snapshot.round.half;
+ const swapped=round.mode==='galah'&&round.turn!==snapshot.round.turn;
  if(swapped){onlineFrames=new SnapshotBuffer();if(avatars[0]?.prediction)avatars[0].prediction.pending.length=0;}
  const wasCaught=round.actors.map(actor=>actor.caught),presentation={endStarted:round.endStarted,endElapsed:round.endElapsed,resultsShown:round.resultsShown,profileRecorded:round.profileRecorded,fallOutro:round.fallOutro};round={...snapshot.round,...presentation};role=round.playerRole;
  if(!initial)syncCacheCelebrations();
  if(!initial&&round.mode!=='galah')for(let i=0;i<round.actors.length;i++)if(wasCaught[i]&&!round.actors[i].caught&&avatars[i])gameFX.rescue(avatars[i].group.position);
  onlineFrames.push(snapshot);
  for(const pose of snapshot.poses){const actor=avatars[pose.id];if(!actor)continue;
-  if(pose.id===0&&snapshot.inputFrames){if(initial||!actor.prediction)actor.prediction=new LocalPrediction(actor,pose,round.actors[0],(snapshot.worldTime??snapshot.time),{grid,map:mapData.id});else actor.prediction.reconcile(pose,round.actors[0],(snapshot.worldTime??snapshot.time));}
+  if(pose.id===0&&snapshot.inputFrames){if(initial||!actor.prediction)actor.prediction=new LocalPrediction(actor,pose,round.actors[0],(snapshot.worldTime??snapshot.time),{grid,map:mapData.id});else{if(round.mode==='galah'&&actor.prediction.warp!==(pose.warp||0))actor.prediction.pending.length=0;actor.prediction.reconcile(pose,round.actors[0],(snapshot.worldTime??snapshot.time));}}
   else if(initial)applyPose(actor,pose);
   // Compatibility with a server that has not yet received the input-frame update.
   if(pose.id===0&&!snapshot.inputFrames){actor.netTarget=new THREE.Vector3(...pose.position);if(!initial)actor.group.position.lerp(actor.netTarget,.65);actor.vx=pose.vx;actor.vz=pose.vz;actor.slideX=pose.slideX;actor.velocity=pose.velocity;actor.grounded=pose.grounded;actor.speed=pose.speed;}
@@ -794,9 +794,10 @@ function updateGalahHud(){
  const clock=round.startRemaining>0?'READY '+Math.ceil(round.startRemaining):Math.ceil(round.remaining)+'s';
  const score='<span class="strikers-score red"><small>RED</small><b>'+round.score[1]+'</b></span><span class="strikers-clock">'+clock+'</span><span class="strikers-score blue"><small>BLUE</small><b>'+round.score[0]+'</b></span>';
  if(timer.innerHTML!==score)timer.innerHTML=score;
- const status=$('#galah-status'), attacking=STRIKER_TEAMS[round.half].name+' RUNS';
- const personal=state.galahRole==='runner'?GALAH_STATUS_LABELS[state.galahStatus]:state.galahRole==='leader'?'Patrol the blue lines':'Patrol the red lines via the sidelines';
- status.textContent='HALF '+(round.half+1)+' / 2 · '+attacking+(room?.mode==='couch'?'':' · '+personal.toUpperCase());
+ const status=$('#galah-status'), attacking=STRIKER_TEAMS[galahAttackingTeam(round.turn)].name+' RUNS';
+ const number=galahRoundNumber(round.turn), stage=number>GALAH_ROUNDS?'OVERTIME':'ROUND '+number+' / '+GALAH_ROUNDS;
+ const personal=round.remaining===0?'Time up':GALAH_STATUS_LABELS[state.galahStatus]||(state.galahRole==='leader'?'Patrol the blue lines':'Patrol the red lines via the sidelines');
+ status.textContent=stage+' · '+attacking+(room?.mode==='couch'?'':' · '+personal.toUpperCase());
  if(room?.mode==='couch')updateCouchHud($('#couch-hud'),room,round,bindings);
 }
 function updateTileHud(){

@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.186**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.187**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.186` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.187` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -51,6 +51,23 @@ online all use internal mode ID `balloon`, rules version **14**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.187** gives Galah Panjang three rounds with one 45-second attack
+per team in each round. The first attacker alternates each round and teammates
+swap lead-guard and line-guard assignments. Runners retry after a tag or a
+scored circuit, and the score carries across rounds. A tie adds one 20-second
+attack per team, with a draw if the tie remains. Regulation is 4:30 of active
+play and overtime adds 40 seconds. Galah rules version is **6**.
+
+Syntax checks and all 396 automated tests passed (345 client, 51 multiplayer).
+Tests covered all six regulation attacks, both overtime attacks, retries,
+score accumulation, guard rotation, repeated capture effects, and restoring
+a tag after host migration. In Windows Steam Solo Online with three bots,
+capture smoke rendered again after a retry, the first side swap preserved
+the score, and the HUD fit in fullscreen. Couch Play started with a keyboard,
+an emulated controller, and two bots. The package was verified with
+App ID 480, runtime files, version labels, and current match rules.
+Remote Steam guests, physical controllers, and Steam Deck/Proton remain pending.
 
 Version **0.9.186** makes each Galah Panjang box 6.2 × 6.2 game units.
 The 12.4 × 12.4 court keeps nearly the same playable area as the previous

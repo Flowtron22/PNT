@@ -26,8 +26,8 @@ PC and Steam Deck use the same Windows x64 package, with Proton on Deck.
 
 ## Private development playtest
 
-Current development package is **0.9.186** in
-`dist-steam/win64-dev-playtest-0.9.186`.
+Current development package is **0.9.187** in
+`dist-steam/win64-dev-playtest-0.9.187`.
 
 The windowed client opens at a fixed size. Toggle fullscreen in Settings → Video, or press F11 or Alt+Enter.
 
@@ -69,10 +69,15 @@ Steam online use the same four-player free-for-all rules and fixed Hammer/Banana
 kit. See the [mode notes](BALLOON_BASH.md).
 
 For **Galah Panjang**, use **Events → Galah Panjang**. Seats 1 and 3 play Blue,
-and seats 2 and 4 play Red. Each team gets one 45-second turn to run. Each runner
-who crosses the far dashed line and returns over the home dashed line scores one
-point. Guards tag on contact. The lead guard uses the blue front and center
-lines, and the line guard patrols the two red lines via the sidelines.
+and seats 2 and 4 play Red. Each team gets a 45-second attack in each of three
+rounds. The team that attacks first alternates each round. A runner scores one
+point by crossing the far dashed line and returning over the home dashed line.
+Runners return to the start after scoring or being tagged, and can try again
+while the clock is running. Guards tag on contact. The lead guard uses the
+blue front and center lines, and the line guard patrols the two red lines via
+the sidelines. Teammates swap guard assignments between rounds.
+Points carry across all three rounds. If tied, both teams get one 20-second
+overtime attack. Equal scores after both overtime attacks result in a draw.
 The painted court has four 6.2 × 6.2 game-unit boxes arranged in two lanes.
 Use movement controls to run or guard. Training and Couch Play fill the court
 with bots, and Solo Online uses Galah Panjang matchmaking.

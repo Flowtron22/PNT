@@ -7,10 +7,12 @@ export const GALAH_CAMERA_LIFT = .7;
 export const GALAH_CAMERA_ZOOM = 2.2;
 
 // The active tag travels with the caught pose, including the first snapshot
-// after loading a match. Each avatar plays it once for that match.
+// after loading a match. Retries can produce several tags for the same avatar.
 export function presentGalahCapture(roundId, actor, state, actors, fx, audio) {
- if (!state.galahCapture || state.caughtTime >= CAPTURE_SMOKE_SECONDS || actor.galahCaptureRound === roundId) return;
- actor.galahCaptureRound = roundId;
+ if (!state.galahCapture || state.caughtTime >= CAPTURE_SMOKE_SECONDS) return;
+ const key = roundId + ':' + state.galahCapture.id;
+ if (actor.galahCaptureKey === key) return;
+ actor.galahCaptureKey = key;
  const {position, guardPosition} = state.galahCapture;
  fx.capture(new THREE.Vector3(...position), new THREE.Vector3(...guardPosition));
  audio.capture(state.id, actors);

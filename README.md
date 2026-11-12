@@ -16,10 +16,10 @@ supported. See [controls and rules](docs/SPLASH_AREA.md).
 team takes a turn running across the four-box Grassfield court and back.
 Available in Training, Couch Play, and Steam Solo Online.
 
-The current Steam dev-playtest is **0.9.186**. Build and share the complete
-`dist-steam/win64-dev-playtest-0.9.186` folder, including `steam_appid.txt`.
-This update gives Galah Panjang four square boxes and about five times the
-previous stopping distance on open ground.
+The current Steam dev-playtest is **0.9.187**. Build and share the complete
+`dist-steam/win64-dev-playtest-0.9.187` folder, including `steam_appid.txt`.
+This update gives Galah Panjang three rounds of equal attack time, runner
+retries, rotating guard assignments, and paired overtime for ties.
 See the [release summary](handoff.md#current-release-summary).
 
 Developed by Todak Studios, with Classic, Patty Prowl, Tile Tumble, Slippery

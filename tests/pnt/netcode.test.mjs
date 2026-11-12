@@ -37,6 +37,8 @@ test('remote interpolation remains monotonic and smooth with jittery 20Hz arriva
 });
 test('remote turns take the short arc, teleports snap and extrapolation stops at 100ms',()=>{
  const a={...pose(),angle:179*Math.PI/180},b={...pose(1),angle:-179*Math.PI/180};assert.ok(Math.abs(Math.abs(interpolatePose(a,b,.5).angle)-Math.PI)<1e-8);assert.deepEqual(interpolatePose(a,pose(20),.5).position,[20,0,0]);
+ const respawn={...b,warp:1,speed:0};
+ assert.deepEqual(interpolatePose({...a,speed:1},respawn,.5,.1),respawn);
  const buffer=new SnapshotBuffer();buffer.push(snapshot(0,0));buffer.push(snapshot(.05,3));let pair;for(let i=0;i<180;i++)pair=buffer.advance(1/60);assert.ok(pair.extra<=.100000001);assert.ok(interpolatePose(pair.a.poses[0],pair.b.poses[0],pair.alpha,pair.extra).position[0]<=.6000001);
 });
 

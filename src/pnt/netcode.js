@@ -28,8 +28,8 @@ export class SnapshotBuffer {
  advance(dt){if(!this.frames.length)return null;const latest=this.frames.at(-1),target=latest.time-this.delay,error=target-this.time;this.time+=Math.min(.1,Math.max(0,dt))*(1+Math.max(-.05,Math.min(.05,error*.5)));this.time=Math.min(this.time,latest.time+.1);while(this.frames.length>2&&this.frames[1].time<this.time)this.frames.shift();const a=this.frames[0],b=this.frames.find(frame=>frame.time>=this.time)||latest;return {a,b,alpha:a===b?1:Math.max(0,Math.min(1,(this.time-a.time)/(b.time-a.time))),extra:Math.max(0,Math.min(.1,this.time-b.time))};}
 }
 export function interpolatePose(a,b,alpha,extra=0){
- const teleport=Math.hypot(...a.position.map((value,i)=>b.position[i]-value))>2.5;
+ const teleport=(a.warp||0)!==(b.warp||0)||Math.hypot(...a.position.map((value,i)=>b.position[i]-value))>2.5;
  const position=teleport?[...b.position]:a.position.map((value,i)=>value+(b.position[i]-value)*alpha);
  if(!teleport&&extra){position[0]+=(b.vx+(b.slideX||0))*extra;position[2]+=b.vz*extra;}
- return {...b,position,angle:teleport?b.angle:a.angle+angleDelta(a.angle,b.angle)*alpha,speed:a.speed+(b.speed-a.speed)*alpha};
+ return {...b,position,angle:teleport?b.angle:a.angle+angleDelta(a.angle,b.angle)*alpha,speed:teleport?b.speed:a.speed+(b.speed-a.speed)*alpha};
 }
