@@ -16,8 +16,8 @@ supported. See [controls and rules](docs/SPLASH_AREA.md).
 team takes a turn running across the four-box Grassfield court and back.
 Available in Training, Couch Play, and Steam Solo Online.
 
-The current Steam dev-playtest is **0.9.184**. Build and share the complete
-`dist-steam/win64-dev-playtest-0.9.184` folder, including `steam_appid.txt`.
+The current Steam dev-playtest is **0.9.185**. Build and share the complete
+`dist-steam/win64-dev-playtest-0.9.185` folder, including `steam_appid.txt`.
 
 Developed by Todak Studios, with Classic, Patty Prowl, Tile Tumble, Slippery
 Shoots and **Balloon Bash**. Balloon Bash is a 1v1v1v1 last-player-standing

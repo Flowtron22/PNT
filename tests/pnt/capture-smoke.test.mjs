@@ -51,3 +51,22 @@ test('capture effects recycle a bounded smoke pool and clear cancels deferred ce
  assert.ok(smoke.children.every(p=>!p.visible));assert.equal(scene.getObjectByName('celebration-vfx').visible,false);
  fx.capture(new THREE.Vector3());assert.equal(smoke.children[0].children[0].geometry,geometry);fx.clear();
 });
+
+test('a new Galah match replaces capture smoke geometry and materials',()=>{
+ const scene=new THREE.Group(),fx=createGameFX(scene);
+ fx.capture(new THREE.Vector3());
+ const previous=scene.getObjectByName('capture-smoke'),puff=previous.children[0].children[0];
+ let disposals=0;
+ puff.geometry.addEventListener('dispose',()=>disposals++);
+ puff.material.addEventListener('dispose',()=>disposals++);
+ fx.clear();
+ fx.resetCaptureSmoke();
+ const smoke=scene.getObjectByName('capture-smoke');
+ assert.equal(previous.parent,null);
+ assert.equal(disposals,2);
+ assert.equal(scene.children.filter(group=>group.name==='capture-smoke').length,1);
+ fx.capture(new THREE.Vector3(2,0,3));
+ const next=smoke.children.find(cloud=>cloud.visible).children[0];
+ assert.notEqual(next.geometry,puff.geometry);
+ assert.notEqual(next.material,puff.material);
+});

@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.184**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.185**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.184` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.185` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -51,6 +51,19 @@ online all use internal mode ID `balloon`, rules version **14**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.185** recreates the Galah Panjang capture-smoke geometry,
+materials, and meshes at each match start. In 0.9.184, live Steam Solo Online
+→ Play Again reproduced a missing cloud in the rendered rematch frame despite
+an active smoke effect and the caught animation. In 0.9.185, the same path
+rendered the smoke in both matches. The check used one signed-in Steam host
+and three bots, and compared the rendered capture frames. Galah rules
+version **4** remains in use.
+
+Syntax checks and all 395 automated tests passed (345 client, 50 multiplayer).
+The Windows x64 Steam package was verified with App ID 480, runtime files,
+version labels, and current capture effects code. Remote Steam guests,
+physical controllers, and Steam Deck/Proton remain pending.
 
 Version **0.9.184** increases Galah Panjang's full-speed stopping glide
 to about two game units. Capture smoke and sound now play from the

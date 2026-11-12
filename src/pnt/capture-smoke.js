@@ -6,10 +6,11 @@ export {CAPTURE_SMOKE_SECONDS,CAPTURE_CELEBRATION_DELAY} from './capture-timing.
 export class CaptureSmokeVFX{
  constructor(root,geometry){
   this.group=new THREE.Group();this.group.name='capture-smoke';root.add(this.group);this.cursor=0;
-  const materials=[0xe8e9ec,0xd9dce2,0xc5cbd4,0xf4f4f5].map(color=>new THREE.MeshLambertMaterial({color,flatShading:false}));
+  this.materials=[0xe8e9ec,0xd9dce2,0xc5cbd4,0xf4f4f5].map(color=>new THREE.MeshLambertMaterial({color,flatShading:false}));
+  this.geometry=geometry.clone();
   this.items=Array.from({length:4},()=>{
    const cloud=new THREE.Group();cloud.visible=false;this.group.add(cloud);
-   for(let i=0;i<16;i++)cloud.add(new THREE.Mesh(geometry,materials[i%4]));
+   for(let i=0;i<16;i++)cloud.add(new THREE.Mesh(this.geometry,this.materials[i%4]));
    return {cloud,life:0,radius:1,phase:0,handed:1,rotation:new THREE.Euler(),puffs:cloud.children.map(mesh=>({mesh,position:new THREE.Vector3(),scale:new THREE.Vector3(),rotation:new THREE.Euler()}))};
   });
  }
@@ -48,4 +49,9 @@ export class CaptureSmokeVFX{
   }
  }
  clear(){for(const item of this.items){item.life=0;item.cloud.visible=false;}}
+ dispose(){
+  this.group.removeFromParent();
+  this.geometry.dispose();
+  for(const material of this.materials)material.dispose();
+ }
 }
