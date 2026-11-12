@@ -18,8 +18,9 @@ Available in Training, Couch Play, and Steam Solo Online.
 
 The current Steam dev-playtest is **0.9.187**. Build and share the complete
 `dist-steam/win64-dev-playtest-0.9.187` folder, including `steam_appid.txt`.
-This update gives Galah Panjang three rounds of equal attack time, runner
-retries, rotating guard assignments, and paired overtime for ties.
+Galah Panjang now runs for 4½ minutes of active play across three rounds.
+Each team attacks for 45 seconds per round, runners can retry, and teammates
+rotate guard assignments. A tie gives each team one 20-second overtime attack.
 See the [release summary](handoff.md#current-release-summary).
 
 Developed by Todak Studios, with Classic, Patty Prowl, Tile Tumble, Slippery
