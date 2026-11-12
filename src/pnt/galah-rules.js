@@ -1,4 +1,6 @@
-export const GALAH_VERSION = 2;
+import {CAPTURE_LOCK_SECONDS} from './capture-timing.js';
+
+export const GALAH_VERSION = 3;
 export const GALAH_HALF_SECONDS = 45;
 export const GALAH_WIDTH = 5.1;
 export const GALAH_END = 7.6;
@@ -26,6 +28,8 @@ function prepareHalf(round, half) {
  for (const actor of round.actors) {
   actor.galahRole = actor.team === half ? 'runner' : actor.id < 2 ? 'leader' : 'guard';
   actor.galahStatus = actor.galahRole === 'runner' ? 'outbound' : null;
+  actor.caught = false;
+  actor.caughtTime = 0;
  }
 }
 
@@ -64,17 +68,23 @@ export function beginGalahTick(round, dt) {
  }
 }
 
-export function finishGalahTick(round, actors, dt, heightAt) {
+export function finishGalahTick(round, actors, dt, heightAt, onCapture) {
  const guards = round.actors.filter(actor => actor.galahRole !== 'runner');
  const runners = round.actors.filter(actor => actor.galahRole === 'runner');
+ for (const runner of runners) if (runner.caught) runner.caughtTime += dt;
  for (const runner of runners.filter(galahRunnerActive)) {
   const point = actors[runner.id].group.position;
-  const tagged = guards.some(guard => {
+  const tagger = guards.find(guard => {
    const other = actors[guard.id].group.position;
    return Math.hypot(point.x - other.x, point.z - other.z) <= TAG_RANGE;
   });
-  if (tagged) runner.galahStatus = 'tagged';
-  else if (runner.galahStatus === 'outbound' && point.z >= GALAH_RUN_LINE) runner.galahStatus = 'returning';
+  if (tagger) {
+   runner.galahStatus = 'tagged';
+   runner.caught = true;
+   runner.caughtTime = 0;
+   Object.assign(actors[runner.id], {vx:0, vz:0, slideX:0, speed:0});
+   onCapture(runner.id, point, actors[tagger.id].group.position);
+  } else if (runner.galahStatus === 'outbound' && point.z >= GALAH_RUN_LINE) runner.galahStatus = 'returning';
   else if (runner.galahStatus === 'returning' && point.z <= -GALAH_RUN_LINE) {
    runner.galahStatus = 'scored';
    runner.circuits++;
@@ -85,6 +95,7 @@ export function finishGalahTick(round, actors, dt, heightAt) {
  round.remaining = Math.max(0, round.remaining - dt);
  if (round.remaining > 1e-8 && runners.some(galahRunnerActive)) return;
  for (const runner of runners.filter(galahRunnerActive)) runner.galahStatus = 'timeout';
+ if (runners.some(runner => runner.caught && runner.caughtTime < CAPTURE_LOCK_SECONDS - 1e-8)) return;
  if (round.half === 0) {
   prepareHalf(round, 1);
   round.startRemaining = 3;

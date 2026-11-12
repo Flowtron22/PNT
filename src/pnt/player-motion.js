@@ -22,7 +22,7 @@ export function advanceActor(actor,state,dx,dz,dt,{grid,map,tilt=0,speed,furnitu
  if(actor.wasFlying&&!flying){const landing=actor.flightLanding||nearestLanding(grid,p.x,p.z);if(landing){p.x=landing.x;p.z=landing.z;p.y=Math.max(p.y,landing.y);actor.vx=actor.vz=actor.slideX=0;}else if(respawn)p.copy(typeof respawn==='function'?respawn():respawn);actor.flightLanding=null;previous.copy(p);}
  if(flying&&!actor.wasFlying){actor.flightFloor=p.y;actor.flightLanding=null;}actor.wasFlying=flying;
  if(state.effectTime>0&&['stunned','airStunned','kick'].includes(state.effect))actor.vx=actor.vz=actor.slideX=0;
- environmentVelocity(actor,dx,dz,speed,dt,{map,grounded:actor.grounded,flying,locked,tilt,response:state.galahRole?2.5:1});const nx=p.x+(actor.vx+(actor.slideX||0))*dt,nz=p.z+actor.vz*dt;
+ environmentVelocity(actor,dx,dz,speed,dt,{map,grounded:actor.grounded,flying,locked,tilt,acceleration:state.galahRole?40:16,braking:state.galahRole?5:22});const nx=p.x+(actor.vx+(actor.slideX||0))*dt,nz=p.z+actor.vz*dt;
  const at=(x,z)=>sampleGround(grid,x,z),ground=at(p.x,p.z),walkY=Number.isFinite(ground)?ground:p.y,walkable=(x,z)=>{const h=at(x,z);return Number.isFinite(h)&&h-walkY<.5&&walkY-h<1.2;};let moved=false;
  const inside=(x,z)=>state.galahRole?galahCanMove(state.galahRole,x,z):state.team==null||strikerInsidePitch(x,z,.28);
  const canMove=(x,z)=>flying||(inside(x,z)&&icebergGroundPathClear(grid,p.x,p.z,x,z)&&walkable(x,z)&&canTraverse(grid,p.x,p.z,x,z));

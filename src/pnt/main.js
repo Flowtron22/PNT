@@ -310,7 +310,7 @@ function receiveOnlineSnapshot(snapshot,initial=false){
  if(swapped){onlineFrames=new SnapshotBuffer();if(avatars[0]?.prediction)avatars[0].prediction.pending.length=0;}
  const wasCaught=round.actors.map(actor=>actor.caught),presentation={endStarted:round.endStarted,endElapsed:round.endElapsed,resultsShown:round.resultsShown,profileRecorded:round.profileRecorded,fallOutro:round.fallOutro};round={...snapshot.round,...presentation};role=round.playerRole;
  if(!initial)syncCacheCelebrations();
- if(!initial)for(let i=0;i<round.actors.length;i++)if(wasCaught[i]&&!round.actors[i].caught&&avatars[i])gameFX.rescue(avatars[i].group.position);
+ if(!initial&&round.mode!=='galah')for(let i=0;i<round.actors.length;i++)if(wasCaught[i]&&!round.actors[i].caught&&avatars[i])gameFX.rescue(avatars[i].group.position);
  onlineFrames.push(snapshot);
  for(const pose of snapshot.poses){const actor=avatars[pose.id];if(!actor)continue;
   if(pose.id===0&&snapshot.inputFrames){if(initial||!actor.prediction)actor.prediction=new LocalPrediction(actor,pose,round.actors[0],(snapshot.worldTime??snapshot.time),{grid,map:mapData.id});else actor.prediction.reconcile(pose,round.actors[0],(snapshot.worldTime??snapshot.time));}
@@ -726,7 +726,13 @@ function updateGame(dt){
   if(state.effect==='rocket'&&state.effectTime>0&&Math.hypot(dx,dz)<.1){dx=Math.sin(a.group.rotation.y);dz=Math.cos(a.group.rotation.y);}
   const botEdge=round.mode==='tiletide'&&state.id!==0&&!couchHuman(room,state.id)&&state.effect!=='banana'?a.group.position.clone():null,moved=move(a,dx,dz,dt,movementSpeed(state.role,mapData.id,state.id===0||couchHuman(room,state.id),state.effect==='rocket'&&state.effectTime>0));if(botEdge&&!tileStageContains(round,a.group.position)){a.group.position.copy(botEdge);a.vx=a.vz=a.slideX=a.speed=0;}if(!moved&&state.effect==='banana'&&state.effectTime>0)state.spinDirection=rollSpinDirection();if(!moved&&state.id!==0&&!locked&&Math.hypot(dx,dz)>.1){a.routeTime=0;}animate(a,state,dt);wishes.push({id:state.id,wants:wants&&!locked});
  }
- if(round.mode==='galah'){finishGalahTick(round,avatars,dt,heightAt);return;}
+ if(round.mode==='galah'){
+  finishGalahTick(round,avatars,dt,heightAt,(id,position,guardPosition)=>{
+   gameFX.capture(position,guardPosition);
+   gameAudio.capture(id,avatars);
+  });
+  return;
+ }
  furniturePhysics?.step(dt,avatars);
  for(const h of hazards)h.time-=dt;smokeCoverage();for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];if(h.type==='smoke')animateSmokeBomb(h.mesh,dt);else if(h.type==='banana')animateBananaHazard(h.mesh,dt);animateHazardTelegraph(h.mesh,dt);animatePlayerMirage(h.mesh,dt);if(h.type==='banana'&&h.time>0)for(const state of round.actors){const event=['diretide','tiletide','strikers','balloon','splash','galah'].includes(round.mode),friendly=round.mode==='strikers'?state.team===round.actors[h.owner]?.team:state.id===h.owner;if(state.caught||state.inSmoke||(event?friendly:state.role===h.ownerRole)||state.effectTime>0)continue;if(avatars[state.id].group.position.distanceTo(h.mesh.position)<.8){setEffect(state,'banana',round.mode==='tiletide'?TILE_BANANA_SECONDS:round.mode==='balloon'?BALLOON_BANANA_SECONDS:event?EVENT_BANANA_SECONDS:2);h.time=0;break;}}if(h.time<=0){disposeHazard(h);hazards.splice(i,1);}}
  for(const r of round.actors.filter(a=>!['diretide','tiletide','strikers','balloon','splash','galah'].includes(round.mode)&&a.role==='runner')){const p=cop.group.position,q=avatars[r.id].group.position;if(detectThiefAt(round,chaser.id,r.id,dt,p,q,withinSight(p,q))){gameFX.capture(q,p);gameAudio.capture(r.id,avatars);cop.vx=cop.vz=cop.slideX=cop.speed=0;cancelInteraction(round,r.id);if(r.id===0)stopInteract();say(r.id===0?'CAPTURED!':'CATCHING THIEF!',1);}}

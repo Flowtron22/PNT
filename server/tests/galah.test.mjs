@@ -5,6 +5,7 @@ import {GALAH_WIDTH, GALAH_END, GALAH_RUN_LINE, GALAH_RUNWAY_END, GALAH_CROSSBAR
 import {canTraverse} from '../../src/pnt/collision.js';
 import {PerspectiveCamera, Vector3} from '../../vendor/three/build/three.module.js';
 import {localSnapshot} from '../../src/pnt/multiplayer.js';
+import {CAPTURE_LOCK_SECONDS} from '../../src/pnt/capture-timing.js';
 
 registerHooks({resolve(specifier, context, next) {
  if (specifier === 'three') return next(new URL('../../vendor/three/build/three.module.js', import.meta.url).href, context);
@@ -75,6 +76,23 @@ test('Galah runners reverse quickly and the line guard can turn onto the sidelin
  assert.ok(Math.abs(runner.group.rotation.y + Math.PI/2) < .25);
 });
 
+test('Galah runners glide after releasing movement', async () => {
+ const sim = await MatchSimulation.create('grassfield', players, 'galah');
+ const runner = sim.actors[0];
+ for (let seq = 1; seq <= 30; seq++) {
+  sim.input(0,{seq,x:1,z:0});
+  sim.step();
+ }
+ const releaseX = runner.group.position.x;
+ sim.input(0,{seq:31,x:0,z:0});
+ for (let i = 0; i < 12; i++) sim.step();
+ assert.ok(runner.vx > 1.5);
+ assert.ok(runner.group.position.x > releaseX + .6);
+ for (let i = 0; i < 90; i++) sim.step();
+ assert.ok(runner.vx < .01);
+ assert.ok(runner.group.position.x < releaseX + 1.3);
+});
+
 test('Galah scores a complete circuit once and resumes the role swap after host restore', async () => {
  const sim = await MatchSimulation.create('grassfield', players, 'galah');
  const [runner, lead, partner] = sim.actors;
@@ -90,13 +108,25 @@ test('Galah scores a complete circuit once and resumes the role swap after host 
  assert.deepEqual(sim.round.score,[1,0]);
  partner.group.position.copy(lead.group.position);
  sim.step();
- assert.equal(sim.round.half, 1);
- assert.equal(sim.round.startRemaining, 3);
- assert.deepEqual(sim.round.actors.map(a => a.galahRole), ['leader','runner','guard','runner']);
+ assert.equal(sim.round.half, 0);
+ assert.equal(sim.round.actors[2].caught, true);
+ assert.equal(sim.round.actors[2].caughtTime, 0);
+ assert.deepEqual(sim.events, [{id:1,type:'capture',actor:2,position:partner.group.position.toArray(),policePosition:lead.group.position.toArray()}]);
  const checkpoint = JSON.parse(JSON.stringify(sim.snapshot()));
  const restored = await MatchSimulation.restore(checkpoint, players);
  assert.deepEqual(restored.snapshot(), checkpoint);
- const guest = localSnapshot(checkpoint, players, '3');
+ const caughtGuest = localSnapshot(checkpoint, players, '2');
+ assert.equal(caughtGuest.round.actors[0].caught, true);
+ assert.equal(caughtGuest.events[0].actor, 0);
+ for (let i = 0; i < CAPTURE_LOCK_SECONDS * 60 - 1; i++) restored.step();
+ assert.equal(restored.round.half, 0);
+ assert.equal(restored.events.length, 1);
+ restored.step();
+ assert.equal(restored.round.half, 1);
+ assert.equal(restored.round.startRemaining, 3);
+ assert.deepEqual(restored.round.actors.map(a => a.galahRole), ['leader','runner','guard','runner']);
+ assert.equal(restored.round.actors[2].caught, false);
+ const guest = localSnapshot(restored.snapshot(), players, '3');
  assert.equal(guest.round.actors[0].team, 1);
  assert.equal(guest.round.actors[0].galahRole, 'runner');
  for (let i = 0; i < 185; i++) restored.step();
@@ -105,6 +135,9 @@ test('Galah scores a complete circuit once and resumes the role swap after host 
  assert.equal(restored.round.actors[1].galahStatus, 'tagged');
  restored.round.remaining = 1/60;
  restored.step();
+ assert.equal(restored.round.phase, 'playing');
+ assert.equal(restored.round.actors[3].galahStatus, 'timeout');
+ for (let i = 1; i < CAPTURE_LOCK_SECONDS * 60; i++) restored.step();
  assert.equal(restored.round.phase, 'finished');
  assert.equal(restored.round.winnerTeam, 0);
  assert.deepEqual(restored.round.score,[1,0]);

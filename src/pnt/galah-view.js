@@ -57,9 +57,9 @@ export function createGalahCourt(parent, heightAt) {
  };
  const w = GALAH_WIDTH, end = GALAH_END;
  for (const x of [-w, w]) line(x,-end,x,end,white,.11);
- line(0,-end,0,end,blue);
- line(-w,-end,w,-end,blue);
- for (const z of GALAH_CROSSBARS) line(-w,z,w,z,red);
+ line(0,-end,0,end,blue,.28);
+ line(-w,-end,w,-end,blue,.28);
+ for (const z of GALAH_CROSSBARS) line(-w,z,w,z,red,.28);
  for (const z of [-GALAH_RUN_LINE, GALAH_RUN_LINE]) {
   const dashes = Math.floor((w - .3) / .6);
   for (let dash = -dashes; dash <= dashes; dash++) {
