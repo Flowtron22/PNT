@@ -22,7 +22,7 @@ reference material. Follow the current Steam workflow for all new game work.
 
 ## Current build
 
-The current Windows x64 Steam playtest package is **0.9.185**. The same Windows
+The current Windows x64 Steam playtest package is **0.9.186**. The same Windows
 package targets Steam Deck via Proton. The desktop client uses Steam
 lobbies and peer networking, with match authority on the lobby host's PC.
 
@@ -33,7 +33,7 @@ npm ci
 npm run build:steam -- --dev-playtest
 ```
 
-Share the entire `dist-steam/win64-dev-playtest-0.9.185` folder, including
+Share the entire `dist-steam/win64-dev-playtest-0.9.186` folder, including
 `steam_appid.txt`. Testers sign in to the Steam desktop client with separate
 accounts and run `Police N Thief.exe`. The development build uses Spacewar
 App ID 480. Steam distribution uses the assigned game or Playtest App ID.
@@ -51,6 +51,20 @@ online all use internal mode ID `balloon`, rules version **14**, and the procedu
 circular arena. Keep those identifiers stable when changing display names.
 
 ## Current release summary
+
+Version **0.9.186** makes each Galah Panjang box 6.2 × 6.2 game units.
+The 12.4 × 12.4 court keeps nearly the same playable area as the previous
+rectangle. Players glide about five times farther when releasing movement
+at full speed on open ground, from about two to ten game units. Court
+boundaries and guard rails constrain the glide. Galah rules version is **5**.
+
+The square court and both runways were visible in the Windows Training
+smoke build in windowed and fullscreen layouts. A signed-in Steam host
+played Solo Online with three bots and verified a rendered capture.
+Syntax checks and all 395 automated tests passed (345 client, 50 multiplayer).
+The package was verified with App ID 480, runtime files, version labels,
+and current game code. Remote Steam guests, physical controllers, and Steam
+Deck/Proton remain pending.
 
 Version **0.9.185** recreates the Galah Panjang capture-smoke geometry,
 materials, and meshes at each match start. In 0.9.184, live Steam Solo Online

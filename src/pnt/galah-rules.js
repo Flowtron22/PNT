@@ -1,9 +1,9 @@
 import {CAPTURE_LOCK_SECONDS} from './capture-timing.js';
 
-export const GALAH_VERSION = 4;
+export const GALAH_VERSION = 5;
 export const GALAH_HALF_SECONDS = 45;
-export const GALAH_WIDTH = 5.1;
-export const GALAH_END = 7.6;
+export const GALAH_WIDTH = 6.2;
+export const GALAH_END = GALAH_WIDTH;
 export const GALAH_CROSSBARS = [0, GALAH_END];
 export const GALAH_ROLE_LABELS = {runner:'Runner', leader:'Lead guard', guard:'Line guard'};
 export const GALAH_STATUS_LABELS = {outbound:'Cross the court', returning:'Return home', tagged:'Tagged', scored:'Scored', timeout:'Time up'};

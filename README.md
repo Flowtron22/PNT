@@ -16,11 +16,11 @@ supported. See [controls and rules](docs/SPLASH_AREA.md).
 team takes a turn running across the four-box Grassfield court and back.
 Available in Training, Couch Play, and Steam Solo Online.
 
-The current Steam dev-playtest is **0.9.185**. Build and share the complete
-`dist-steam/win64-dev-playtest-0.9.185` folder, including `steam_appid.txt`.
-This update fixes missing Galah Panjang capture smoke after **Solo Online →
-Play Again**. The smoke was verified in both matches with a signed-in Steam
-host and three bots. See the [release summary](handoff.md#current-release-summary).
+The current Steam dev-playtest is **0.9.186**. Build and share the complete
+`dist-steam/win64-dev-playtest-0.9.186` folder, including `steam_appid.txt`.
+This update gives Galah Panjang four square boxes and about five times the
+previous stopping distance on open ground.
+See the [release summary](handoff.md#current-release-summary).
 
 Developed by Todak Studios, with Classic, Patty Prowl, Tile Tumble, Slippery
 Shoots and **Balloon Bash**. Balloon Bash is a 1v1v1v1 last-player-standing

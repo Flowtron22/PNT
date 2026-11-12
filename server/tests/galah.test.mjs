@@ -38,9 +38,10 @@ test('Galah guards stay on their own rails and cannot use classic tools', async 
  assert.ok(lead.z < -GALAH_END + .33);
 });
 
-test('the four-box court stays traversable and its runways fit the zoomed camera', async () => {
+test('the square court stays traversable and its runways fit the zoomed camera', async () => {
  const sim = await MatchSimulation.create('grassfield', players, 'galah');
- assert.ok(Math.abs((GALAH_WIDTH * GALAH_END) / (3.6 * 5.4) - 2) < .01);
+ assert.equal(GALAH_WIDTH,GALAH_END);
+ assert.ok(Math.abs(GALAH_WIDTH * GALAH_END / (5.1 * 7.6) - 1) < .02);
  for (let x = -GALAH_WIDTH; x <= GALAH_WIDTH; x += .2) {
   for (let z = -GALAH_RUNWAY_END; z <= GALAH_RUNWAY_END; z += .2) {
    assert.ok(canTraverse(sim.grid,x,z,x+.08,z+.08), 'blocked court cell at '+[x,z]);
@@ -66,9 +67,9 @@ test('the four-box court stays traversable and its runways fit the zoomed camera
 test('Galah runners reverse quickly and the line guard can turn onto the sideline', async () => {
  const sim = await MatchSimulation.create('grassfield', players, 'galah');
  const runner = sim.actors[0], guard = sim.actors[3];
- for (let seq = 1; seq <= 120; seq++) {
-  sim.input(3,{seq,x:seq <= 85 ? 1 : 0,z:seq <= 85 ? 0 : 1});
-  if (seq > 100) sim.input(0,{seq,x:seq <= 114 ? 1 : -1,z:0});
+ for (let seq = 1; seq <= 150; seq++) {
+  sim.input(3,{seq,x:seq <= 105 ? 1 : 0,z:seq <= 105 ? 0 : 1});
+  if (seq > 130) sim.input(0,{seq,x:seq <= 144 ? 1 : -1,z:0});
   sim.step();
  }
  assert.ok(guard.group.position.x > GALAH_WIDTH-.32 && guard.group.position.z > 1.5);
@@ -76,21 +77,30 @@ test('Galah runners reverse quickly and the line guard can turn onto the sidelin
  assert.ok(Math.abs(runner.group.rotation.y + Math.PI/2) < .25);
 });
 
-test('Galah runners glide after releasing movement', async () => {
+test('Galah runners coast about five times farther and stop at the runway boundary', async () => {
  const sim = await MatchSimulation.create('grassfield', players, 'galah');
  const runner = sim.actors[0];
+ runner.group.position.set(-3.5,0,-GALAH_RUNWAY_END+.15);
  for (let seq = 1; seq <= 30; seq++) {
-  sim.input(0,{seq,x:1,z:0});
+  sim.input(0,{seq,x:0,z:1});
   sim.step();
  }
- const releaseX = runner.group.position.x;
+ const releaseZ = runner.group.position.z;
+ const previousGlide = runner.vz / (60 * Math.expm1(2.8/60));
  sim.input(0,{seq:31,x:0,z:0});
- for (let i = 0; i < 12; i++) sim.step();
- assert.ok(runner.vx > 2.8);
- assert.ok(runner.group.position.x > releaseX + .75);
- for (let i = 0; i < 145; i++) sim.step();
- assert.ok(runner.vx < .01);
- assert.ok(runner.group.position.x > releaseX + 1.7 && runner.group.position.x < releaseX + 2.2);
+ for (let i = 0; i < 750; i++) sim.step();
+ assert.ok(runner.vz < .01);
+ const ratio = (runner.group.position.z-releaseZ)/previousGlide;
+ assert.ok(ratio > 4.95 && ratio < 5.15);
+ for (let seq = 32; seq <= 50; seq++) {
+  sim.input(0,{seq,x:0,z:1});
+  sim.step();
+ }
+ sim.input(0,{seq:51,x:0,z:0});
+ for (let i = 0; i < 90; i++) sim.step();
+ assert.ok(runner.group.position.z <= GALAH_RUNWAY_END);
+ assert.ok(runner.group.position.z > GALAH_RUNWAY_END-.1);
+ assert.equal(runner.vz,0);
 });
 
 test('Galah scores a complete circuit once and resumes the role swap after host restore', async () => {
